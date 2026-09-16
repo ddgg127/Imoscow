@@ -6,8 +6,8 @@
     "node": ">=22.13.0"
   },
   "scripts": {
-    "predev": "node scripts/copy-maplibre-worker.mjs",
-    "prebuild": "node scripts/copy-maplibre-worker.mjs",
+    "predev": "node scripts/import-csv.mjs && node scripts/copy-maplibre-worker.mjs",
+    "prebuild": "node scripts/import-csv.mjs && node scripts/copy-maplibre-worker.mjs",
     "install:ci": "node scripts/install-ci.mjs",
     "dev": "node scripts/run-framework.mjs dev",
     "build": "node scripts/run-framework.mjs build",
