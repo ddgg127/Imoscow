@@ -32,9 +32,9 @@ export interface GeocodingProvider {
 }
 
 /**
- * Contract placeholder for the backend. The browser intentionally does not call
- * public routing/geocoding endpoints yet: keys, caching and rate limits belong
- * in FastAPI. Swap this adapter for OSRM or Yandex without changing map UI.
+ * Browser-facing contract for the backend proxy. It keeps third-party services
+ * behind our own endpoints, so OSRM can later be replaced by Yandex or FastAPI
+ * without changing the map components.
  */
 export class BackendRoutingProvider implements RoutingProvider {
   readonly id: "osrm" | "yandex";
@@ -44,7 +44,7 @@ export class BackendRoutingProvider implements RoutingProvider {
   }
 
   async buildRoute(request: RouteRequest): Promise<RouteResult> {
-    const response = await fetch(`${this.baseUrl}/route`, {
+    const response = await fetch(this.baseUrl, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ provider: this.id, ...request }),
@@ -64,3 +64,18 @@ export class BackendRoutingProvider implements RoutingProvider {
   }
 }
 
+export class BackendGeocodingProvider implements GeocodingProvider {
+  readonly id: "nominatim" | "yandex";
+
+  constructor(id: "nominatim" | "yandex", private readonly baseUrl = "/api/geocode") {
+    this.id = id;
+  }
+
+  async geocode(address: string): Promise<Coordinate | null> {
+    const response = await fetch(`${this.baseUrl}?q=${encodeURIComponent(address)}`);
+    if (response.status === 404) return null;
+    if (!response.ok) throw new Error("Не удалось определить координаты адреса");
+    const data = await response.json() as { coordinates: Coordinate };
+    return data.coordinates;
+  }
+}
