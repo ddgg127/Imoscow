@@ -1,0 +1,2384 @@
+{
+  "version": 1,
+  "provider": "Nominatim + Photon / OpenStreetMap",
+  "entries": {
+    "Домодедово, проезд.Кутузовский, д. 16": {
+      "query": "Домодедово, проезд.Кутузовский, д. 16",
+      "coordinates": [
+        37.7619456,
+        55.4371874
+      ],
+      "displayName": "Кутузовский проезд, 16, Домодедово, Московская область",
+      "status": "precise",
+      "osmType": "yes",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Домодедово, проезд.Советский 1-й, д. 1А": {
+      "query": "Домодедово, проезд.Советский 1-й, д. 1А",
+      "coordinates": [
+        37.7700883,
+        55.4407054
+      ],
+      "displayName": "1-й Советский проезд, 1А, Домодедово, Московская область",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Домодедово, ул.1-я Коммунистическая, д. 39": {
+      "query": "Домодедово, ул.1-я Коммунистическая, д. 39",
+      "coordinates": [
+        37.7444395,
+        55.4546029
+      ],
+      "displayName": "1-я Коммунистическая улица, 39, Домодедово, Московская область",
+      "status": "precise",
+      "osmType": "yes",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Домодедово, ул.Гагарина, д. 55/2": {
+      "query": "Домодедово, ул.Гагарина, д. 55/2",
+      "coordinates": [
+        37.7394233,
+        55.4515305
+      ],
+      "displayName": "улица Гагарина, 55 к2, Домодедово, Московская область",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Домодедово, ул.Зеленая, д. 85": {
+      "query": "Домодедово, ул.Зеленая, д. 85",
+      "coordinates": [
+        37.8314845,
+        55.4967691
+      ],
+      "displayName": "улица Зеленая, Чурилково, Московская область",
+      "status": "approximate",
+      "osmType": "residential",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Домодедово, ул.Ильюшина, д. 11 к 2": {
+      "query": "Домодедово, ул.Ильюшина, д. 11 к 2",
+      "coordinates": [
+        37.841857,
+        55.4187003
+      ],
+      "displayName": "S7 Hotel Домодедово, 1Б, улица Ильюшина, микрорайон Авиационный, Домодедово, городской округ Домодедово, Московская область, Центральный федеральный округ, 142007, Россия",
+      "status": "approximate",
+      "osmType": "hotel",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Домодедово, ул.Ильюшина, д. 20": {
+      "query": "Домодедово, ул.Ильюшина, д. 20",
+      "coordinates": [
+        37.8378227,
+        55.4105367
+      ],
+      "displayName": "улица Ильюшина, 20, Домодедово, Московская область",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Домодедово, ул.Корнеева, д. 40": {
+      "query": "Домодедово, ул.Корнеева, д. 40",
+      "coordinates": [
+        37.7783486,
+        55.4255128
+      ],
+      "displayName": "улица Корнеева, 40, Домодедово, Московская область",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Домодедово, ул.Корнеева, д. 48": {
+      "query": "Домодедово, ул.Корнеева, д. 48",
+      "coordinates": [
+        37.7782889,
+        55.4235837
+      ],
+      "displayName": "улица Корнеева, 48, Домодедово, Московская область",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Домодедово, ул.Корнеева, д. 50": {
+      "query": "Домодедово, ул.Корнеева, д. 50",
+      "coordinates": [
+        37.7779539,
+        55.4226672
+      ],
+      "displayName": "улица Корнеева, 50, Домодедово, Московская область",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Кашира, ул.8 Марта, д. 22": {
+      "query": "Кашира, ул.8 Марта, д. 22",
+      "coordinates": [
+        38.2387126,
+        54.8442956
+      ],
+      "displayName": "улица 8-го Марта, 22, Кашира, Московская область",
+      "status": "precise",
+      "osmType": "yes",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Кашира, ул.Кржижановского, д. 7": {
+      "query": "Кашира, ул.Кржижановского, д. 7",
+      "coordinates": [
+        38.2399045,
+        54.8398702
+      ],
+      "displayName": "улица Кржижановского, 7, Кашира, Московская область",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Кашира, ул.Ленина, д. 11 к 3": {
+      "query": "Кашира, ул.Ленина, д. 11 к 3",
+      "coordinates": [
+        38.197068,
+        54.8397971
+      ],
+      "displayName": "Кашира-город воинской доблести, улица Ленина, Кашира-3, Кашира, городской округ Кашира, Московская область, Центральный федеральный округ, 142903, Россия",
+      "status": "approximate",
+      "osmType": "memorial",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Кашира, ул.Металлургов, д. 5 к 3": {
+      "query": "Кашира, ул.Металлургов, д. 5 к 3",
+      "coordinates": [
+        38.1897638,
+        54.8409976
+      ],
+      "displayName": "улица Металлургов, 5 к3, Кашира, Московская область",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Кашира, ул.Победы, д. 9": {
+      "query": "Кашира, ул.Победы, д. 9",
+      "coordinates": [
+        38.1934697,
+        54.8385881
+      ],
+      "displayName": "Бристоль, улица Победы, 9, Кашира, Московская область",
+      "status": "precise",
+      "osmType": "alcohol",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Кашира, ул.Садовая, д. 18": {
+      "query": "Кашира, ул.Садовая, д. 18",
+      "coordinates": [
+        38.2453976,
+        54.8423286
+      ],
+      "displayName": "Садовая улица, 18, Кашира, Московская область",
+      "status": "precise",
+      "osmType": "yes",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Кашира, ул.Садовая, д. 2/11": {
+      "query": "Кашира, ул.Садовая, д. 2/11",
+      "coordinates": [
+        38.2443522,
+        54.8500604
+      ],
+      "displayName": "Садовая улица, 2/11, Кашира, Московская область",
+      "status": "precise",
+      "osmType": "yes",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Кашира, ул.Юбилейная, д. 8": {
+      "query": "Кашира, ул.Юбилейная, д. 8",
+      "coordinates": [
+        38.248056,
+        54.8419626
+      ],
+      "displayName": "Юбилейная улица, 8, Кашира, Московская область",
+      "status": "precise",
+      "osmType": "yes",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Кашира, ул.Юбилейная, д. 9": {
+      "query": "Кашира, ул.Юбилейная, д. 9",
+      "coordinates": [
+        38.2494867,
+        54.8400884
+      ],
+      "displayName": "Юбилейная улица, 9, Кашира, Московская область",
+      "status": "precise",
+      "osmType": "yes",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва Бирюлевская ул. д. 44": {
+      "query": "Москва Бирюлевская ул. д. 44",
+      "coordinates": [
+        37.6646136,
+        55.5889273
+      ],
+      "displayName": "Бирюлёвская улица, Бирюлёво, район Бирюлёво Восточное, Москва, Центральный федеральный округ, 115372, Россия",
+      "status": "approximate",
+      "osmType": "tertiary",
+      "matchQuality": "street_fallback",
+      "validated": true
+    },
+    "Москва Булатниковский пр-зд. д. 6к1": {
+      "query": "Москва Булатниковский пр-зд. д. 6к1",
+      "coordinates": [
+        37.6587944,
+        55.5814044
+      ],
+      "displayName": "Московские Ярмарки, Булатниковский проезд, вл14д, Москва, Москва",
+      "status": "precise",
+      "osmType": "retail",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, б-р.Волжский, д. 50 к 2": {
+      "query": "Москва, б-р.Волжский, д. 50 к 2",
+      "coordinates": [
+        37.7441887,
+        55.7118645
+      ],
+      "displayName": "Москва 109125, Волжский бульвар, район Текстильщики, Москва, Центральный федеральный округ, 109125, Россия",
+      "status": "approximate",
+      "osmType": "post_office",
+      "matchQuality": "street_fallback",
+      "validated": true
+    },
+    "Москва, б-р.Кленовый, д. 10 к 1": {
+      "query": "Москва, б-р.Кленовый, д. 10 к 1",
+      "coordinates": [
+        37.6807341,
+        55.6744865
+      ],
+      "displayName": "Кленовый бульвар, Коломенка, район Нагатинский Затон, Москва, Центральный федеральный округ, 115470, Россия",
+      "status": "approximate",
+      "osmType": "station",
+      "matchQuality": "street_fallback",
+      "validated": true
+    },
+    "Москва, б-р.Ореховый, д. 11 к 1": {
+      "query": "Москва, б-р.Ореховый, д. 11 к 1",
+      "coordinates": [
+        37.7128557,
+        55.6119115
+      ],
+      "displayName": "Школа № 878. Корпус школьного образования № 4, Ореховый бульвар, Москва, Москва",
+      "status": "approximate",
+      "osmType": "school",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Москва, б-р.Ореховый, д. 35 к 1": {
+      "query": "Москва, б-р.Ореховый, д. 35 к 1",
+      "coordinates": [
+        37.7380847,
+        55.6281967
+      ],
+      "displayName": "Школа № 534 Корпус 1, Ореховый проезд, Москва, Москва",
+      "status": "approximate",
+      "osmType": "school",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Москва, б-р.Ореховый, д. 61 к 1": {
+      "query": "Москва, б-р.Ореховый, д. 61 к 1",
+      "coordinates": [
+        37.7380847,
+        55.6281967
+      ],
+      "displayName": "Школа № 534 Корпус 1, Ореховый проезд, Москва, Москва",
+      "status": "approximate",
+      "osmType": "school",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Москва, б-р.Ореховый, д. 7 к 1": {
+      "query": "Москва, б-р.Ореховый, д. 7 к 1",
+      "coordinates": [
+        37.7380847,
+        55.6281967
+      ],
+      "displayName": "Школа № 534 Корпус 1, Ореховый проезд, Москва, Москва",
+      "status": "approximate",
+      "osmType": "school",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Москва, б-р.Самаркандский Квартал 137а, д. к5": {
+      "query": "Москва, б-р.Самаркандский Квартал 137а, д. к5",
+      "coordinates": [
+        37.8193568,
+        55.7000662
+      ],
+      "displayName": "квартал Самаркандский Бульвар 137А, к5, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, б-р.Самаркандский, д. 10к2": {
+      "query": "Москва, б-р.Самаркандский, д. 10к2",
+      "coordinates": [
+        37.8268229,
+        55.7047733
+      ],
+      "displayName": "Самаркандский бульвар, Москва, Москва",
+      "status": "approximate",
+      "osmType": "tertiary",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Москва, б-р.Самаркандский, д. 32к1": {
+      "query": "Москва, б-р.Самаркандский, д. 32к1",
+      "coordinates": [
+        37.8268229,
+        55.7047733
+      ],
+      "displayName": "Самаркандский бульвар, Москва, Москва",
+      "status": "approximate",
+      "osmType": "tertiary",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Москва, б-р.Симферопольский, д. 27": {
+      "query": "Москва, б-р.Симферопольский, д. 27",
+      "coordinates": [
+        37.6062192,
+        55.6486775
+      ],
+      "displayName": "Симферопольский бульвар, 27, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, б-р.Смоленский, д. 17 стр. 1": {
+      "query": "Москва, б-р.Смоленский, д. 17 стр. 1",
+      "coordinates": [
+        37.585773,
+        55.7393891
+      ],
+      "displayName": "Смоленский бульвар, Москва, Москва",
+      "status": "approximate",
+      "osmType": "primary",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Москва, б-р.Черноморский, д. 19 к 2": {
+      "query": "Москва, б-р.Черноморский, д. 19 к 2",
+      "coordinates": [
+        37.6081553,
+        55.6470662
+      ],
+      "displayName": "Школа № 1862. Корпус дошкольного образования №6, Черноморский бульвар, Москва, Москва",
+      "status": "approximate",
+      "osmType": "kindergarten",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Москва, б-р.Чонгарский, д. 1 к 4": {
+      "query": "Москва, б-р.Чонгарский, д. 1 к 4",
+      "coordinates": [
+        37.6080146,
+        55.6519162
+      ],
+      "displayName": "Школа № 2016. Корпус школьного образования №1, Чонгарский бульвар, Москва, Москва",
+      "status": "approximate",
+      "osmType": "school",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Москва, б-р.Чонгарский, д. 22 к 2": {
+      "query": "Москва, б-р.Чонгарский, д. 22 к 2",
+      "coordinates": [
+        37.6080146,
+        55.6519162
+      ],
+      "displayName": "Школа № 2016. Корпус школьного образования №1, Чонгарский бульвар, Москва, Москва",
+      "status": "approximate",
+      "osmType": "school",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Москва, наб.Нагатинская, д. 60 к 2": {
+      "query": "Москва, наб.Нагатинская, д. 60 к 2",
+      "coordinates": [
+        37.654239,
+        55.677011
+      ],
+      "displayName": "Детско-юношеский центр Виктория. Корпус «Юный техник», Нагатинская улица, 22 к2, Москва, Москва",
+      "status": "precise",
+      "osmType": "community_centre",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, наб.Семеновская, д. 2/1": {
+      "query": "Москва, наб.Семеновская, д. 2/1",
+      "coordinates": [
+        37.7328543,
+        55.7830958
+      ],
+      "displayName": "21 Семеновская, Щербаковская улица, 41А, Москва, Москва",
+      "status": "precise",
+      "osmType": "hotel",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, наб.Семеновская, д. 3/1к2": {
+      "query": "Москва, наб.Семеновская, д. 3/1к2",
+      "coordinates": [
+        37.7036212,
+        55.7808861
+      ],
+      "displayName": "Семёновская набережная, 3, Москва, Москва",
+      "status": "precise",
+      "osmType": "train_station",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, пер.Большой Рогожский, д. 10 к 2": {
+      "query": "Москва, пер.Большой Рогожский, д. 10 к 2",
+      "coordinates": [
+        37.6679638,
+        55.7428641
+      ],
+      "displayName": "Большой Рогожский переулок, Москва, Москва",
+      "status": "approximate",
+      "osmType": "unclassified",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Москва, пер.Маяковского, д. 2": {
+      "query": "Москва, пер.Маяковского, д. 2",
+      "coordinates": [
+        37.660006,
+        55.7399224
+      ],
+      "displayName": "переулок Маяковского, 2, Москва, Москва",
+      "status": "precise",
+      "osmType": "notary",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, пер.Ослябинский, д. 3": {
+      "query": "Москва, пер.Ослябинский, д. 3",
+      "coordinates": [
+        37.6603865,
+        55.7131672
+      ],
+      "displayName": "Ослябинский переулок, 3, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, пр-кт.60-летия Октября, д. 17": {
+      "query": "Москва, пр-кт.60-летия Октября, д. 17",
+      "coordinates": [
+        37.5798241,
+        55.6953306
+      ],
+      "displayName": "проспект 60-летия Октября, 17, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, пр-кт.60-летия Октября, д. 18 к 2": {
+      "query": "Москва, пр-кт.60-летия Октября, д. 18 к 2",
+      "coordinates": [
+        37.573364,
+        55.6894338
+      ],
+      "displayName": "проспект 60-летия Октября, 18 к2, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, пр-кт.Балаклавский, д. 20 к 4": {
+      "query": "Москва, пр-кт.Балаклавский, д. 20 к 4",
+      "coordinates": [
+        37.5959185,
+        55.6423446
+      ],
+      "displayName": "Балаклавский проспект, 20 к4, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, пр-кт.Балаклавский, д. 50": {
+      "query": "Москва, пр-кт.Балаклавский, д. 50",
+      "coordinates": [
+        37.607546,
+        55.6416515
+      ],
+      "displayName": "Стоматология+КТ, Балаклавский проспект, 12 к3, Москва, Москва",
+      "status": "precise",
+      "osmType": "dentist",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, пр-кт.Волгоградский, д. 128 к 5": {
+      "query": "Москва, пр-кт.Волгоградский, д. 128 к 5",
+      "coordinates": [
+        37.7738951,
+        55.7062794
+      ],
+      "displayName": "Школа № 1208 имени Героя Советского Союза М.С. Шумилова. Корпус № 5, Волгоградский проспект (дублёр), Москва, Москва",
+      "status": "approximate",
+      "osmType": "kindergarten",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Москва, пр-кт.Волгоградский, д. 128к1": {
+      "query": "Москва, пр-кт.Волгоградский, д. 128к1",
+      "coordinates": [
+        37.7738951,
+        55.7062794
+      ],
+      "displayName": "Школа № 1208 имени Героя Советского Союза М.С. Шумилова. Корпус № 5, Волгоградский проспект (дублёр), Москва, Москва",
+      "status": "approximate",
+      "osmType": "kindergarten",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Москва, пр-кт.Волгоградский, д. 97 к 1": {
+      "query": "Москва, пр-кт.Волгоградский, д. 97 к 1",
+      "coordinates": [
+        37.7738951,
+        55.7062794
+      ],
+      "displayName": "Школа № 1208 имени Героя Советского Союза М.С. Шумилова. Корпус № 5, Волгоградский проспект (дублёр), Москва, Москва",
+      "status": "approximate",
+      "osmType": "kindergarten",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Москва, пр-кт.Ленинский, д. 70/11": {
+      "query": "Москва, пр-кт.Ленинский, д. 70/11",
+      "coordinates": [
+        37.5409439,
+        55.6879737
+      ],
+      "displayName": "ИФНС России № 36 по г. Москве, Ленинский проспект, 70/11, Москва, Москва",
+      "status": "precise",
+      "osmType": "government",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, пр-кт.Нахимовский, д. 50": {
+      "query": "Москва, пр-кт.Нахимовский, д. 50",
+      "coordinates": [
+        37.5590236,
+        55.6807498
+      ],
+      "displayName": "Нахимовский проспект, 50, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, пр-кт.Пролетарский, д. 14А": {
+      "query": "Москва, пр-кт.Пролетарский, д. 14А",
+      "coordinates": [
+        37.6533634,
+        55.6360111
+      ],
+      "displayName": "Пролетарский проспект, 14А, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, пр-кт.Пролетарский, д. 18 к 4": {
+      "query": "Москва, пр-кт.Пролетарский, д. 18 к 4",
+      "coordinates": [
+        37.6538396,
+        55.6338547
+      ],
+      "displayName": "Пролетарский проспект, 18 к4, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, пр-кт.Рязанский, д. 73": {
+      "query": "Москва, пр-кт.Рязанский, д. 73",
+      "coordinates": [
+        37.7902547,
+        55.7184554
+      ],
+      "displayName": "Рязанский проспект, 73, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, пр-кт.Севастопольский, д. 9 к 1": {
+      "query": "Москва, пр-кт.Севастопольский, д. 9 к 1",
+      "coordinates": [
+        37.5467179,
+        55.6419862
+      ],
+      "displayName": "Школа №49. Школьный корпус, Севастопольский проспект, Москва, Москва",
+      "status": "approximate",
+      "osmType": "school",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Москва, проезд Орехово-Зуевский, д. 18/8": {
+      "query": "Москва, проезд Орехово-Зуевский, д. 18/8",
+      "coordinates": [
+        37.7534715,
+        55.7311522
+      ],
+      "displayName": "Орехово-Зуевский проезд, 18/8, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, проезд.3-й Павелецкий, д. 7 к 2": {
+      "query": "Москва, проезд.3-й Павелецкий, д. 7 к 2",
+      "coordinates": [
+        37.6424726,
+        55.7116326
+      ],
+      "displayName": "3-й Павелецкий проезд, 7, 3-й Павелецкий проезд, Москва, Москва",
+      "status": "approximate",
+      "osmType": "bus_stop",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Москва, проезд.3-й Павелецкий, д. 9": {
+      "query": "Москва, проезд.3-й Павелецкий, д. 9",
+      "coordinates": [
+        37.6405504,
+        55.7107376
+      ],
+      "displayName": "3-й Павелецкий проезд, 9, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, проезд.Борисовский, д. 44 к 3": {
+      "query": "Москва, проезд.Борисовский, д. 44 к 3",
+      "coordinates": [
+        37.7217811,
+        55.6265158
+      ],
+      "displayName": "Москва 115563, 11 к1 с2, Борисовский проезд, район Орехово-Борисово Северное, Москва, Центральный федеральный округ, 115563, Россия",
+      "status": "approximate",
+      "osmType": "post_office",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Москва, проезд.Востряковский, д. 15 к 2": {
+      "query": "Москва, проезд.Востряковский, д. 15 к 2",
+      "coordinates": [
+        37.6434946,
+        55.5793029
+      ],
+      "displayName": "Москва 117403, Востряковский проезд, район Бирюлёво Западное, Москва, Центральный федеральный округ, 117403, Россия",
+      "status": "approximate",
+      "osmType": "post_office",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Москва, проезд.Востряковский, д. 15 к 4": {
+      "query": "Москва, проезд.Востряковский, д. 15 к 4",
+      "coordinates": [
+        37.6434946,
+        55.5793029
+      ],
+      "displayName": "Москва 117403, Востряковский проезд, район Бирюлёво Западное, Москва, Центральный федеральный округ, 117403, Россия",
+      "status": "approximate",
+      "osmType": "post_office",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Москва, проезд.Гурьевский, д. 19 к 2": {
+      "query": "Москва, проезд.Гурьевский, д. 19 к 2",
+      "coordinates": [
+        37.7526336,
+        55.6064306
+      ],
+      "displayName": "Гурьевский проезд, 19, Гурьевский проезд, Москва, Москва",
+      "status": "approximate",
+      "osmType": "bus_stop",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Москва, проезд.Гурьевский, д. 23 к 1": {
+      "query": "Москва, проезд.Гурьевский, д. 23 к 1",
+      "coordinates": [
+        37.7536622,
+        55.6074243
+      ],
+      "displayName": "Гурьевский проезд, 23 к1, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, проезд.Загорьевский, д. 7 к 2": {
+      "query": "Москва, проезд.Загорьевский, д. 7 к 2",
+      "coordinates": [
+        37.6687513,
+        55.5738877
+      ],
+      "displayName": "Москва 115547, 9/12 с2, Загорьевский проезд, район Бирюлёво Восточное, Москва, Центральный федеральный округ, 115547, Россия",
+      "status": "approximate",
+      "osmType": "post_office",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Москва, проезд.Загорьевский, д. 9": {
+      "query": "Москва, проезд.Загорьевский, д. 9",
+      "coordinates": [
+        37.6775523,
+        55.5780853
+      ],
+      "displayName": "Загорьевский проезд, 9, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, проезд.Коломенский, д. 27 к 3": {
+      "query": "Москва, проезд.Коломенский, д. 27 к 3",
+      "coordinates": [
+        37.6369471,
+        55.6626045
+      ],
+      "displayName": "Патологоанотомический корпус, Коломенский проезд, 4 с3, Москва, Москва",
+      "status": "precise",
+      "osmType": "mortuary",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, проезд.Ореховый, д. 23 к 1": {
+      "query": "Москва, проезд.Ореховый, д. 23 к 1",
+      "coordinates": [
+        37.7380847,
+        55.6281967
+      ],
+      "displayName": "Школа № 534 Корпус 1, Ореховый проезд, Москва, Москва",
+      "status": "approximate",
+      "osmType": "school",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Москва, проезд.Ореховый, д. 41": {
+      "query": "Москва, проезд.Ореховый, д. 41",
+      "coordinates": [
+        37.7307244,
+        55.6165342
+      ],
+      "displayName": "Ореховый проезд, 41, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, проезд.Ферганский, д. 7 к 5": {
+      "query": "Москва, проезд.Ферганский, д. 7 к 5",
+      "coordinates": [
+        37.8172696,
+        55.6938907
+      ],
+      "displayName": "Москва 109507, Ферганский проезд, район Выхино-Жулебино, Москва, Центральный федеральный округ, 109507, Россия",
+      "status": "approximate",
+      "osmType": "post_office",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Москва, проезд.Шипиловский, д. 59 к 2": {
+      "query": "Москва, проезд.Шипиловский, д. 59 к 2",
+      "coordinates": [
+        37.706075,
+        55.6007725
+      ],
+      "displayName": "Центр развития детского и массового спорта «Вершина» им. Сергея Макарова (Москва), Шипиловский проезд, район Орехово-Борисово Южное, Москва, Центральный федеральный округ, 109387, Россия",
+      "status": "approximate",
+      "osmType": "sports_centre",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Москва, ул Бирюлёвская, д 1с1": {
+      "query": "Москва, ул Бирюлёвская, д 1с1",
+      "coordinates": [
+        37.6646136,
+        55.5889273
+      ],
+      "displayName": "Бирюлёвская улица, Бирюлёво, район Бирюлёво Восточное, Москва, Центральный федеральный округ, 115372, Россия",
+      "status": "approximate",
+      "osmType": "tertiary",
+      "matchQuality": "street_fallback",
+      "validated": true
+    },
+    "Москва, ул Юных Ленинцев, д 83с 4": {
+      "query": "Москва, ул Юных Ленинцев, д 83с 4",
+      "coordinates": [
+        37.7603944,
+        55.7025146
+      ],
+      "displayName": "улица Юных Ленинцев, 57 к4, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.1-я Дубровская, д. 6": {
+      "query": "Москва, ул.1-я Дубровская, д. 6",
+      "coordinates": [
+        37.6695609,
+        55.7267393
+      ],
+      "displayName": "1-я Дубровская улица, 6, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.1-я Новокузьминская, д. 16 к 1": {
+      "query": "Москва, ул.1-я Новокузьминская, д. 16 к 1",
+      "coordinates": [
+        37.7895195,
+        55.7150634
+      ],
+      "displayName": "Москва 109377, 1-я Новокузьминская улица, Рязанский район, Москва, Центральный федеральный округ, 109377, Россия",
+      "status": "approximate",
+      "osmType": "post_office",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Москва, ул.11-я Текстильщиков, д. 10": {
+      "query": "Москва, ул.11-я Текстильщиков, д. 10",
+      "coordinates": [
+        37.7431987,
+        55.706885
+      ],
+      "displayName": "11-я улица Текстильщиков, 10, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.2-я Рощинская, д. 11": {
+      "query": "Москва, ул.2-я Рощинская, д. 11",
+      "coordinates": [
+        37.6125848,
+        55.7092888
+      ],
+      "displayName": "2-я Рощинская улица, 11, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.2-я Синичкина, д. 9 к 1": {
+      "query": "Москва, ул.2-я Синичкина, д. 9 к 1",
+      "coordinates": [
+        37.712879,
+        55.7624783
+      ],
+      "displayName": "2-я улица Синичкина, Москва, Москва",
+      "status": "approximate",
+      "osmType": "residential",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Москва, ул.3-я Институтская, д. 5 к 2": {
+      "query": "Москва, ул.3-я Институтская, д. 5 к 2",
+      "coordinates": [
+        37.7821899,
+        55.7219922
+      ],
+      "displayName": "3-я Институтская улица, 5 к2, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.3-я Карачаровская, д. 4 к 1": {
+      "query": "Москва, ул.3-я Карачаровская, д. 4 к 1",
+      "coordinates": [
+        37.7445677,
+        55.7337571
+      ],
+      "displayName": "3-я Карачаровская улица, 4 к1, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.3-я Карачаровская, д. 8 к 2": {
+      "query": "Москва, ул.3-я Карачаровская, д. 8 к 2",
+      "coordinates": [
+        37.7471726,
+        55.7333702
+      ],
+      "displayName": "3-я Карачаровская улица, 8 к2, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.6-я Радиальная, д. 5 к 3": {
+      "query": "Москва, ул.6-я Радиальная, д. 5 к 3",
+      "coordinates": [
+        37.6610798,
+        55.6047823
+      ],
+      "displayName": "500 мелочей, 6-я Радиальная улица, 5 к3, Москва, Москва",
+      "status": "precise",
+      "osmType": "hardware",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.6-я Радиальная, д. 7/1 к 2": {
+      "query": "Москва, ул.6-я Радиальная, д. 7/1 к 2",
+      "coordinates": [
+        37.6510228,
+        55.6037747
+      ],
+      "displayName": "6-я Радиальная улица, 7/1 к2, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Авиамоторная, д. 14": {
+      "query": "Москва, ул.Авиамоторная, д. 14",
+      "coordinates": [
+        37.7163595,
+        55.7522991
+      ],
+      "displayName": "Авиамоторная улица, 14, Москва, Москва",
+      "status": "precise",
+      "osmType": "house",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Автозаводская, д. 11": {
+      "query": "Москва, ул.Автозаводская, д. 11",
+      "coordinates": [
+        37.6577684,
+        55.7073446
+      ],
+      "displayName": "Автозаводская, Автозаводская улица, Москва, Москва",
+      "status": "approximate",
+      "osmType": "station",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Москва, ул.Академика Миллионщикова, д. 13 к 1": {
+      "query": "Москва, ул.Академика Миллионщикова, д. 13 к 1",
+      "coordinates": [
+        37.6548724,
+        55.6727009
+      ],
+      "displayName": "Терапевтический корпус и приёмное отделение, улица Академика Миллионщикова, 1 с2, Москва, Москва",
+      "status": "precise",
+      "osmType": "hospital",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Артюхиной, д. 16": {
+      "query": "Москва, ул.Артюхиной, д. 16",
+      "coordinates": [
+        37.7377998,
+        55.6984967
+      ],
+      "displayName": "улица Артюхиной, 16, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Артюхиной, д. 20А": {
+      "query": "Москва, ул.Артюхиной, д. 20А",
+      "coordinates": [
+        37.7365767,
+        55.6972845
+      ],
+      "displayName": "улица Артюхиной, 20А, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Артюхиной, д. 3": {
+      "query": "Москва, ул.Артюхиной, д. 3",
+      "coordinates": [
+        37.7378149,
+        55.7029289
+      ],
+      "displayName": "улица Артюхиной, 3, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Бирюлёвская, д. 39": {
+      "query": "Москва, ул.Бирюлёвская, д. 39",
+      "coordinates": [
+        37.6658771,
+        55.5881256
+      ],
+      "displayName": "Бирюлёвская улица, 39, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Бирюлёвская, д. 58 к 3": {
+      "query": "Москва, ул.Бирюлёвская, д. 58 к 3",
+      "coordinates": [
+        37.6690951,
+        55.582064
+      ],
+      "displayName": "Бирюлёвская улица, 58 к3, Москва, Москва",
+      "status": "precise",
+      "osmType": "yes",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Болотниковская, д. 9 к 2": {
+      "query": "Москва, ул.Болотниковская, д. 9 к 2",
+      "coordinates": [
+        37.5825886,
+        55.663631
+      ],
+      "displayName": "Школа № 1948 \"Лингвист-М\". Учебный корпус 6 и 7, Болотниковская улица, Москва, Москва",
+      "status": "approximate",
+      "osmType": "kindergarten",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Москва, ул.Большая Калитниковская, д. 38": {
+      "query": "Москва, ул.Большая Калитниковская, д. 38",
+      "coordinates": [
+        37.6862063,
+        55.7361675
+      ],
+      "displayName": "Большая Калитниковская улица, 38, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Большая Пионерская, д. 33 к 2": {
+      "query": "Москва, ул.Большая Пионерская, д. 33 к 2",
+      "coordinates": [
+        37.6351637,
+        55.7261963
+      ],
+      "displayName": "Большая Пионерская улица, 33 к2, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Большая Серпуховская, д. 31 к 6": {
+      "query": "Москва, ул.Большая Серпуховская, д. 31 к 6",
+      "coordinates": [
+        37.6286049,
+        55.7233901
+      ],
+      "displayName": "Большая Серпуховская улица, 31 к6, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Борисовские Пруды, д. 20 к 1": {
+      "query": "Москва, ул.Борисовские Пруды, д. 20 к 1",
+      "coordinates": [
+        37.7158779,
+        55.6355303
+      ],
+      "displayName": "улица Борисовские Пруды, Москва, Москва",
+      "status": "approximate",
+      "osmType": "secondary",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Москва, ул.Борисовские Пруды, д. 48 к 2": {
+      "query": "Москва, ул.Борисовские Пруды, д. 48 к 2",
+      "coordinates": [
+        37.7747995,
+        55.6418225
+      ],
+      "displayName": "улица Борисовские Пруды, 48 к2, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Боровая, д. 12": {
+      "query": "Москва, ул.Боровая, д. 12",
+      "coordinates": [
+        37.7147651,
+        55.770292
+      ],
+      "displayName": "Боровая улица, 12, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Боровая, д. 14": {
+      "query": "Москва, ул.Боровая, д. 14",
+      "coordinates": [
+        37.7156999,
+        55.7693914
+      ],
+      "displayName": "Боровая улица, 14, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Братеевская, д. 16 к 1": {
+      "query": "Москва, ул.Братеевская, д. 16 к 1",
+      "coordinates": [
+        37.7594212,
+        55.6327145
+      ],
+      "displayName": "Братеевская улица, Москва, Москва",
+      "status": "approximate",
+      "osmType": "tertiary",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Москва, ул.Братеевская, д. 18 к 1": {
+      "query": "Москва, ул.Братеевская, д. 18 к 1",
+      "coordinates": [
+        37.7594212,
+        55.6327145
+      ],
+      "displayName": "Братеевская улица, Москва, Москва",
+      "status": "approximate",
+      "osmType": "tertiary",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Москва, ул.Бронницкая, д. 12": {
+      "query": "Москва, ул.Бронницкая, д. 12",
+      "coordinates": [
+        37.759554,
+        55.7314152
+      ],
+      "displayName": "Бронницкая улица, 12, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Булатниковская, д. 4 к 1": {
+      "query": "Москва, ул.Булатниковская, д. 4 к 1",
+      "coordinates": [
+        37.6340094,
+        55.5811843
+      ],
+      "displayName": "Главный корпус ТЭЦ № 26, Булатниковская улица, Москва, Москва",
+      "status": "approximate",
+      "osmType": "bus_stop",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Москва, ул.Весёлая, д. 33 к 7": {
+      "query": "Москва, ул.Весёлая, д. 33 к 7",
+      "coordinates": [
+        37.6631328,
+        55.6235129
+      ],
+      "displayName": "Весёлая улица, 33 к7, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Винокурова, д. 12 к 4": {
+      "query": "Москва, ул.Винокурова, д. 12 к 4",
+      "coordinates": [
+        37.5883596,
+        55.6854662
+      ],
+      "displayName": "улица Винокурова, 12 к4, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Винокурова, д. 5/6 к 2": {
+      "query": "Москва, ул.Винокурова, д. 5/6 к 2",
+      "coordinates": [
+        37.5850112,
+        55.6898618
+      ],
+      "displayName": "улица Винокурова, 5/6 к2, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Восточная, д. 2 к 2": {
+      "query": "Москва, ул.Восточная, д. 2 к 2",
+      "coordinates": [
+        37.6606542,
+        55.7158529
+      ],
+      "displayName": "Восточная улица, Даниловский район, Москва, Центральный федеральный округ, 115280, Россия",
+      "status": "approximate",
+      "osmType": "secondary",
+      "matchQuality": "street_fallback",
+      "validated": true
+    },
+    "Москва, ул.Генерала Белова, д. 45 к 2": {
+      "query": "Москва, ул.Генерала Белова, д. 45 к 2",
+      "coordinates": [
+        37.7261342,
+        55.6072105
+      ],
+      "displayName": "улица Генерала Белова, 45 к2, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Городская, д. 9": {
+      "query": "Москва, ул.Городская, д. 9",
+      "coordinates": [
+        37.6568957,
+        55.7427302
+      ],
+      "displayName": "Городская усадьба Полежаевых и Зубовых, улица Александра Солженицына, 9 с1, Москва, Москва",
+      "status": "precise",
+      "osmType": "attraction",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Грайвороновская, д. 10 к 2": {
+      "query": "Москва, ул.Грайвороновская, д. 10 к 2",
+      "coordinates": [
+        37.7319259,
+        55.7183547
+      ],
+      "displayName": "Грайвороновская улица, 10 к2, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Дмитрия Ульянова, д. 27": {
+      "query": "Москва, ул.Дмитрия Ульянова, д. 27",
+      "coordinates": [
+        37.5809496,
+        55.6858472
+      ],
+      "displayName": "улица Дмитрия Ульянова, 27, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Домодедовская, д. 31": {
+      "query": "Москва, ул.Домодедовская, д. 31",
+      "coordinates": [
+        37.7161258,
+        55.6039003
+      ],
+      "displayName": "Домодедовская улица, 31, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Дубининская, д. 59 к 2": {
+      "query": "Москва, ул.Дубининская, д. 59 к 2",
+      "coordinates": [
+        37.6348001,
+        55.7191142
+      ],
+      "displayName": "Дубининская улица, 59, Москва, Москва",
+      "status": "precise",
+      "osmType": "yes",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Ереванская, д. 29": {
+      "query": "Москва, ул.Ереванская, д. 29",
+      "coordinates": [
+        37.6790583,
+        55.629584
+      ],
+      "displayName": "Ереванская улица, 29, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Зарайская, д. 51 к 2": {
+      "query": "Москва, ул.Зарайская, д. 51 к 2",
+      "coordinates": [
+        37.7666528,
+        55.7305904
+      ],
+      "displayName": "Школа № 777 имени Героя Советского Союза Е. В. Михайлова. Дошкольный корпус \"Радость\", Зарайская улица, Москва, Москва",
+      "status": "approximate",
+      "osmType": "kindergarten",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Москва, ул.Затонная, д. 11 к 3": {
+      "query": "Москва, ул.Затонная, д. 11 к 3",
+      "coordinates": [
+        37.6836589,
+        55.6783476
+      ],
+      "displayName": "ГБОУ школа № 1527 Корпус Сказка, Затонная улица, 8 к3, Москва, Москва",
+      "status": "precise",
+      "osmType": "kindergarten",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Затонная, д. 12 к 1": {
+      "query": "Москва, ул.Затонная, д. 12 к 1",
+      "coordinates": [
+        37.6836862,
+        55.6775382
+      ],
+      "displayName": "ГБОУ школа № 1527 Корпус Кораблик, Затонная улица, 10 к2, Москва, Москва",
+      "status": "precise",
+      "osmType": "kindergarten",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Зеленодольская, д. 28Б": {
+      "query": "Москва, ул.Зеленодольская, д. 28Б",
+      "coordinates": [
+        37.7708367,
+        55.7118436
+      ],
+      "displayName": "Зеленодольская улица, 28Б, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Земляной Вал, д. 24/30 стр. 1": {
+      "query": "Москва, ул.Земляной Вал, д. 24/30 стр. 1",
+      "coordinates": [
+        37.6571501,
+        55.7586892
+      ],
+      "displayName": "улица Земляной Вал, 24/30 с1, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Кантемировская, д. 5 к 2": {
+      "query": "Москва, ул.Кантемировская, д. 5 к 2",
+      "coordinates": [
+        37.6608994,
+        55.6418537
+      ],
+      "displayName": "Школа №2000 корпус №2, Кантемировская улица, 22 к5, Москва, Москва",
+      "status": "precise",
+      "osmType": "school",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Каховка, д. 7 к 1": {
+      "query": "Москва, ул.Каховка, д. 7 к 1",
+      "coordinates": [
+        37.5770805,
+        55.6525553
+      ],
+      "displayName": "Школа № 538 имени С.В. Гришина. Главный корпус школьного образования, улица Каховка, Москва, Москва",
+      "status": "approximate",
+      "osmType": "school",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Москва, ул.Керченская, д. 10 к 2": {
+      "query": "Москва, ул.Керченская, д. 10 к 2",
+      "coordinates": [
+        37.5816709,
+        55.6556242
+      ],
+      "displayName": "Керченская улица, 10 к2, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Керченская, д. 6 к 2": {
+      "query": "Москва, ул.Керченская, д. 6 к 2",
+      "coordinates": [
+        37.583089,
+        55.6572931
+      ],
+      "displayName": "Керченская улица, 6 к2, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Коломенская, д. 21": {
+      "query": "Москва, ул.Коломенская, д. 21",
+      "coordinates": [
+        37.6943031,
+        55.6777277
+      ],
+      "displayName": "Коломенская улица, 21, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Коломенская, д. 5": {
+      "query": "Москва, ул.Коломенская, д. 5",
+      "coordinates": [
+        37.7017312,
+        55.6825757
+      ],
+      "displayName": "Коломенская набережная, 5, Коломенская улица, Москва, Москва",
+      "status": "approximate",
+      "osmType": "bus_stop",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Москва, ул.Красноказарменная, д. 9Б стр. 1": {
+      "query": "Москва, ул.Красноказарменная, д. 9Б стр. 1",
+      "coordinates": [
+        37.6903596,
+        55.7603241
+      ],
+      "displayName": "Красноказарменная улица, Москва, Москва",
+      "status": "approximate",
+      "osmType": "secondary",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Москва, ул.Кустанайская, д. 8 к 1": {
+      "query": "Москва, ул.Кустанайская, д. 8 к 1",
+      "coordinates": [
+        37.7505444,
+        55.6186923
+      ],
+      "displayName": "На Кустанайской, Кустанайская улица, 8 к3, Москва, Москва",
+      "status": "precise",
+      "osmType": "pharmacy",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Кустанайская, д. 9 к 1": {
+      "query": "Москва, ул.Кустанайская, д. 9 к 1",
+      "coordinates": [
+        37.7543157,
+        55.6180751
+      ],
+      "displayName": "Кустанайская улица, 9 к1, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Луганская, д. 1": {
+      "query": "Москва, ул.Луганская, д. 1",
+      "coordinates": [
+        37.6632651,
+        55.6288439
+      ],
+      "displayName": "Луганская улица, Москва, Москва",
+      "status": "approximate",
+      "osmType": "secondary",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Москва, ул.Луганская, д. 3 к 1": {
+      "query": "Москва, ул.Луганская, д. 3 к 1",
+      "coordinates": [
+        37.669103,
+        55.6220073
+      ],
+      "displayName": "Луганская улица, район Царицыно, Москва, Центральный федеральный округ, 115541, Россия",
+      "status": "approximate",
+      "osmType": "secondary",
+      "matchQuality": "street_fallback",
+      "validated": true
+    },
+    "Москва, ул.Луганская, д. 4 к 1": {
+      "query": "Москва, ул.Луганская, д. 4 к 1",
+      "coordinates": [
+        37.669103,
+        55.6220073
+      ],
+      "displayName": "Луганская улица, район Царицыно, Москва, Центральный федеральный округ, 115541, Россия",
+      "status": "approximate",
+      "osmType": "secondary",
+      "matchQuality": "street_fallback",
+      "validated": true
+    },
+    "Москва, ул.Люсиновская, д. 4": {
+      "query": "Москва, ул.Люсиновская, д. 4",
+      "coordinates": [
+        37.6224055,
+        55.7273725
+      ],
+      "displayName": "Люсиновская улица, 4, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Малышева, д. 13": {
+      "query": "Москва, ул.Малышева, д. 13",
+      "coordinates": [
+        37.7438382,
+        55.6980379
+      ],
+      "displayName": "улица Малышева, 13, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Маршала Захарова, д. 18 к 1": {
+      "query": "Москва, ул.Маршала Захарова, д. 18 к 1",
+      "coordinates": [
+        37.6963197,
+        55.6207826
+      ],
+      "displayName": "улица Маршала Захарова, 18 к1 с2, Москва, Москва",
+      "status": "precise",
+      "osmType": "yes",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Маршала Чуйкова, д. 9 к 2": {
+      "query": "Москва, ул.Маршала Чуйкова, д. 9 к 2",
+      "coordinates": [
+        37.774313,
+        55.7140048
+      ],
+      "displayName": "Школа на Юго-Востоке имени Маршала В.И. Чуйкова. Дошкольный корпус, улица Фёдора Полетаева, Москва, Москва",
+      "status": "approximate",
+      "osmType": "school",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Москва, ул.Машкова, д. 13 стр. 1": {
+      "query": "Москва, ул.Машкова, д. 13 стр. 1",
+      "coordinates": [
+        37.6517359,
+        55.7637776
+      ],
+      "displayName": "улица Машкова, Москва, Москва",
+      "status": "approximate",
+      "osmType": "residential",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Москва, ул.Медынская, д. 5 к 1": {
+      "query": "Москва, ул.Медынская, д. 5 к 1",
+      "coordinates": [
+        37.6449954,
+        55.5854252
+      ],
+      "displayName": "Школа № 667. Корпус дошкольного образования №7, Медынская улица, Москва, Москва",
+      "status": "approximate",
+      "osmType": "kindergarten",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Москва, ул.Международная, д. 28 стр. 1": {
+      "query": "Москва, ул.Международная, д. 28 стр. 1",
+      "coordinates": [
+        37.6893076,
+        55.745199
+      ],
+      "displayName": "Москва-Товарная, Международная улица, Таганский район, Москва, Центральный федеральный округ, 109544, Россия",
+      "status": "approximate",
+      "osmType": "station",
+      "matchQuality": "street_fallback",
+      "validated": true
+    },
+    "Москва, ул.Михайлова, д. 14": {
+      "query": "Москва, ул.Михайлова, д. 14",
+      "coordinates": [
+        37.7659603,
+        55.7270299
+      ],
+      "displayName": "улица Михайлова, 14, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Москворечье, д. 4 к 6": {
+      "query": "Москва, ул.Москворечье, д. 4 к 6",
+      "coordinates": [
+        37.642715,
+        55.6517149
+      ],
+      "displayName": "улица Москворечье, район Москворечье-Сабурово, Москва, Центральный федеральный округ, 115478, Россия",
+      "status": "approximate",
+      "osmType": "secondary",
+      "matchQuality": "street_fallback",
+      "validated": true
+    },
+    "Москва, ул.Мусы Джалиля, д. 9 к 1": {
+      "query": "Москва, ул.Мусы Джалиля, д. 9 к 1",
+      "coordinates": [
+        37.7437967,
+        55.6274499
+      ],
+      "displayName": "улица Мусы Джалиля, 9 к1, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Нагорная, д. 44 к 2": {
+      "query": "Москва, ул.Нагорная, д. 44 к 2",
+      "coordinates": [
+        37.4328264,
+        55.5093825
+      ],
+      "displayName": "Нагорная ул, 2, Лаптево, Москва",
+      "status": "precise",
+      "osmType": "yes",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Нижегородская, д. 25": {
+      "query": "Москва, ул.Нижегородская, д. 25",
+      "coordinates": [
+        37.6944616,
+        55.7374783
+      ],
+      "displayName": "Нижегородская улица, 25, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Нижегородская, д. 61": {
+      "query": "Москва, ул.Нижегородская, д. 61",
+      "coordinates": [
+        37.7178025,
+        55.732503
+      ],
+      "displayName": "Нижегородская улица, 61, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Нижегородская, д. 63": {
+      "query": "Москва, ул.Нижегородская, д. 63",
+      "coordinates": [
+        37.7186987,
+        55.7324552
+      ],
+      "displayName": "Нижегородская улица, 63, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Новорогожская, д. 10": {
+      "query": "Москва, ул.Новорогожская, д. 10",
+      "coordinates": [
+        37.6832489,
+        55.740048
+      ],
+      "displayName": "Новорогожская улица, 10, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Новорогожская, д. 20": {
+      "query": "Москва, ул.Новорогожская, д. 20",
+      "coordinates": [
+        37.6879408,
+        55.7400694
+      ],
+      "displayName": "Бристоль, Новорогожская улица, 20, Москва, Москва",
+      "status": "precise",
+      "osmType": "alcohol",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Новорогожская, д. 8": {
+      "query": "Москва, ул.Новорогожская, д. 8",
+      "coordinates": [
+        37.6845796,
+        55.740895
+      ],
+      "displayName": "Новорогожская улица, 8, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Окская, д. 32": {
+      "query": "Москва, ул.Окская, д. 32",
+      "coordinates": [
+        37.7695221,
+        55.7144711
+      ],
+      "displayName": "Окская улица, 32, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Окская, д. 48/2": {
+      "query": "Москва, ул.Окская, д. 48/2",
+      "coordinates": [
+        37.7794008,
+        55.7176399
+      ],
+      "displayName": "Окская улица, 48/2, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Окская, д. 6 к 1": {
+      "query": "Москва, ул.Окская, д. 6 к 1",
+      "coordinates": [
+        37.7817628,
+        55.718342
+      ],
+      "displayName": "Окская, Окская улица, Москва, Москва",
+      "status": "approximate",
+      "osmType": "station",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Москва, ул.Паперника, д. 18": {
+      "query": "Москва, ул.Паперника, д. 18",
+      "coordinates": [
+        37.7935117,
+        55.7213231
+      ],
+      "displayName": "улица Паперника, 18, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Паперника, д. 19": {
+      "query": "Москва, ул.Паперника, д. 19",
+      "coordinates": [
+        37.7907198,
+        55.7217574
+      ],
+      "displayName": "улица Паперника, 19, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Паромная, д. 9 к 1": {
+      "query": "Москва, ул.Паромная, д. 9 к 1",
+      "coordinates": [
+        37.7630982,
+        55.6369125
+      ],
+      "displayName": "Паромная улица, 9 к1, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Плющиха, д. 42": {
+      "query": "Москва, ул.Плющиха, д. 42",
+      "coordinates": [
+        37.5766111,
+        55.7416406
+      ],
+      "displayName": "Дом Бикини, улица Плющиха, 42, Москва, Москва",
+      "status": "precise",
+      "osmType": "clothes",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Профсоюзная, д. 8 к 2": {
+      "query": "Москва, ул.Профсоюзная, д. 8 к 2",
+      "coordinates": [
+        37.504068,
+        55.6269207
+      ],
+      "displayName": "Школа № 1507. Корпус школьного образования, Профсоюзная улица (дублёр), Москва, Москва",
+      "status": "approximate",
+      "osmType": "school",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Москва, ул.Ремизова, д. 15 к 2": {
+      "query": "Москва, ул.Ремизова, д. 15 к 2",
+      "coordinates": [
+        37.6040072,
+        55.6757919
+      ],
+      "displayName": "улица Ремизова, 15 к2, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Рогожский Вал, д. 2/50": {
+      "query": "Москва, ул.Рогожский Вал, д. 2/50",
+      "coordinates": [
+        37.6777676,
+        55.7456189
+      ],
+      "displayName": "улица Рогожский Вал, 2/50, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Садовники, д. 10 к 1": {
+      "query": "Москва, ул.Садовники, д. 10 к 1",
+      "coordinates": [
+        37.6550138,
+        55.6752361
+      ],
+      "displayName": "улица Садовники, район Нагатино-Садовники, Москва, Центральный федеральный округ, 115487, Россия",
+      "status": "approximate",
+      "osmType": "tertiary",
+      "matchQuality": "street_fallback",
+      "validated": true
+    },
+    "Москва, ул.Саратовская, д. 14/1": {
+      "query": "Москва, ул.Саратовская, д. 14/1",
+      "coordinates": [
+        37.7378743,
+        55.7145577
+      ],
+      "displayName": "Саратовская улица, 14/1, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Саратовская, д. 16": {
+      "query": "Москва, ул.Саратовская, д. 16",
+      "coordinates": [
+        37.7401969,
+        55.7150007
+      ],
+      "displayName": "Саратовская улица, 16, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Севанская, д. 15 к 1": {
+      "query": "Москва, ул.Севанская, д. 15 к 1",
+      "coordinates": [
+        37.6661872,
+        55.6185745
+      ],
+      "displayName": "Севанская улица, Москва, Москва",
+      "status": "approximate",
+      "osmType": "tertiary",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Москва, ул.Смирновская, д. 6": {
+      "query": "Москва, ул.Смирновская, д. 6",
+      "coordinates": [
+        37.7085631,
+        55.7367411
+      ],
+      "displayName": "Смирновская улица, 6, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Сторожевая, д. 31": {
+      "query": "Москва, ул.Сторожевая, д. 31",
+      "coordinates": [
+        37.7168314,
+        55.7647986
+      ],
+      "displayName": "Сторожевая улица, 31, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Стройковская, д. 8": {
+      "query": "Москва, ул.Стройковская, д. 8",
+      "coordinates": [
+        37.6737801,
+        55.7347571
+      ],
+      "displayName": "Стройковская улица, 8, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Судостроительная, д. 27 к 2": {
+      "query": "Москва, ул.Судостроительная, д. 27 к 2",
+      "coordinates": [
+        37.6713145,
+        55.6814327
+      ],
+      "displayName": "ГБОУ школа № 1527 Корпус Солнышко, Судостроительная улица, 11 к2, Москва, Москва",
+      "status": "precise",
+      "osmType": "kindergarten",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Судостроительная, д. 31 к 3": {
+      "query": "Москва, ул.Судостроительная, д. 31 к 3",
+      "coordinates": [
+        37.6815298,
+        55.6842343
+      ],
+      "displayName": "ГБОУ школа № 463 Корпус №2, Судостроительная улица, 31 к2, Москва, Москва",
+      "status": "precise",
+      "osmType": "school",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Судостроительная, д. 36": {
+      "query": "Москва, ул.Судостроительная, д. 36",
+      "coordinates": [
+        37.6875838,
+        55.6841931
+      ],
+      "displayName": "Судостроительная улица, 36, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Талалихина, д. 16": {
+      "query": "Москва, ул.Талалихина, д. 16",
+      "coordinates": [
+        37.676817,
+        55.7355002
+      ],
+      "displayName": "улица Талалихина, 16, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Талалихина, д. 2/1 к 4": {
+      "query": "Москва, ул.Талалихина, д. 2/1 к 4",
+      "coordinates": [
+        37.6733454,
+        55.7369925
+      ],
+      "displayName": "улица Талалихина, 2/1 к4, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Ташкентская, д. 16к2": {
+      "query": "Москва, ул.Ташкентская, д. 16к2",
+      "coordinates": [
+        37.8176041,
+        55.7063245
+      ],
+      "displayName": "Ташкентская улица, Москва, Москва",
+      "status": "approximate",
+      "osmType": "secondary",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Москва, ул.Трофимова, д. 24 к 2": {
+      "query": "Москва, ул.Трофимова, д. 24 к 2",
+      "coordinates": [
+        37.6762548,
+        55.7017705
+      ],
+      "displayName": "улица Трофимова, 24 к2 с3, Москва, Москва",
+      "status": "precise",
+      "osmType": "service",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Трофимова, д. 4А": {
+      "query": "Москва, ул.Трофимова, д. 4А",
+      "coordinates": [
+        37.6614474,
+        55.7011084
+      ],
+      "displayName": "улица Трофимова, 4А, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Усачёва, д. 25": {
+      "query": "Москва, ул.Усачёва, д. 25",
+      "coordinates": [
+        37.5651309,
+        55.7249586
+      ],
+      "displayName": "Усачёва улица, 25, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Усачёва, д. 29 к 1": {
+      "query": "Москва, ул.Усачёва, д. 29 к 1",
+      "coordinates": [
+        37.5599096,
+        55.7228202
+      ],
+      "displayName": "Усачёва улица, Москва, Москва",
+      "status": "approximate",
+      "osmType": "tertiary",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Москва, ул.Ферганская, д. 28/7": {
+      "query": "Москва, ул.Ферганская, д. 28/7",
+      "coordinates": [
+        37.8250104,
+        55.7010782
+      ],
+      "displayName": "Ферганская улица, 28/7, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Фёдора Полетаева, д. 2 к 6": {
+      "query": "Москва, ул.Фёдора Полетаева, д. 2 к 6",
+      "coordinates": [
+        37.7752573,
+        55.7143976
+      ],
+      "displayName": "улица Фёдора Полетаева, 6 с2, Москва, Москва",
+      "status": "precise",
+      "osmType": "service",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Херсонская, д. 18": {
+      "query": "Москва, ул.Херсонская, д. 18",
+      "coordinates": [
+        37.5680436,
+        55.6522074
+      ],
+      "displayName": "Ozon, Херсонская улица, 18, Москва, Москва",
+      "status": "precise",
+      "osmType": "outpost",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Чистова, д. 12": {
+      "query": "Москва, ул.Чистова, д. 12",
+      "coordinates": [
+        37.741942,
+        55.696506
+      ],
+      "displayName": "улица Чистова, 12, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Чистопольская, д. 2 к 2": {
+      "query": "Москва, ул.Чистопольская, д. 2 к 2",
+      "coordinates": [
+        37.7570574,
+        55.7307652
+      ],
+      "displayName": "Чистопольская улица, Нижегородский район, Москва, Центральный федеральный округ, 109202, Россия",
+      "status": "approximate",
+      "osmType": "residential",
+      "matchQuality": "street_fallback",
+      "validated": true
+    },
+    "Москва, ул.Шверника, д. 12/2 к 3": {
+      "query": "Москва, ул.Шверника, д. 12/2 к 3",
+      "coordinates": [
+        37.5882121,
+        55.6914016
+      ],
+      "displayName": "Надежда Фарм, ул. Шверника, 12/2, Москва, Москва",
+      "status": "precise",
+      "osmType": "pharmacy",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Шверника, д. 14/1 к 2": {
+      "query": "Москва, ул.Шверника, д. 14/1 к 2",
+      "coordinates": [
+        37.5882121,
+        55.6914016
+      ],
+      "displayName": "Надежда Фарм, ул. Шверника, 12/2, Москва, Москва",
+      "status": "precise",
+      "osmType": "pharmacy",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Шверника, д. 18 к 2": {
+      "query": "Москва, ул.Шверника, д. 18 к 2",
+      "coordinates": [
+        37.5882121,
+        55.6914016
+      ],
+      "displayName": "Надежда Фарм, ул. Шверника, 12/2, Москва, Москва",
+      "status": "precise",
+      "osmType": "pharmacy",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Шверника, д. 3": {
+      "query": "Москва, ул.Шверника, д. 3",
+      "coordinates": [
+        37.5818461,
+        55.694198
+      ],
+      "displayName": "улица Шверника, 3, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Шверника, д. 5 к 2": {
+      "query": "Москва, ул.Шверника, д. 5 к 2",
+      "coordinates": [
+        37.5882121,
+        55.6914016
+      ],
+      "displayName": "Надежда Фарм, ул. Шверника, 12/2, Москва, Москва",
+      "status": "precise",
+      "osmType": "pharmacy",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Шипиловская, д. 38": {
+      "query": "Москва, ул.Шипиловская, д. 38",
+      "coordinates": [
+        37.7241969,
+        55.6205783
+      ],
+      "displayName": "Kmfilm production, Шипиловская улица, 38, Москва, Москва",
+      "status": "precise",
+      "osmType": "studio",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ул.Юных Ленинцев, д. 84": {
+      "query": "Москва, ул.Юных Ленинцев, д. 84",
+      "coordinates": [
+        37.7786035,
+        55.6981178
+      ],
+      "displayName": "улица Юных Ленинцев, 84, Москва, Москва",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва, ш.Каширское, д. 136": {
+      "query": "Москва, ш.Каширское, д. 136",
+      "coordinates": [
+        37.8119554,
+        55.3140398
+      ],
+      "displayName": "Москва-Юг, Каширское шоссе, Шебанцево, Домодедово, городской округ Домодедово, Московская область, Центральный федеральный округ, 142046, Россия",
+      "status": "approximate",
+      "osmType": "cafe",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Москва, ш.Каширское, д. 94 к 1": {
+      "query": "Москва, ш.Каширское, д. 94 к 1",
+      "coordinates": [
+        37.6645822,
+        55.649755
+      ],
+      "displayName": "Главный корпус, Каширское шоссе, 31, Москва, Москва",
+      "status": "precise",
+      "osmType": "university",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Москва,проезд Симферопольский, д.7": {
+      "query": "Москва,проезд Симферопольский, д.7",
+      "coordinates": [
+        37.6158385,
+        55.6647568
+      ],
+      "displayName": "Симферопольский проезд, 7, Москва, Москва",
+      "status": "precise",
+      "osmType": "yes",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Московская область, г. Кашира Кржижановского ул. д. 5/1": {
+      "query": "Московская область, г. Кашира Кржижановского ул. д. 5/1",
+      "coordinates": [
+        38.2404648,
+        54.8404598
+      ],
+      "displayName": "улица Кржижановского, 5 к1, Кашира, Московская область",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Московская область, г. Кашира Кржижановского ул. д. 5/2": {
+      "query": "Московская область, г. Кашира Кржижановского ул. д. 5/2",
+      "coordinates": [
+        38.2420016,
+        54.8406569
+      ],
+      "displayName": "улица Кржижановского, 5 к2, Кашира, Московская область",
+      "status": "precise",
+      "osmType": "yes",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Московская область, г. Кашира Кржижановского ул. д. 5/3": {
+      "query": "Московская область, г. Кашира Кржижановского ул. д. 5/3",
+      "coordinates": [
+        38.242988,
+        54.8408174
+      ],
+      "displayName": "улица Кржижановского, 5 к3, Кашира, Московская область",
+      "status": "precise",
+      "osmType": "yes",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Московская область, г. Кашира Кржижановского ул. д. 7к2": {
+      "query": "Московская область, г. Кашира Кржижановского ул. д. 7к2",
+      "coordinates": [
+        38.239367,
+        54.8398433
+      ],
+      "displayName": "улица Кржижановского, Кашира, Московская область",
+      "status": "approximate",
+      "osmType": "tertiary",
+      "validated": true,
+      "matchQuality": "street_or_object"
+    },
+    "Московская область, г. Кашира Центральная ул. д. 19": {
+      "query": "Московская область, г. Кашира Центральная ул. д. 19",
+      "coordinates": [
+        38.3666348,
+        54.6918358
+      ],
+      "displayName": "Центральная улица, 19, Московская область",
+      "status": "precise",
+      "osmType": "yes",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Московская область, г. Кашира Центральная ул. д. 21": {
+      "query": "Московская область, г. Кашира Центральная ул. д. 21",
+      "coordinates": [
+        38.2397671,
+        54.8421235
+      ],
+      "displayName": "Центральная улица, 21, Кашира, Московская область",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Московская область, г. Ступино Андропова ул. д. 33": {
+      "query": "Московская область, г. Ступино Андропова ул. д. 33",
+      "coordinates": [
+        38.0935711,
+        54.8854951
+      ],
+      "displayName": "улица Андропова, 9Г, Ступино, Московская область",
+      "status": "precise",
+      "osmType": "detached",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Московская область, г. Ступино Андропова ул. д. 37": {
+      "query": "Московская область, г. Ступино Андропова ул. д. 37",
+      "coordinates": [
+        38.0935711,
+        54.8854951
+      ],
+      "displayName": "улица Андропова, 9Г, Ступино, Московская область",
+      "status": "precise",
+      "osmType": "detached",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "Ступино, ул.Калинина, д. 34": {
+      "query": "Ступино, ул.Калинина, д. 34",
+      "coordinates": [
+        38.0692054,
+        54.8917937
+      ],
+      "displayName": "улица Калинина, 34, Ступино, Московская область",
+      "status": "precise",
+      "osmType": "apartments",
+      "validated": true,
+      "matchQuality": "house"
+    },
+    "обл.Московская область, г.Домодедово, пгт.Востряково-1, ул.Жуковского, д. 14/18": {
+      "query": "обл.Московская область, г.Домодедово, пгт.Востряково-1, ул.Жуковского, д. 14/18",
+      "coordinates": [
+        37.8409177,
+        55.4122673
+      ],
+      "displayName": "улица Жуковского, 14/18 с1, Домодедово, Московская область",
+      "status": "precise",
+      "osmType": "yes",
+      "validated": true,
+      "matchQuality": "house"
+    }
+  },
+  "generatedAt": "2026-09-17T16:52:25.848Z",
+  "uniqueAddresses": 198
+}
