@@ -51,8 +51,11 @@ export default defineConfig(async () => {
   const { cloudflare } = await import("@cloudflare/vite-plugin");
 
   return {
+    envPrefix: ["VITE_", "NEXT_PUBLIC_"],
     server: {
-      ...(managedLinux ? { host: "0.0.0.0", allowedHosts: ["terminal.local"] } : {}),
+      // Windows Chrome resolves localhost to IPv4; Vite's default is [::1] only.
+      host: managedLinux ? "0.0.0.0" : "127.0.0.1",
+      ...(managedLinux ? { allowedHosts: ["terminal.local"] } : {}),
       ...(isCodexSeatbeltSandbox ? { watch: { useFsEvents: false, usePolling: true } } : {}),
     },
     plugins: [

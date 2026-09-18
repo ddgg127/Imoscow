@@ -39,7 +39,7 @@ export interface GeocodingProvider {
 export class BackendRoutingProvider implements RoutingProvider {
   readonly id: "osrm" | "yandex";
 
-  constructor(id: "osrm" | "yandex", private readonly baseUrl = "/api/routing") {
+  constructor(id: "osrm" | "yandex", private readonly baseUrl = "/api/routing", private readonly apiKey = "") {
     this.id = id;
   }
 
@@ -47,7 +47,7 @@ export class BackendRoutingProvider implements RoutingProvider {
     const response = await fetch(this.baseUrl, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ provider: this.id, ...request }),
+      body: JSON.stringify({ provider: this.id, apiKey: this.apiKey || undefined, ...request }),
     });
     if (!response.ok) throw new Error("Не удалось построить маршрут");
     return response.json() as Promise<RouteResult>;
@@ -67,12 +67,14 @@ export class BackendRoutingProvider implements RoutingProvider {
 export class BackendGeocodingProvider implements GeocodingProvider {
   readonly id: "nominatim" | "yandex";
 
-  constructor(id: "nominatim" | "yandex", private readonly baseUrl = "/api/geocode") {
+  constructor(id: "nominatim" | "yandex", private readonly baseUrl = "/api/geocode", private readonly apiKey = "") {
     this.id = id;
   }
 
   async geocode(address: string): Promise<Coordinate | null> {
-    const response = await fetch(`${this.baseUrl}?q=${encodeURIComponent(address)}`);
+    const params = new URLSearchParams({ q: address, provider: this.id });
+    if (this.apiKey) params.set("apikey", this.apiKey);
+    const response = await fetch(`${this.baseUrl}?${params}`);
     if (response.status === 404) return null;
     if (!response.ok) throw new Error("Не удалось определить координаты адреса");
     const data = await response.json() as { coordinates: Coordinate };
