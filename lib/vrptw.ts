@@ -16,7 +16,7 @@ export type RouteStop = { jobId: string; arrival: number; start: number; end: nu
 export type RoutePlan = { engineerId: string; stops: RouteStop[]; distanceKm: number; durationMinutes: number; load: number };
 export type PlanMetrics = { assigned: number; total: number; unassigned: number; distanceKm: number; slaPercent: number; late: number; utilization: number };
 export type ZoneMetric = { name: Region; jobs: number; assigned: number; sla: number; distance: number; baselineDistance: number; engineers: number };
-export type OptimizationResult = { jobs: Job[]; routes: RoutePlan[]; metrics: PlanMetrics; baseline: PlanMetrics; zones: ZoneMetric[]; runtimeMs: number };
+export type OptimizationResult = { jobs: Job[]; routes: RoutePlan[]; baselineRoutes: RoutePlan[]; metrics: PlanMetrics; baseline: PlanMetrics; zones: ZoneMetric[]; runtimeMs: number };
 export type TravelMatrix = {
   distanceKm: (a: Coordinate, b: Coordinate) => number;
   durationMin: (a: Coordinate, b: Coordinate) => number;
@@ -223,23 +223,26 @@ function metricsFrom(engineers: Engineer[], jobs: Job[], routes: RoutePlan[]): P
   return { assigned, total: jobs.length, unassigned: jobs.length - assigned, distanceKm: distance, slaPercent: assigned ? Math.round((assigned - late) / assigned * 1000) / 10 : 0, late, utilization: Math.round(utilization) };
 }
 
+function baselineJobsFor(engineer: Engineer, jobs: Job[]) {
+  return jobs.filter(job => job.baselineEngineerId === engineer.id).sort((a, b) => a.windowStart - b.windowStart || a.windowEnd - b.windowEnd);
+}
+
 function baselinePlan(engineers: Engineer[], jobs: Job[], speedKmh: number, travel?: TravelMatrix) {
-  const routes = engineers.map(engineer => {
-    const assigned = jobs.filter(job => job.baselineEngineerId === engineer.id).sort((a, b) => a.windowStart - b.windowStart || a.windowEnd - b.windowEnd);
-    return simulate(engineer, assigned, false, speedKmh, travel)!;
-  });
+  const routes = engineers.map(engineer => simulate(engineer, baselineJobsFor(engineer, jobs), false, speedKmh, travel)!).filter(route => route.stops.length);
   return { routes, metrics: metricsFrom(engineers, jobs, routes) };
 }
 
-export function idleOptimization(engineers: Engineer[], jobs: Job[], speedKmh = SPEED_KMH): OptimizationResult {
-  const baseline = baselinePlan(engineers, jobs, speedKmh);
+export function idleOptimization(engineers: Engineer[], jobs: Job[], speedKmh = SPEED_KMH, travel?: TravelMatrix): OptimizationResult {
+  const baseline = travel
+    ? baselinePlan(engineers, jobs, speedKmh, travel)
+    : { routes: [] as RoutePlan[], metrics: { assigned: 0, total: jobs.length, unassigned: jobs.length, distanceKm: 0, slaPercent: 0, late: 0, utilization: 0 } };
   const zones = regions.map(name => {
     const zoneJobs = jobs.filter(job => job.region === name);
     const ids = new Set(engineers.filter(engineer => engineer.region === name).map(engineer => engineer.id));
     const baseRoutes = baseline.routes.filter(route => ids.has(route.engineerId));
     return { name, jobs: zoneJobs.length, assigned: 0, sla: 0, distance: 0, baselineDistance: baseRoutes.reduce((sum, route) => sum + route.distanceKm, 0), engineers: ids.size };
   });
-  return { jobs: jobs.map(job => ({ ...job })), routes: [], metrics: { assigned: 0, total: jobs.length, unassigned: jobs.length, distanceKm: 0, slaPercent: 0, late: 0, utilization: 0 }, baseline: baseline.metrics, zones, runtimeMs: 0 };
+  return { jobs: jobs.map(job => ({ ...job })), routes: [], baselineRoutes: baseline.routes, metrics: { assigned: 0, total: jobs.length, unassigned: jobs.length, distanceKm: 0, slaPercent: 0, late: 0, utilization: 0 }, baseline: baseline.metrics, zones, runtimeMs: 0 };
 }
 
 function hashSeed(jobs: Job[], engineers: Engineer[]) {
@@ -498,7 +501,7 @@ function finish(engineers: Engineer[], inputJobs: Job[], jobs: Job[], assignment
     const onTime = zoneRoutes.reduce((sum, route) => sum + route.stops.filter(stop => stop.onTime).length, 0);
     return { name, jobs: zoneJobs.length, assigned, sla: assigned ? Math.round(onTime / assigned * 100) : 0, distance: zoneRoutes.reduce((sum, route) => sum + route.distanceKm, 0), baselineDistance: baseRoutes.reduce((sum, route) => sum + route.distanceKm, 0), engineers: [...ids].length };
   });
-  return { jobs: resultJobs, routes, metrics, baseline: baseline.metrics, zones, runtimeMs: Math.round((performance.now() - started) * 10) / 10 };
+  return { jobs: resultJobs, routes, baselineRoutes: baseline.routes, metrics, baseline: baseline.metrics, zones, runtimeMs: Math.round((performance.now() - started) * 10) / 10 };
 }
 
 export function optimizeVrptw(engineers: Engineer[], inputJobs: Job[], options: OptimizeOptions = {}): OptimizationResult {

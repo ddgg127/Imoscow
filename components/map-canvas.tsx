@@ -18,11 +18,14 @@ const OSM_RASTER_STYLE = {
 const emptyLines: GeoJSON.FeatureCollection<GeoJSON.LineString> = { type: "FeatureCollection", features: [] };
 
 export function routeCoordinates(engineer: Engineer, list: Job[], baseline = false, plan?: RoutePlan | null) {
-  if (!baseline && plan?.stops.length) {
+  if (plan?.stops.length) {
     const byId = new Map(list.map(job => [job.id, job]));
     return [engineer.start, ...plan.stops.map(stop => byId.get(stop.jobId)?.coordinates).filter((point): point is Coordinate => Boolean(point))];
   }
-  return [engineer.start, ...list.filter(job => (baseline ? job.baselineEngineerId : job.engineerId) === engineer.id).sort((a, b) => a.windowStart - b.windowStart).map(job => job.coordinates)];
+  const assigned = list
+    .filter(job => (baseline ? job.baselineEngineerId : job.engineerId) === engineer.id)
+    .sort((a, b) => a.windowStart - b.windowStart || a.windowEnd - b.windowEnd);
+  return [engineer.start, ...assigned.map(job => job.coordinates)];
 }
 
 function lineLengthKm(coords: Coordinate[]) {
@@ -140,10 +143,67 @@ function setLineSource(map: MapLibreMap, id: string, data: GeoJSON.FeatureCollec
   (map.getSource(id) as { setData: (data: GeoJSON.FeatureCollection) => void } | undefined)?.setData(data);
 }
 
-function useRoadRoutes(routingEnabled: boolean, visibleEngineers: Engineer[], visibleJobs: Job[], routes: RoutePlan[], providerId: "osrm" | "yandex", apiKey: string, onRoutingState: (state: RoutingState) => void) {
+function looksLikeRoad(coords: Coordinate[], waypoints: Coordinate[]) {
+  if (coords.length < 2) return false;
+  return waypoints.length <= 2 ? coords.length >= 2 : coords.length > waypoints.length;
+}
+
+async function roadLine(waypoints: Coordinate[], provider: BackendRoutingProvider): Promise<[Coordinate[], boolean]> {
+  if (waypoints.length < 2) return [waypoints, false];
+  const line: Coordinate[] = [];
+  let failed = false;
+  for (let i = 0; i < waypoints.length - 1; i++) {
+    const pair = [waypoints[i], waypoints[i + 1]];
+    try {
+      const result = await provider.buildRoute({ points: pair, mode: "driving" });
+      const coords = result.geometry.coordinates as Coordinate[];
+      if (result.provider === "fallback" || !looksLikeRoad(coords, pair)) {
+        failed = true;
+        continue;
+      }
+      if (line.length) line.push(...coords.slice(1));
+      else line.push(...coords);
+    } catch {
+      failed = true;
+    }
+  }
+  if (looksLikeRoad(line, waypoints)) return [line, failed];
+  return [waypoints, true];
+}
+
+async function fetchRoadLines(engineers: Engineer[], jobs: Job[], plans: Map<string, RoutePlan>, baseline: boolean, provider: BackendRoutingProvider, cancelled: () => boolean) {
+  const results: Array<readonly [string, Coordinate[], boolean]> = [];
+  for (let offset = 0; offset < engineers.length; offset += 3) {
+    const batch = await Promise.all(engineers.slice(offset, offset + 3).map(async engineer => {
+      const waypoints = routeCoordinates(engineer, jobs, baseline, plans.get(engineer.id));
+      if (waypoints.length < 2) return [engineer.id, waypoints, false] as const;
+      const [line, failed] = await roadLine(waypoints, provider);
+      return [engineer.id, line, failed] as const;
+    }));
+    results.push(...batch);
+    if (cancelled()) break;
+  }
+  return results;
+}
+
+function useRoadRoutes(
+  routingEnabled: boolean,
+  compare: boolean,
+  visibleEngineers: Engineer[],
+  visibleJobs: Job[],
+  routes: RoutePlan[],
+  baselineEngineers: Engineer[],
+  baselineJobs: Job[],
+  baselineRoutes: RoutePlan[],
+  providerId: "osrm" | "yandex",
+  apiKey: string,
+  onRoutingState: (state: RoutingState) => void,
+) {
   const [roadRoutes, setRoadRoutes] = useState<Record<string, Coordinate[]>>({});
+  const [baselineRoads, setBaselineRoads] = useState<Record<string, Coordinate[]>>({});
   const [routeStatus, setRouteStatus] = useState<RoutingState>(routingEnabled ? "loading" : "idle");
   const planByEngineer = useMemo(() => new Map(routes.map(route => [route.engineerId, route])), [routes]);
+  const baselineByEngineer = useMemo(() => new Map(baselineRoutes.map(route => [route.engineerId, route])), [baselineRoutes]);
   useEffect(() => {
     if (!routingEnabled) {
       setRoadRoutes({});
@@ -156,32 +216,7 @@ function useRoadRoutes(routingEnabled: boolean, visibleEngineers: Engineer[], vi
     onRoutingState("loading");
     const provider = new BackendRoutingProvider(providerId, "/api/routing", apiKey);
     void (async () => {
-      const results: Array<readonly [string, Coordinate[], boolean]> = [];
-      for (let offset = 0; offset < visibleEngineers.length; offset += 3) {
-        const batch = await Promise.all(visibleEngineers.slice(offset, offset + 3).map(async engineer => {
-          const waypoints = routeCoordinates(engineer, visibleJobs, false, planByEngineer.get(engineer.id));
-          if (waypoints.length < 2) return [engineer.id, waypoints, false] as const;
-          const line: Coordinate[] = [];
-          let failed = false;
-          for (let i = 0; i < waypoints.length - 1; i++) {
-            try {
-              const result = await provider.buildRoute({ points: [waypoints[i], waypoints[i + 1]], mode: "driving" });
-              const coords = result.geometry.coordinates as Coordinate[];
-              if (result.provider === "fallback" || coords.length < 2) {
-                failed = true;
-                continue;
-              }
-              if (line.length) line.push(...coords.slice(1));
-              else line.push(...coords);
-            } catch {
-              failed = true;
-            }
-          }
-          return [engineer.id, line.length >= 2 ? line : waypoints, failed || line.length < 2] as const;
-        }));
-        results.push(...batch);
-        if (cancelled) return;
-      }
+      const results = await fetchRoadLines(visibleEngineers, visibleJobs, planByEngineer, false, provider, () => cancelled);
       if (cancelled) return;
       const state: RoutingState = results.some(item => item[2]) ? "fallback" : "ready";
       setRoadRoutes(Object.fromEntries(results.map(([id, coords]) => [id, coords])));
@@ -190,7 +225,21 @@ function useRoadRoutes(routingEnabled: boolean, visibleEngineers: Engineer[], vi
     })();
     return () => { cancelled = true; };
   }, [routingEnabled, visibleEngineers, visibleJobs, planByEngineer, providerId, apiKey, onRoutingState]);
-  return { roadRoutes, routeStatus };
+  useEffect(() => {
+    if (!routingEnabled || !compare) {
+      setBaselineRoads({});
+      return;
+    }
+    let cancelled = false;
+    const provider = new BackendRoutingProvider(providerId, "/api/routing", apiKey);
+    void (async () => {
+      const results = await fetchRoadLines(baselineEngineers, baselineJobs, baselineByEngineer, true, provider, () => cancelled);
+      if (cancelled) return;
+      setBaselineRoads(Object.fromEntries(results.map(([id, coords]) => [id, coords])));
+    })();
+    return () => { cancelled = true; };
+  }, [routingEnabled, compare, baselineEngineers, baselineJobs, baselineByEngineer, providerId, apiKey]);
+  return { roadRoutes, baselineRoads, routeStatus };
 }
 
 function captionText(status: RoutingState) {
@@ -227,6 +276,7 @@ type CanvasProps = {
   compare: boolean;
   routingEnabled: boolean;
   routes: RoutePlan[];
+  baselineRoutes: RoutePlan[];
   onSelectEngineer: (id: string) => void;
   onSelectJob: (id: string) => void;
   onInspectJob: (id: string) => void;
@@ -254,7 +304,7 @@ function markerButton(className: string, text: string, color: string, title: str
 }
 
 export function MapCanvas(props: CanvasProps) {
-  const { visibleJobs, baselineJobs, engineers, selectedEngineerId, selectedJobId, simTime, simPlaying, simSpeed, simEnd, onSimTime, onSimPlaying, compare, routingEnabled, routes, onSelectEngineer, onSelectJob, onInspectJob, onRoutingState } = props;
+  const { visibleJobs, baselineJobs, engineers, selectedEngineerId, selectedJobId, simTime, simPlaying, simSpeed, simEnd, onSimTime, onSimPlaying, compare, routingEnabled, routes, baselineRoutes, onSelectEngineer, onSelectJob, onInspectJob, onRoutingState } = props;
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const markersRef = useRef<Marker[]>([]);
@@ -268,11 +318,27 @@ export function MapCanvas(props: CanvasProps) {
   const [mapReady, setMapReady] = useState(false);
   const simulating = simTime != null;
   const { markerJobs, visibleEngineers, markerEngineers } = useVisibleMarkers(visibleJobs, engineers, routingEnabled);
-  const { roadRoutes, routeStatus } = useRoadRoutes(routingEnabled, visibleEngineers, visibleJobs, routes, "osrm", "", onRoutingState);
+  const baselineEngineers = useMemo(() => {
+    const ids = new Set((baselineRoutes.length ? baselineRoutes.map(route => route.engineerId) : baselineJobs.map(job => job.baselineEngineerId)).filter((id): id is string => Boolean(id)));
+    return engineers.filter(engineer => ids.has(engineer.id));
+  }, [engineers, baselineRoutes, baselineJobs]);
+  const { roadRoutes, baselineRoads, routeStatus } = useRoadRoutes(routingEnabled, compare, visibleEngineers, visibleJobs, routes, baselineEngineers, baselineJobs, baselineRoutes, "osrm", "", onRoutingState);
   const latestRef = useRef({ visibleJobs, visibleEngineers, compare, routingEnabled });
   useEffect(() => { latestRef.current = { visibleJobs, visibleEngineers, compare, routingEnabled }; }, [visibleJobs, visibleEngineers, compare, routingEnabled]);
   const planByEngineer = useMemo(() => new Map(routes.map(route => [route.engineerId, route])), [routes]);
-  const routeFor = useCallback((engineer: Engineer) => roadRoutes[engineer.id] ?? routeCoordinates(engineer, visibleJobs, false, planByEngineer.get(engineer.id)), [roadRoutes, visibleJobs, planByEngineer]);
+  const baselineByEngineer = useMemo(() => new Map(baselineRoutes.map(route => [route.engineerId, route])), [baselineRoutes]);
+  const routeFor = useCallback((engineer: Engineer) => {
+    const roads = roadRoutes[engineer.id];
+    if (roads && looksLikeRoad(roads, routeCoordinates(engineer, visibleJobs, false, planByEngineer.get(engineer.id)))) return roads;
+    if (!routingEnabled) return routeCoordinates(engineer, visibleJobs, false, planByEngineer.get(engineer.id));
+    return [] as Coordinate[];
+  }, [roadRoutes, visibleJobs, planByEngineer, routingEnabled]);
+  const baselineFor = useCallback((engineer: Engineer) => {
+    const roads = baselineRoads[engineer.id];
+    const waypoints = routeCoordinates(engineer, baselineJobs, true, baselineByEngineer.get(engineer.id));
+    if (roads && looksLikeRoad(roads, waypoints)) return roads;
+    return [] as Coordinate[];
+  }, [baselineRoads, baselineJobs, baselineByEngineer]);
   const routeData = useMemo<GeoJSON.FeatureCollection<GeoJSON.LineString>>(() => {
     if (!routingEnabled) return emptyLines;
     return {
@@ -283,7 +349,18 @@ export function MapCanvas(props: CanvasProps) {
       }),
     };
   }, [routingEnabled, visibleEngineers, selectedEngineerId, routeFor]);
-  const baselineData = useMemo<GeoJSON.FeatureCollection<GeoJSON.LineString>>(() => routingEnabled && compare && !simulating ? ({ type: "FeatureCollection", features: visibleEngineers.map(engineer => lineFeature(engineer, routeCoordinates(engineer, baselineJobs, true), false, 1)) }) : emptyLines, [routingEnabled, compare, simulating, visibleEngineers, baselineJobs]);
+  const baselineData = useMemo<GeoJSON.FeatureCollection<GeoJSON.LineString>>(() => {
+    if (!routingEnabled || !compare) return emptyLines;
+    return {
+      type: "FeatureCollection",
+      features: baselineEngineers
+        .map(engineer => {
+          const coords = baselineFor(engineer);
+          return coords.length >= 2 ? lineFeature(engineer, coords, false, 1) : null;
+        })
+        .filter((feature): feature is GeoJSON.Feature<GeoJSON.LineString> => Boolean(feature)),
+    };
+  }, [routingEnabled, compare, baselineEngineers, baselineFor]);
   const fitCoords = useCallback(async (points: Coordinate[], maxZoom = 13.2) => {
     const map = mapRef.current;
     if (!map || !loadedRef.current || !points.length) return;
@@ -319,10 +396,11 @@ export function MapCanvas(props: CanvasProps) {
       });
       map.on("style.load", () => {
         loadedRef.current = true;
+        (map.getContainer() as HTMLElement & { __ffMap?: MapLibreMap }).__ffMap = map;
         const current = latestRef.current;
         const initial: GeoJSON.FeatureCollection<GeoJSON.LineString> = current.routingEnabled ? { type: "FeatureCollection", features: current.visibleEngineers.map(engineer => ({ type: "Feature", properties: { id: engineer.id, color: engineer.color, selected: 0 }, geometry: { type: "LineString", coordinates: routeCoordinates(engineer, current.visibleJobs) } })) } : emptyLines;
         if (!map.getSource("baseline-routes")) {
-          map.addSource("baseline-routes", { type: "geojson", data: initial });
+          map.addSource("baseline-routes", { type: "geojson", data: emptyLines });
           map.addLayer({ id: "baseline-routes", type: "line", source: "baseline-routes", layout: { visibility: current.compare ? "visible" : "none" }, paint: { "line-color": ["get", "color"], "line-width": 4, "line-opacity": .38, "line-dasharray": [1, 1.5] } });
         }
         if (!map.getSource("route-ghost")) {
@@ -350,12 +428,14 @@ export function MapCanvas(props: CanvasProps) {
   }, []);
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !loadedRef.current || simulating) return;
-    setLineSource(map, "routes", routeData);
+    if (!map || !loadedRef.current) return;
     setLineSource(map, "baseline-routes", baselineData);
-    setLineSource(map, "route-ghost", emptyLines);
-    if (map.getLayer("baseline-routes")) map.setLayoutProperty("baseline-routes", "visibility", compare && routingEnabled ? "visible" : "none");
-  }, [routeData, baselineData, compare, routingEnabled, simulating, mapReady]);
+    if (!simulating) {
+      setLineSource(map, "routes", routeData);
+      setLineSource(map, "route-ghost", emptyLines);
+    }
+    if (map.getLayer("baseline-routes")) map.setLayoutProperty("baseline-routes", "visibility", compare && routingEnabled && !simPlaying ? "visible" : "none");
+  }, [routeData, baselineData, compare, routingEnabled, simulating, simPlaying, mapReady]);
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !loadedRef.current) return;
@@ -401,8 +481,8 @@ export function MapCanvas(props: CanvasProps) {
   simSpeedRef.current = simSpeed;
   simTimeRef.current = simTime;
   simEndRef.current = simEnd;
-  const fleetRef = useRef({ visibleEngineers, visibleJobs, engineers, selectedEngineerId, planByEngineer, routeFor, onSelectEngineer, onSimTime, onSimPlaying });
-  fleetRef.current = { visibleEngineers, visibleJobs, engineers, selectedEngineerId, planByEngineer, routeFor, onSelectEngineer, onSimTime, onSimPlaying };
+  const fleetRef = useRef({ visibleEngineers, visibleJobs, engineers, selectedEngineerId, planByEngineer, routeFor, onSelectEngineer, onSimTime, onSimPlaying, compare, routeData, baselineData });
+  fleetRef.current = { visibleEngineers, visibleJobs, engineers, selectedEngineerId, planByEngineer, routeFor, onSelectEngineer, onSimTime, onSimPlaying, compare, routeData, baselineData };
   useEffect(() => {
     const map = mapRef.current;
     const clearVehicles = () => {
@@ -448,7 +528,7 @@ export function MapCanvas(props: CanvasProps) {
     const paint = (Marker: typeof import("maplibre-gl").Marker, time: number) => {
       const host = mapRef.current;
       if (!host) return;
-      const { visibleEngineers: moversSource, visibleJobs: jobs, selectedEngineerId: selected, planByEngineer: plans, routeFor: coordsOf, onSelectEngineer: select } = fleetRef.current;
+      const { visibleEngineers: moversSource, visibleJobs: jobs, selectedEngineerId: selected, planByEngineer: plans, routeFor: coordsOf, onSelectEngineer: select, compare: showBaseline, routeData: vrptwLines, baselineData: originalLines } = fleetRef.current;
       const movers = moversSource.filter(engineer => coordsOf(engineer).length >= 2).slice(0, 24);
       const keep = new Set(movers.map(engineer => engineer.id));
       for (const [id, marker] of vehiclesRef.current) {
@@ -457,6 +537,7 @@ export function MapCanvas(props: CanvasProps) {
           vehiclesRef.current.delete(id);
         }
       }
+      const playing = simPlayingRef.current;
       const ghosts: GeoJSON.Feature<GeoJSON.LineString>[] = [];
       const trails: GeoJSON.Feature<GeoJSON.LineString>[] = [];
       for (const engineer of movers) {
@@ -482,9 +563,16 @@ export function MapCanvas(props: CanvasProps) {
           marker.setLngLat(pose.point);
         }
       }
-      setLineSource(host, "route-ghost", { type: "FeatureCollection", features: ghosts });
-      setLineSource(host, "routes", { type: "FeatureCollection", features: trails });
-      if (host.getLayer("baseline-routes")) host.setLayoutProperty("baseline-routes", "visibility", "none");
+      if (!playing && showBaseline) {
+        setLineSource(host, "routes", vrptwLines);
+        setLineSource(host, "route-ghost", emptyLines);
+        setLineSource(host, "baseline-routes", originalLines);
+        if (host.getLayer("baseline-routes")) host.setLayoutProperty("baseline-routes", "visibility", "visible");
+      } else {
+        setLineSource(host, "route-ghost", { type: "FeatureCollection", features: ghosts });
+        setLineSource(host, "routes", { type: "FeatureCollection", features: trails });
+        if (host.getLayer("baseline-routes")) host.setLayoutProperty("baseline-routes", "visibility", "none");
+      }
       writeHud(time, movers);
     };
     void import("maplibre-gl").then(({ Marker }) => {
