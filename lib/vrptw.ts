@@ -22,14 +22,48 @@ export type TravelMatrix = {
   durationMin: (a: Coordinate, b: Coordinate) => number;
   knows?: (a: Coordinate, b: Coordinate) => boolean;
 };
-export type OptimizeOptions = { speedKmh?: number; travel?: TravelMatrix; seed?: number; innerBudget?: number; zoneBudget?: number };
+export type SearchObjective = "fieldflow" | "distance";
+export type TracePhase = "insert" | "anneal" | "relocate" | "compact" | "done";
+export type TraceRoute = { engineerId: string; color: string; jobIds: string[]; points: Coordinate[] };
+export type TraceFrame = {
+  step: number;
+  phase: TracePhase;
+  label: string;
+  accepted: boolean;
+  distanceKm: number;
+  score: number;
+  vehicles: number;
+  routes: TraceRoute[];
+};
+export type OptimizeOptions = {
+  speedKmh?: number;
+  travel?: TravelMatrix;
+  seed?: number;
+  innerBudget?: number;
+  zoneBudget?: number;
+  objective?: SearchObjective;
+  trace?: SearchTrace;
+  skipInsertPolish?: boolean;
+};
 
+export const VEHICLE_COST = 140;
+export const DISTANCE_WEIGHT = 10;
 const SPEED_KMH = 32;
 const SLACK = 0.12;
 const P0 = 0.8;
 const P_STOP = 0.01;
-const VEHICLE_COST = 140;
 const WAIT_WEIGHT = 0.35;
+
+export class SearchTrace {
+  frames: TraceFrame[] = [];
+  push(frame: Omit<TraceFrame, "step">) {
+    if (this.frames.length >= 800) return;
+    this.frames.push({ ...frame, step: this.frames.length });
+  }
+}
+
+let activeObjective: SearchObjective = "fieldflow";
+let activeTrace: SearchTrace | null = null;
 export const regions: Region[] = ["Восток", "Юго-восток", "Югоцентр"];
 const SCALE_COLORS = ["#7657ff", "#00a89d", "#ff8b3d", "#2d82d7", "#e84f87", "#8b5e34", "#7a9c32", "#d35f45", "#5367c9", "#a04fa4", "#168b67", "#b67b1f"];
 
@@ -200,19 +234,43 @@ function simulate(engineer: Engineer, route: Job[], hardWindows = true, speedKmh
 }
 
 function planScore(plan: RoutePlan, engineer: Engineer) {
+  if (activeObjective === "distance") return plan.distanceKm;
   const capacity = Math.max(1, engineer.shiftEnd - engineer.shiftStart);
   const slackGap = Math.max(0, plan.durationMinutes - capacity * (1 - SLACK));
   const wait = plan.stops.reduce((sum, stop) => sum + Math.max(0, stop.start - stop.arrival), 0);
-  return plan.distanceKm * 10 + wait * WAIT_WEIGHT + slackGap * 0.45 + plan.durationMinutes * 0.01;
+  return plan.distanceKm * DISTANCE_WEIGHT + wait * WAIT_WEIGHT + slackGap * 0.45 + plan.durationMinutes * 0.01;
+}
+
+function vehiclePenalty() {
+  return activeObjective === "distance" ? 0 : VEHICLE_COST;
 }
 
 function insertionScore(engineer: Engineer, currentLength: number, currentScore: number, plan: RoutePlan) {
-  return planScore(plan, engineer) - currentScore + (currentLength ? 0 : VEHICLE_COST);
+  return planScore(plan, engineer) - currentScore + (currentLength ? 0 : vehiclePenalty());
 }
 
 function fleetScore(from: Engineer, fromPlan: RoutePlan, to: Engineer, toPlan: RoutePlan, fromJobs: number, toJobs: number) {
   const vehicles = (fromJobs > 0 ? 1 : 0) + (toJobs > 0 ? 1 : 0);
-  return planScore(fromPlan, from) + planScore(toPlan, to) + VEHICLE_COST * vehicles;
+  return planScore(fromPlan, from) + planScore(toPlan, to) + vehiclePenalty() * vehicles;
+}
+
+function emitTrace(phase: TracePhase, label: string, engineers: Engineer[], assignments: Map<string, Job[]>, speedKmh: number, travel: TravelMatrix | undefined, accepted = true) {
+  if (!activeTrace) return;
+  let distanceKm = 0;
+  let score = 0;
+  let vehicles = 0;
+  const routes: TraceRoute[] = [];
+  for (const engineer of engineers) {
+    const route = assignments.get(engineer.id) ?? [];
+    if (!route.length) continue;
+    const plan = simulate(engineer, route, false, speedKmh, travel);
+    if (!plan) continue;
+    vehicles += 1;
+    distanceKm += plan.distanceKm;
+    score += planScore(plan, engineer) + vehiclePenalty();
+    routes.push({ engineerId: engineer.id, color: engineer.color, jobIds: route.map(job => job.id), points: [engineer.start, ...route.map(job => job.coordinates)] });
+  }
+  activeTrace.push({ phase, label, accepted, distanceKm, score, vehicles, routes });
 }
 
 function metricsFrom(engineers: Engineer[], jobs: Job[], routes: RoutePlan[]): PlanMetrics {
@@ -287,13 +345,22 @@ function expectedPositiveDelta(engineer: Engineer, route: Job[], speedKmh: numbe
   return positives.length ? positives.reduce((sum, item) => sum + item, 0) / positives.length : 1;
 }
 
-function annealRoute(engineer: Engineer, route: Job[], speedKmh: number, travel: TravelMatrix | undefined, random: () => number, budget: number) {
+type TraceCtx = { engineers: Engineer[]; assignments: Map<string, Job[]> };
+
+function snapshotRoute(engineer: Engineer, route: Job[], speedKmh: number, travel: TravelMatrix | undefined, ctx?: TraceCtx) {
+  if (ctx) ctx.assignments.set(engineer.id, route);
+  return simulate(engineer, route, true, speedKmh, travel);
+}
+
+function annealRoute(engineer: Engineer, route: Job[], speedKmh: number, travel: TravelMatrix | undefined, random: () => number, budget: number, ctx?: TraceCtx) {
   if (route.length < 3) return route.slice();
   let current = route.slice();
-  let currentPlan = simulate(engineer, current, true, speedKmh, travel);
+  let currentPlan = snapshotRoute(engineer, current, speedKmh, travel, ctx);
   if (!currentPlan) return route.slice();
   let best = current;
   let bestPlan = currentPlan;
+  const startedKm = bestPlan.distanceKm;
+  if (activeTrace && ctx) emitTrace("anneal", `2-opt старт ${engineer.name}: ${startedKm.toFixed(1)}`, ctx.engineers, ctx.assignments, speedKmh, travel);
   const mu = expectedPositiveDelta(engineer, current, speedKmh, travel, random);
   const tau = Math.max(8, budget / 4);
   for (let k = 0; k < budget; k++) {
@@ -314,6 +381,8 @@ function annealRoute(engineer: Engineer, route: Job[], speedKmh: number, travel:
       if (planScore(plan, engineer) + 1e-9 < planScore(bestPlan, engineer)) {
         best = candidate;
         bestPlan = plan;
+        if (ctx) ctx.assignments.set(engineer.id, best);
+        if (activeTrace && ctx) emitTrace("anneal", `2-opt ${engineer.name}: ${startedKm.toFixed(1)} → ${bestPlan.distanceKm.toFixed(1)}`, ctx.engineers, ctx.assignments, speedKmh, travel);
       }
     }
   }
@@ -327,13 +396,17 @@ function annealRoute(engineer: Engineer, route: Job[], speedKmh: number, travel:
         const candidate = reverseSegment(best, i, j);
         const plan = simulate(engineer, candidate, true, speedKmh, travel);
         if (plan && planScore(plan, engineer) + 1e-6 < planScore(bestPlan, engineer)) {
+          const before = bestPlan.distanceKm;
           best = candidate;
           bestPlan = plan;
           improved = true;
+          if (ctx) ctx.assignments.set(engineer.id, best);
+          if (activeTrace && ctx) emitTrace("anneal", `Локальный 2-opt ${engineer.name}: ${before.toFixed(1)} → ${bestPlan.distanceKm.toFixed(1)}`, ctx.engineers, ctx.assignments, speedKmh, travel);
         }
       }
     }
   }
+  if (ctx) ctx.assignments.set(engineer.id, best);
   return best;
 }
 
@@ -348,9 +421,29 @@ function pickInsertion(candidates: Array<{ engineer: Engineer; route: Job[]; pla
   return best;
 }
 
+function copyAssignments(source: Map<string, Job[]>) {
+  return new Map(Array.from(source, ([id, jobs]) => [id, jobs.slice()]));
+}
+
+function applyAssignments(target: Map<string, Job[]>, source: Map<string, Job[]>) {
+  for (const id of target.keys()) target.set(id, (source.get(id) ?? []).slice());
+}
+
+function zoneObjective(engineers: Engineer[], assignments: Map<string, Job[]>, speedKmh: number, travel: TravelMatrix | undefined) {
+  let score = 0;
+  for (const engineer of engineers) {
+    const route = assignments.get(engineer.id) ?? [];
+    if (!route.length) continue;
+    const plan = simulate(engineer, route, true, speedKmh, travel);
+    if (!plan) return Number.POSITIVE_INFINITY;
+    score += planScore(plan, engineer) + vehiclePenalty();
+  }
+  return score;
+}
+
 function relocateOnce(zoneEngineers: Engineer[], assignments: Map<string, Job[]>, speedKmh: number, travel: TravelMatrix | undefined, random: () => number, T: number) {
   const donors = zoneEngineers.filter(item => (assignments.get(item.id)?.length ?? 0) > 0);
-  if (!donors.length) return;
+  if (!donors.length) return false;
   const from = donors[Math.floor(random() * donors.length)];
   const fromRoute = assignments.get(from.id)!;
   const jobIndex = Math.floor(random() * fromRoute.length);
@@ -358,9 +451,9 @@ function relocateOnce(zoneEngineers: Engineer[], assignments: Map<string, Job[]>
   const without = fromRoute.filter((_, index) => index !== jobIndex);
   const fromPlan = simulate(from, fromRoute, true, speedKmh, travel);
   const withoutPlan = simulate(from, without, true, speedKmh, travel);
-  if (!fromPlan || !withoutPlan) return;
+  if (!fromPlan || !withoutPlan) return false;
   const targets = zoneEngineers.filter(item => item.id !== from.id && compatible(item, job));
-  if (!targets.length) return;
+  if (!targets.length) return false;
   const to = targets[Math.floor(random() * targets.length)];
   const toRoute = assignments.get(to.id)!;
   const toPlan = simulate(to, toRoute, true, speedKmh, travel)!;
@@ -372,14 +465,17 @@ function relocateOnce(zoneEngineers: Engineer[], assignments: Map<string, Job[]>
     const score = planScore(plan, to);
     if (!best || score < best.score) best = { route: candidate, plan, score };
   }
-  if (!best) return;
+  if (!best) return false;
   const before = fleetScore(from, fromPlan, to, toPlan, fromRoute.length, toRoute.length);
   const after = fleetScore(from, withoutPlan, to, best.plan, without.length, best.route.length);
   const delta = after - before;
   if (delta <= 0 || random() < Math.exp(-delta / Math.max(T, 1e-6))) {
     assignments.set(from.id, without);
     assignments.set(to.id, best.route);
+    emitTrace("relocate", `Перенос ${job.id}: ${from.name} → ${to.name}`, zoneEngineers, assignments, speedKmh, travel, delta <= 1e-9);
+    return true;
   }
+  return false;
 }
 
 function expectedPositiveRelocate(zoneEngineers: Engineer[], assignments: Map<string, Job[]>, speedKmh: number, travel: TravelMatrix | undefined, random: () => number) {
@@ -456,8 +552,9 @@ function compactZone(zoneEngineers: Engineer[], assignments: Map<string, Job[]>,
         const before = fleetScore(from, fromPlan, to, toPlan, fromRoute.length, toRoute.length);
         const after = fleetScore(from, simulate(from, [], true, speedKmh, travel)!, to, mergedPlan, 0, candidate.length);
         if (after > before + 1e-6) continue;
-        assignments.set(to.id, candidate.length >= 3 ? annealRoute(to, candidate, speedKmh, travel, random, 80) : candidate);
+        assignments.set(to.id, candidate.length >= 3 ? annealRoute(to, candidate, speedKmh, travel, random, 80, { engineers: zoneEngineers, assignments }) : candidate);
         assignments.set(from.id, []);
+        emitTrace("compact", `Слияние ${from.name} → ${to.name}`, zoneEngineers, assignments, speedKmh, travel);
         moved = true;
         break;
       }
@@ -467,22 +564,43 @@ function compactZone(zoneEngineers: Engineer[], assignments: Map<string, Job[]>,
 }
 
 function annealZone(zoneEngineers: Engineer[], assignments: Map<string, Job[]>, speedKmh: number, travel: TravelMatrix | undefined, random: () => number, budget: number) {
+  let elite = copyAssignments(assignments);
+  let eliteScore = zoneObjective(zoneEngineers, assignments, speedKmh, travel);
+  const keepElite = (label: string) => {
+    const score = zoneObjective(zoneEngineers, assignments, speedKmh, travel);
+    if (score + 1e-9 < eliteScore) {
+      eliteScore = score;
+      elite = copyAssignments(assignments);
+      emitTrace("relocate", label, zoneEngineers, assignments, speedKmh, travel);
+    }
+  };
+  const restoreElite = () => {
+    const current = zoneObjective(zoneEngineers, assignments, speedKmh, travel);
+    if (current <= eliteScore + 1e-9) return;
+    applyAssignments(assignments, elite);
+    emitTrace("relocate", "Возврат к лучшему найденному плану", zoneEngineers, assignments, speedKmh, travel);
+  };
   for (const engineer of zoneEngineers) {
     const route = assignments.get(engineer.id) ?? [];
-    if (route.length >= 3) assignments.set(engineer.id, annealRoute(engineer, route, speedKmh, travel, random, Math.min(budget, 400)));
+    if (route.length >= 3) assignments.set(engineer.id, annealRoute(engineer, route, speedKmh, travel, random, Math.min(budget, 400), { engineers: zoneEngineers, assignments }));
   }
+  keepElite("Лучший план после 2-opt");
   const tau = Math.max(12, budget / 5);
   const mu = expectedPositiveRelocate(zoneEngineers, assignments, speedKmh, travel, random);
   for (let k = 0; k < budget; k++) {
     const p = P0 * Math.exp(-k / tau);
     if (p < P_STOP) break;
-    relocateOnce(zoneEngineers, assignments, speedKmh, travel, random, temperature(mu, p));
+    if (relocateOnce(zoneEngineers, assignments, speedKmh, travel, random, temperature(mu, p))) keepElite("Новый лучший план");
   }
+  restoreElite();
   for (const engineer of zoneEngineers) {
     const route = assignments.get(engineer.id) ?? [];
-    if (route.length >= 3) assignments.set(engineer.id, annealRoute(engineer, route, speedKmh, travel, random, 80));
+    if (route.length >= 3) assignments.set(engineer.id, annealRoute(engineer, route, speedKmh, travel, random, 80, { engineers: zoneEngineers, assignments }));
   }
+  keepElite("Лучший план после полировки");
   compactZone(zoneEngineers, assignments, speedKmh, travel, random);
+  keepElite("Лучший план после уплотнения");
+  restoreElite();
 }
 
 function finish(engineers: Engineer[], inputJobs: Job[], jobs: Job[], assignments: Map<string, Job[]>, speedKmh: number, travel: TravelMatrix | undefined, started: number): OptimizationResult {
@@ -508,13 +626,19 @@ export function optimizeVrptw(engineers: Engineer[], inputJobs: Job[], options: 
   const speedKmh = options.speedKmh ?? SPEED_KMH;
   const travel = options.travel;
   const started = performance.now();
+  const previousObjective = activeObjective;
+  const previousTrace = activeTrace;
+  activeObjective = options.objective ?? "fieldflow";
+  activeTrace = options.trace ?? null;
   const jobs: Job[] = inputJobs.map(job => ({ ...job, engineerId: null, risk: false }));
   const assignments = new Map(engineers.map(engineer => [engineer.id, [] as Job[]]));
   const ordered = [...jobs].sort((a, b) => b.priority - a.priority || a.windowEnd - b.windowEnd || a.windowStart - b.windowStart);
   const random = rng.bind(null, { value: options.seed ?? hashSeed(inputJobs, engineers) });
   const innerBudget = options.innerBudget ?? 120;
   const zoneBudget = options.zoneBudget ?? 900;
+  emitTrace("insert", "Старт: пустые маршруты", engineers, assignments, speedKmh, travel);
 
+  try {
   for (let index = 0; index < ordered.length; index++) {
     const job = ordered[index];
     const candidates: Array<{ engineer: Engineer; route: Job[]; plan: RoutePlan; score: number }> = [];
@@ -534,9 +658,12 @@ export function optimizeVrptw(engineers: Engineer[], inputJobs: Job[], options: 
     const p = P0 * Math.exp(-index / Math.max(8, ordered.length / 3));
     const chosen = pickInsertion(candidates, random, p);
     if (!chosen) continue;
-    const polished = annealRoute(chosen.engineer, chosen.route, speedKmh, travel, random, innerBudget);
+    const polished = options.skipInsertPolish
+      ? chosen.route
+      : annealRoute(chosen.engineer, chosen.route, speedKmh, travel, random, innerBudget, { engineers, assignments });
     assignments.set(chosen.engineer.id, polished);
     job.engineerId = chosen.engineer.id;
+    emitTrace("insert", `Вставка ${job.id} → ${chosen.engineer.name}`, engineers, assignments, speedKmh, travel);
   }
 
   for (const name of regions) {
@@ -548,7 +675,12 @@ export function optimizeVrptw(engineers: Engineer[], inputJobs: Job[], options: 
     }
   }
 
+  emitTrace("done", "Финальный план", engineers, assignments, speedKmh, travel);
   return finish(engineers, inputJobs, jobs, assignments, speedKmh, travel, started);
+  } finally {
+    activeObjective = previousObjective;
+    activeTrace = previousTrace;
+  }
 }
 
 export function reoptimizeUrgent(engineers: Engineer[], inputJobs: Job[], urgentId: string, options: OptimizeOptions = {}): OptimizationResult {
@@ -580,7 +712,7 @@ export function reoptimizeUrgent(engineers: Engineer[], inputJobs: Job[], urgent
   }
   const chosen = pickInsertion(candidates, random, 0.35);
   if (!chosen) return optimizeVrptw(engineers, inputJobs, options);
-  assignments.set(chosen.engineer.id, annealRoute(chosen.engineer, chosen.route, speedKmh, travel, random, options.innerBudget ?? 180));
+  assignments.set(chosen.engineer.id, annealRoute(chosen.engineer, chosen.route, speedKmh, travel, random, options.innerBudget ?? 180, { engineers, assignments }));
   urgent.engineerId = chosen.engineer.id;
   const others = engineers
     .filter(item => item.region === chosen.engineer.region && item.id !== chosen.engineer.id)
@@ -614,4 +746,70 @@ export function uniquePoints(engineers: Engineer[], jobs: Job[]) {
   for (const engineer of engineers) add(engineer.start);
   for (const job of jobs) add(job.coordinates);
   return points;
+}
+
+export function euclideanTravel(speedKmh = SPEED_KMH): TravelMatrix {
+  return {
+    distanceKm: (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]),
+    durationMin: (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]) / Math.max(0.25, speedKmh / 60),
+    knows: () => true,
+  };
+}
+
+export function makeDemoProblem(pointCount: number, vehicleCount: number, seed = 1) {
+  const random = rng.bind(null, { value: seed >>> 0 || 1 });
+  const depot: Coordinate = [50, 50];
+  const vehicles = Math.max(1, Math.round(vehicleCount));
+  const engineers: Engineer[] = Array.from({ length: vehicles }, (_, index) => ({
+    id: `demo-${index + 1}`,
+    initials: `К${index + 1}`,
+    name: vehicles === 1 ? "Курьер" : `Курьер ${index + 1}`,
+    route: `Демо ${index + 1}`,
+    jobs: 0,
+    distance: "0",
+    load: 0,
+    color: SCALE_COLORS[index % SCALE_COLORS.length],
+    region: "Восток",
+    start: [...depot] as Coordinate,
+    skills: ["Демо"],
+    equipment: ["Демо"],
+    transport: "Автомобиль",
+    shiftStart: 480,
+    shiftEnd: 1320,
+  }));
+  const jobs: Job[] = Array.from({ length: Math.max(3, Math.round(pointCount)) }, (_, index) => {
+    let coordinates: Coordinate = [20, 20];
+    for (let attempt = 0; attempt < 16; attempt++) {
+      const candidate: Coordinate = [
+        Number((8 + random() * 84).toFixed(2)),
+        Number((8 + random() * 84).toFixed(2)),
+      ];
+      if (Math.hypot(candidate[0] - 50, candidate[1] - 50) > 10) {
+        coordinates = candidate;
+        break;
+      }
+    }
+    return {
+      id: `P${index + 1}`,
+      time: "08:00–22:00",
+      windowStart: 480,
+      windowEnd: 1320,
+      area: "Плоскость",
+      address: `Точка ${index + 1}`,
+      kind: "Демо",
+      tone: "violet",
+      region: "Восток",
+      engineerId: null,
+      baselineEngineerId: engineers[index % engineers.length].id,
+      coordinates,
+      risk: false,
+      equipment: "Демо",
+      requiredTransport: "Автомобиль",
+      priority: 1,
+      serviceMinutes: 1,
+      source: "Демо",
+      status: "Новая",
+    };
+  });
+  return { engineers, jobs, travel: euclideanTravel(60) };
 }
