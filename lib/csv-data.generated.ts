@@ -1285,7 +1285,7 @@ export const csvJobs = [
       "Автомобиль"
     ],
     "priority": 5,
-    "serviceMinutes": 45,
+    "serviceMinutes": 60,
     "source": "CSV",
     "status": "Отправлена"
   },
@@ -1316,7 +1316,7 @@ export const csvJobs = [
       "Автомобиль"
     ],
     "priority": 5,
-    "serviceMinutes": 45,
+    "serviceMinutes": 60,
     "source": "CSV",
     "status": "Отправлена"
   },
@@ -1382,7 +1382,7 @@ export const csvJobs = [
       "Автомобиль"
     ],
     "priority": 5,
-    "serviceMinutes": 45,
+    "serviceMinutes": 60,
     "source": "CSV",
     "status": "В пути"
   },
@@ -1413,7 +1413,7 @@ export const csvJobs = [
       "Автомобиль"
     ],
     "priority": 5,
-    "serviceMinutes": 45,
+    "serviceMinutes": 60,
     "source": "CSV",
     "status": "В работе"
   },
@@ -1481,7 +1481,7 @@ export const csvJobs = [
       "Пешком"
     ],
     "priority": 2,
-    "serviceMinutes": 45,
+    "serviceMinutes": 30,
     "source": "CSV",
     "status": "В работе"
   },
@@ -1512,7 +1512,7 @@ export const csvJobs = [
       "Автомобиль"
     ],
     "priority": 5,
-    "serviceMinutes": 45,
+    "serviceMinutes": 60,
     "source": "CSV",
     "status": "Выполнена"
   },
@@ -1544,7 +1544,7 @@ export const csvJobs = [
       "Автомобиль"
     ],
     "priority": 5,
-    "serviceMinutes": 45,
+    "serviceMinutes": 60,
     "source": "CSV",
     "status": "Выполнена"
   },
@@ -1609,7 +1609,7 @@ export const csvJobs = [
       "Автомобиль"
     ],
     "priority": 5,
-    "serviceMinutes": 45,
+    "serviceMinutes": 60,
     "source": "CSV",
     "status": "Выполнена"
   },
@@ -1640,7 +1640,7 @@ export const csvJobs = [
       "Автомобиль"
     ],
     "priority": 5,
-    "serviceMinutes": 45,
+    "serviceMinutes": 60,
     "source": "CSV",
     "status": "Выполнена"
   },
@@ -1706,7 +1706,7 @@ export const csvJobs = [
       "Автомобиль"
     ],
     "priority": 5,
-    "serviceMinutes": 45,
+    "serviceMinutes": 60,
     "source": "CSV",
     "status": "Выполнена"
   },
@@ -1941,7 +1941,7 @@ export const csvJobs = [
       "Автомобиль"
     ],
     "priority": 5,
-    "serviceMinutes": 45,
+    "serviceMinutes": 60,
     "source": "CSV",
     "status": "Выполнена"
   },
@@ -2108,7 +2108,7 @@ export const csvJobs = [
       "Автомобиль"
     ],
     "priority": 5,
-    "serviceMinutes": 45,
+    "serviceMinutes": 60,
     "source": "CSV",
     "status": "Выполнена"
   },
@@ -2139,7 +2139,7 @@ export const csvJobs = [
       "Автомобиль"
     ],
     "priority": 5,
-    "serviceMinutes": 45,
+    "serviceMinutes": 60,
     "source": "CSV",
     "status": "Выполнена"
   },
@@ -2204,7 +2204,7 @@ export const csvJobs = [
       "Автомобиль"
     ],
     "priority": 5,
-    "serviceMinutes": 45,
+    "serviceMinutes": 60,
     "source": "CSV",
     "status": "Выполнена"
   },
@@ -3596,7 +3596,7 @@ export const csvJobs = [
       "Автомобиль"
     ],
     "priority": 5,
-    "serviceMinutes": 45,
+    "serviceMinutes": 60,
     "source": "CSV",
     "status": "Отправлена"
   },
@@ -3628,7 +3628,7 @@ export const csvJobs = [
       "Автомобиль"
     ],
     "priority": 5,
-    "serviceMinutes": 45,
+    "serviceMinutes": 60,
     "source": "CSV",
     "status": "Отправлена"
   },
@@ -3762,7 +3762,7 @@ export const csvJobs = [
       "Автомобиль"
     ],
     "priority": 5,
-    "serviceMinutes": 45,
+    "serviceMinutes": 60,
     "source": "CSV",
     "status": "Отправлена"
   },
@@ -3793,7 +3793,7 @@ export const csvJobs = [
       "Автомобиль"
     ],
     "priority": 5,
-    "serviceMinutes": 45,
+    "serviceMinutes": 60,
     "source": "CSV",
     "status": "В пути"
   },
@@ -3927,7 +3927,7 @@ export const csvJobs = [
       "Автомобиль"
     ],
     "priority": 5,
-    "serviceMinutes": 45,
+    "serviceMinutes": 60,
     "source": "CSV",
     "status": "В работе"
   },
@@ -3993,7 +3993,7 @@ export const csvJobs = [
       "Автомобиль"
     ],
     "priority": 5,
-    "serviceMinutes": 45,
+    "serviceMinutes": 60,
     "source": "CSV",
     "status": "Выполнена"
   },
@@ -4263,7 +4263,7 @@ export const csvJobs = [
       "Автомобиль"
     ],
     "priority": 5,
-    "serviceMinutes": 45,
+    "serviceMinutes": 60,
     "source": "CSV",
     "status": "Выполнена"
   },
@@ -4397,7 +4397,7 @@ export const csvJobs = [
       "Автомобиль"
     ],
     "priority": 5,
-    "serviceMinutes": 45,
+    "serviceMinutes": 60,
     "source": "CSV",
     "status": "Выполнена"
   },
@@ -4463,7 +4463,7 @@ export const csvJobs = [
       "Автомобиль"
     ],
     "priority": 5,
-    "serviceMinutes": 45,
+    "serviceMinutes": 60,
     "source": "CSV",
     "status": "Выполнена"
   },
@@ -4495,7 +4495,7 @@ export const csvJobs = [
       "Автомобиль"
     ],
     "priority": 5,
-    "serviceMinutes": 45,
+    "serviceMinutes": 60,
     "source": "CSV",
     "status": "Просрочена"
   },
@@ -4527,7 +4527,7 @@ export const csvJobs = [
       "Автомобиль"
     ],
     "priority": 5,
-    "serviceMinutes": 45,
+    "serviceMinutes": 60,
     "source": "CSV",
     "status": "Просрочена"
   },
@@ -4627,7 +4627,7 @@ export const csvJobs = [
       "Автомобиль"
     ],
     "priority": 5,
-    "serviceMinutes": 45,
+    "serviceMinutes": 60,
     "source": "CSV",
     "status": "Отправлена"
   },
@@ -4659,7 +4659,7 @@ export const csvJobs = [
       "Автомобиль"
     ],
     "priority": 5,
-    "serviceMinutes": 45,
+    "serviceMinutes": 60,
     "source": "CSV",
     "status": "Отправлена"
   },
@@ -4691,7 +4691,7 @@ export const csvJobs = [
       "Автомобиль"
     ],
     "priority": 5,
-    "serviceMinutes": 45,
+    "serviceMinutes": 60,
     "source": "CSV",
     "status": "Отправлена"
   },
@@ -4723,7 +4723,7 @@ export const csvJobs = [
       "Автомобиль"
     ],
     "priority": 5,
-    "serviceMinutes": 45,
+    "serviceMinutes": 60,
     "source": "CSV",
     "status": "Отправлена"
   },
@@ -4755,7 +4755,7 @@ export const csvJobs = [
       "Автомобиль"
     ],
     "priority": 5,
-    "serviceMinutes": 45,
+    "serviceMinutes": 60,
     "source": "CSV",
     "status": "Отправлена"
   },
@@ -4787,7 +4787,7 @@ export const csvJobs = [
       "Автомобиль"
     ],
     "priority": 5,
-    "serviceMinutes": 45,
+    "serviceMinutes": 60,
     "source": "CSV",
     "status": "Отправлена"
   },
@@ -4819,7 +4819,7 @@ export const csvJobs = [
       "Автомобиль"
     ],
     "priority": 5,
-    "serviceMinutes": 45,
+    "serviceMinutes": 60,
     "source": "CSV",
     "status": "Отправлена"
   },
@@ -4851,7 +4851,7 @@ export const csvJobs = [
       "Автомобиль"
     ],
     "priority": 5,
-    "serviceMinutes": 45,
+    "serviceMinutes": 60,
     "source": "CSV",
     "status": "Отправлена"
   },
@@ -4883,7 +4883,7 @@ export const csvJobs = [
       "Автомобиль"
     ],
     "priority": 5,
-    "serviceMinutes": 45,
+    "serviceMinutes": 60,
     "source": "CSV",
     "status": "Отправлена"
   },
@@ -4915,7 +4915,7 @@ export const csvJobs = [
       "Автомобиль"
     ],
     "priority": 5,
-    "serviceMinutes": 45,
+    "serviceMinutes": 60,
     "source": "CSV",
     "status": "В пути"
   },
@@ -4947,7 +4947,7 @@ export const csvJobs = [
       "Автомобиль"
     ],
     "priority": 5,
-    "serviceMinutes": 45,
+    "serviceMinutes": 60,
     "source": "CSV",
     "status": "Выполнена"
   },
@@ -4979,7 +4979,7 @@ export const csvJobs = [
       "Автомобиль"
     ],
     "priority": 5,
-    "serviceMinutes": 45,
+    "serviceMinutes": 60,
     "source": "CSV",
     "status": "Выполнена"
   },
@@ -6031,7 +6031,7 @@ export const csvJobs = [
       "Автомобиль"
     ],
     "priority": 5,
-    "serviceMinutes": 45,
+    "serviceMinutes": 60,
     "source": "CSV",
     "status": "Отправлена"
   },
@@ -6063,7 +6063,7 @@ export const csvJobs = [
       "Автомобиль"
     ],
     "priority": 5,
-    "serviceMinutes": 45,
+    "serviceMinutes": 60,
     "source": "CSV",
     "status": "Отправлена"
   },
@@ -6128,7 +6128,7 @@ export const csvJobs = [
       "Автомобиль"
     ],
     "priority": 5,
-    "serviceMinutes": 45,
+    "serviceMinutes": 60,
     "source": "CSV",
     "status": "Отправлена"
   },
@@ -6160,7 +6160,7 @@ export const csvJobs = [
       "Автомобиль"
     ],
     "priority": 5,
-    "serviceMinutes": 45,
+    "serviceMinutes": 60,
     "source": "CSV",
     "status": "В работе"
   },
@@ -6192,7 +6192,7 @@ export const csvJobs = [
       "Автомобиль"
     ],
     "priority": 5,
-    "serviceMinutes": 45,
+    "serviceMinutes": 60,
     "source": "CSV",
     "status": "Выполнена"
   },
@@ -6223,7 +6223,7 @@ export const csvJobs = [
       "Автомобиль"
     ],
     "priority": 5,
-    "serviceMinutes": 45,
+    "serviceMinutes": 60,
     "source": "CSV",
     "status": "Выполнена"
   },
@@ -6289,7 +6289,7 @@ export const csvJobs = [
       "Автомобиль"
     ],
     "priority": 5,
-    "serviceMinutes": 45,
+    "serviceMinutes": 60,
     "source": "CSV",
     "status": "Выполнена"
   },
@@ -6321,7 +6321,7 @@ export const csvJobs = [
       "Автомобиль"
     ],
     "priority": 5,
-    "serviceMinutes": 45,
+    "serviceMinutes": 60,
     "source": "CSV",
     "status": "Выполнена"
   },
@@ -6353,7 +6353,7 @@ export const csvJobs = [
       "Автомобиль"
     ],
     "priority": 5,
-    "serviceMinutes": 45,
+    "serviceMinutes": 60,
     "source": "CSV",
     "status": "Выполнена"
   },
@@ -6384,7 +6384,7 @@ export const csvJobs = [
       "Автомобиль"
     ],
     "priority": 5,
-    "serviceMinutes": 45,
+    "serviceMinutes": 60,
     "source": "CSV",
     "status": "Выполнена"
   },
@@ -6873,7 +6873,7 @@ export const csvEngineers = [
     "route": "Маршрут 01",
     "jobs": 7,
     "distance": "0 км",
-    "load": 36,
+    "load": 39,
     "color": "#7657ff",
     "region": "Восток",
     "start": [
@@ -6901,7 +6901,7 @@ export const csvEngineers = [
     "route": "Маршрут 02",
     "jobs": 6,
     "distance": "0 км",
-    "load": 32,
+    "load": 34,
     "color": "#00a89d",
     "region": "Восток",
     "start": [
@@ -6929,7 +6929,7 @@ export const csvEngineers = [
     "route": "Маршрут 03",
     "jobs": 8,
     "distance": "0 км",
-    "load": 43,
+    "load": 46,
     "color": "#ff8b3d",
     "region": "Восток",
     "start": [
@@ -6957,7 +6957,7 @@ export const csvEngineers = [
     "route": "Маршрут 04",
     "jobs": 6,
     "distance": "0 км",
-    "load": 32,
+    "load": 30,
     "color": "#2d82d7",
     "region": "Восток",
     "start": [
@@ -6983,7 +6983,7 @@ export const csvEngineers = [
     "route": "Маршрут 05",
     "jobs": 4,
     "distance": "0 км",
-    "load": 21,
+    "load": 23,
     "color": "#e84f87",
     "region": "Восток",
     "start": [
@@ -7037,7 +7037,7 @@ export const csvEngineers = [
     "route": "Маршрут 07",
     "jobs": 5,
     "distance": "0 км",
-    "load": 27,
+    "load": 29,
     "color": "#7a9c32",
     "region": "Восток",
     "start": [
@@ -7063,7 +7063,7 @@ export const csvEngineers = [
     "route": "Маршрут 08",
     "jobs": 3,
     "distance": "0 км",
-    "load": 16,
+    "load": 18,
     "color": "#d35f45",
     "region": "Восток",
     "start": [
@@ -7115,7 +7115,7 @@ export const csvEngineers = [
     "route": "Маршрут 10",
     "jobs": 6,
     "distance": "0 км",
-    "load": 27,
+    "load": 29,
     "color": "#a04fa4",
     "region": "Восток",
     "start": [
@@ -7169,7 +7169,7 @@ export const csvEngineers = [
     "route": "Маршрут 12",
     "jobs": 5,
     "distance": "0 км",
-    "load": 25,
+    "load": 32,
     "color": "#b67b1f",
     "region": "Восток",
     "start": [
@@ -7195,7 +7195,7 @@ export const csvEngineers = [
     "route": "Маршрут 13",
     "jobs": 11,
     "distance": "0 км",
-    "load": 59,
+    "load": 70,
     "color": "#7657ff",
     "region": "Юго-восток",
     "start": [
@@ -7221,7 +7221,7 @@ export const csvEngineers = [
     "route": "Маршрут 14",
     "jobs": 7,
     "distance": "0 км",
-    "load": 38,
+    "load": 39,
     "color": "#00a89d",
     "region": "Юго-восток",
     "start": [
@@ -7249,7 +7249,7 @@ export const csvEngineers = [
     "route": "Маршрут 15",
     "jobs": 8,
     "distance": "0 км",
-    "load": 43,
+    "load": 46,
     "color": "#ff8b3d",
     "region": "Юго-восток",
     "start": [
@@ -7277,7 +7277,7 @@ export const csvEngineers = [
     "route": "Маршрут 16",
     "jobs": 8,
     "distance": "0 км",
-    "load": 43,
+    "load": 45,
     "color": "#2d82d7",
     "region": "Юго-восток",
     "start": [
@@ -7305,7 +7305,7 @@ export const csvEngineers = [
     "route": "Маршрут 17",
     "jobs": 14,
     "distance": "0 км",
-    "load": 75,
+    "load": 79,
     "color": "#e84f87",
     "region": "Юго-восток",
     "start": [
@@ -7333,7 +7333,7 @@ export const csvEngineers = [
     "route": "Маршрут 18",
     "jobs": 7,
     "distance": "0 км",
-    "load": 38,
+    "load": 39,
     "color": "#8b5e34",
     "region": "Юго-восток",
     "start": [
@@ -7361,7 +7361,7 @@ export const csvEngineers = [
     "route": "Маршрут 19",
     "jobs": 9,
     "distance": "0 км",
-    "load": 48,
+    "load": 52,
     "color": "#7a9c32",
     "region": "Юго-восток",
     "start": [
@@ -7413,7 +7413,7 @@ export const csvEngineers = [
     "route": "Маршрут 21",
     "jobs": 11,
     "distance": "0 км",
-    "load": 59,
+    "load": 73,
     "color": "#5367c9",
     "region": "Юго-восток",
     "start": [
@@ -7513,7 +7513,7 @@ export const csvEngineers = [
     "route": "Маршрут 25",
     "jobs": 5,
     "distance": "0 км",
-    "load": 27,
+    "load": 29,
     "color": "#7657ff",
     "region": "Югоцентр",
     "start": [
@@ -7539,7 +7539,7 @@ export const csvEngineers = [
     "route": "Маршрут 26",
     "jobs": 8,
     "distance": "0 км",
-    "load": 43,
+    "load": 45,
     "color": "#00a89d",
     "region": "Югоцентр",
     "start": [
@@ -7619,7 +7619,7 @@ export const csvEngineers = [
     "route": "Маршрут 29",
     "jobs": 4,
     "distance": "0 км",
-    "load": 21,
+    "load": 25,
     "color": "#e84f87",
     "region": "Югоцентр",
     "start": [
@@ -7645,7 +7645,7 @@ export const csvEngineers = [
     "route": "Маршрут 30",
     "jobs": 4,
     "distance": "0 км",
-    "load": 20,
+    "load": 21,
     "color": "#8b5e34",
     "region": "Югоцентр",
     "start": [
@@ -7697,7 +7697,7 @@ export const csvEngineers = [
     "route": "Маршрут 32",
     "jobs": 5,
     "distance": "0 км",
-    "load": 27,
+    "load": 29,
     "color": "#d35f45",
     "region": "Югоцентр",
     "start": [
@@ -7749,7 +7749,7 @@ export const csvEngineers = [
     "route": "Маршрут 34",
     "jobs": 5,
     "distance": "0 км",
-    "load": 27,
+    "load": 30,
     "color": "#a04fa4",
     "region": "Югоцентр",
     "start": [
@@ -7777,7 +7777,7 @@ export const csvEngineers = [
     "route": "Маршрут 35",
     "jobs": 3,
     "distance": "0 км",
-    "load": 16,
+    "load": 20,
     "color": "#168b67",
     "region": "Югоцентр",
     "start": [

@@ -56,9 +56,9 @@ function canonicalSkill(workType) {
 }
 
 function serviceMinutes(workType, skill) {
-  if (skill === skillCatalog[2]) return /кабел|обрыв|повреж/i.test(workType) ? 60 : 45;
-  if (skill === skillCatalog[1]) return /gpon|гигабит/i.test(workType) ? 60 : 45;
-  return /информ|консультац|настрой|диагност/i.test(workType) ? 30 : 45;
+  if (skill === skillCatalog[2]) return /кабел|обрыв|повреж/i.test(workType) ? 90 : 60;
+  if (skill === skillCatalog[1]) return /gpon|гигабит|гбит|кабел|монтаж/i.test(workType) ? 60 : 45;
+  return /информ|консультац|монитор|настрой|диагност/i.test(workType) ? 30 : 45;
 }
 
 function jobPriority(workType, skill) {
@@ -169,7 +169,7 @@ for (const table of tables) {
       requiredTransport,
       allowedTransports,
       priority: jobPriority(workType, kind),
-      serviceMinutes: serviceMinutes(workType, kind),
+      serviceMinutes: serviceMinutes(`${workType} ${row["Гигабитное подключение"] ?? ""}`, kind),
       source: "CSV",
       status: assignment["Статус BK"] || "Не назначена",
     };
