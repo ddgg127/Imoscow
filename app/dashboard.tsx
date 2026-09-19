@@ -146,7 +146,7 @@ function EngineersView({ engineers, jobs, result, unavailableIds, onOpenDetails,
   return <section className="page-view">
     <InstantSearch value={query} onChange={setQuery} placeholder="Имя инженера или номер заявки"><div className="instant-results">{searched.slice(0, 8).map(engineer => <button type="button" key={engineer.id} onClick={() => onOpenDetails(engineer.id)}><span><b>{engineer.name}</b><small>{engineer.region} · {(jobIdsByEngineer.get(engineer.id) ?? []).length} заявок</small></span><em>{(jobIdsByEngineer.get(engineer.id) ?? []).filter(id => id.toLocaleLowerCase("ru").includes(normalized)).slice(0, 2).map(id => `№ ${id}`).join(", ")}</em></button>)}{!searched.length && <p>Совпадений не найдено</p>}</div></InstantSearch>
     <div className="view-summary">
-      <article><span>Доступно</span><strong>{engineers.length}</strong><small>бригад в текущем запуске</small></article>
+      <article><span>Доступно</span><strong>{engineers.length - unavailableIds.length}</strong><small>из {engineers.length} бригад в текущем запуске</small></article>
       <article><span>На маршрутах</span><strong>{active}</strong><small>имеют назначенные работы</small></article>
       <article><span>Средняя загрузка</span><strong>{avg}%</strong><small>по длительности смены</small></article>
     </div>
