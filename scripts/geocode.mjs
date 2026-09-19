@@ -28,7 +28,7 @@ export function normalizeAddress(raw) {
     .replace(/\s*,\s*/g, ", ")
     .replace(/\s+/g, " ")
     .trim();
-  if (!/(москва|домодедово|кашира)/i.test(value)) value = `Москва, ${value}`;
+  if (!/(москва|московская область|домодедово|кашира|ступино)/i.test(value)) value = `Москва, ${value}`;
   return value.replace(/москва\s*,?\s*москва/gi, "Москва").replace(/\s+/g, " ").trim();
 }
 
@@ -117,7 +117,7 @@ export async function geocodeAddress(raw, cache, fallback) {
   if (!key) return { coords: fallback, fromCache: true };
   const cached = cache[key];
   if (cached?.lon && cached?.lat && process.env.GEOCODE_RETRY !== "1") {
-    return { coords: [Number(cached.lon), Number(cached.lat)], fromCache: true };
+    return { coords: [Number(cached.lon), Number(cached.lat)], fromCache: true, entry: cached };
   }
   const query = normalizeAddress(key);
   let best = null;
@@ -143,11 +143,14 @@ export async function geocodeAddress(raw, cache, fallback) {
       displayName: best.display_name,
       type: `${best.addresstype ?? ""}/${best.type ?? ""}`,
       query: usedQuery,
+      quality: bestScore >= 6 ? "house" : "street",
+      verified: bestScore >= 4,
+      provider: "Nominatim/OpenStreetMap",
     };
-    return { coords: [cache[key].lon, cache[key].lat], fromCache: false };
+    return { coords: [cache[key].lon, cache[key].lat], fromCache: false, entry: cache[key] };
   }
-  cache[key] = { lon: fallback[0], lat: fallback[1], displayName: "", type: "fallback", query };
-  return { coords: fallback, fromCache: false };
+  cache[key] = { lon: fallback[0], lat: fallback[1], displayName: "", type: "fallback", query, quality: "fallback", verified: false, provider: "region center" };
+  return { coords: fallback, fromCache: false, entry: cache[key] };
 }
 
 export async function geocodeMany(addresses, fallbacks) {

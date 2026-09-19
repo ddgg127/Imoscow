@@ -27,10 +27,12 @@ class Job(BaseModel):
     kind: str
     equipment: str
     requiredTransport: str
+    allowedTransports: list[str] | None = None
     priority: int = Field(default=1, ge=1, le=100)
     windowStart: int
     windowEnd: int
     serviceMinutes: int
+    cancelled: bool = False
 
 
 class Matrix(BaseModel):
@@ -80,8 +82,9 @@ def key(point: tuple[float, float]) -> str:
 
 def compatible(engineer: Engineer, job: Job) -> bool:
     return (
-        engineer.region == job.region
-        and engineer.transport == job.requiredTransport
+        not job.cancelled
+        and engineer.region == job.region
+        and engineer.transport in (job.allowedTransports or [job.requiredTransport])
         and job.equipment in engineer.equipment
         and job.kind in engineer.skills
     )

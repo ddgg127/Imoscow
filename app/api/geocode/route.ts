@@ -15,7 +15,7 @@ function scoreHit(hit: Hit) {
 
 async function nominatim(query: string) {
   const url = new URL("https://nominatim.openstreetmap.org/search");
-  url.searchParams.set("q", query.includes("Москва") ? query : `${query}, Москва`);
+  url.searchParams.set("q", /(москва|московская область|домодедово|кашира|ступино)/i.test(query) ? query : `${query}, Москва`);
   url.searchParams.set("format", "jsonv2");
   url.searchParams.set("limit", "5");
   url.searchParams.set("countrycodes", "ru");

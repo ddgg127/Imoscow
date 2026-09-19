@@ -50,21 +50,17 @@ export function heuristicServerResponse(payload: SolverPayload): SolverResponse 
 function validResponse(value: unknown): value is SolverResponse {
   if (!value || typeof value !== "object") return false;
   const item = value as Partial<SolverResponse>;
-  return (item.engine === "ortools" || item.engine === "heuristic-server") && Array.isArray(item.routes)
+  return item.engine === "ortools" && Array.isArray(item.routes)
     && item.routes.every(route => typeof route?.engineerId === "string" && Array.isArray(route.jobIds) && route.jobIds.every(id => typeof id === "string"));
 }
 
-export async function solveVrptwServer(engineers: Engineer[], jobs: Job[], speedKmh: number, travel: TravelMatrix, urgentId?: string): Promise<{ result: OptimizationResult; engine: SolverEngine }> {
+export async function solveVrptwServer(engineers: Engineer[], jobs: Job[], speedKmh: number, travel: TravelMatrix, urgentId?: string): Promise<{ result: OptimizationResult; engine: "ortools" }> {
   const payload = createSolverPayload(engineers, jobs, speedKmh, travel, urgentId);
-  try {
-    const response = await fetch("/api/solver", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
-    if (!response.ok) throw new Error(`Solver API ${response.status}`);
-    const server = await response.json() as unknown;
-    if (!validResponse(server)) throw new Error("Invalid solver response");
-    const result = resultFromRouteOrder(engineers, jobs, server.routes, { speedKmh, travel });
-    result.runtimeMs = Math.round((server.runtimeMs + result.runtimeMs) * 10) / 10;
-    return { result, engine: server.engine };
-  } catch {
-    return { result: optimizeVrptw(engineers, jobs, { speedKmh, travel, innerBudget: 180, zoneBudget: 600 }), engine: "heuristic-browser" };
-  }
+  const response = await fetch("/api/solver", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
+  const server = await response.json().catch(() => null) as (SolverResponse & { error?: string }) | null;
+  if (!response.ok) throw new Error(server?.error ?? `OR-Tools API ${response.status}`);
+  if (!validResponse(server)) throw new Error("Сервер не подтвердил результат OR-Tools");
+  const result = resultFromRouteOrder(engineers, jobs, server.routes, { speedKmh, travel });
+  result.runtimeMs = Math.round((server.runtimeMs + result.runtimeMs) * 10) / 10;
+  return { result, engine: "ortools" };
 }

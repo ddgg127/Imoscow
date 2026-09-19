@@ -95,7 +95,9 @@ test("CSV optimization recovers feasible jobs and explains the remaining unassig
   const input = applyAverageWindows(csvJobs, 240);
   const result = optimizeVrptw(csvEngineers, input, { speedKmh: 24, innerBudget: 160, zoneBudget: 320 });
   const routed = new Map(result.routes.flatMap(route => route.stops.map(stop => [stop.jobId, route.engineerId])));
-  assert.ok(result.metrics.assigned >= 202);
+  // Four south-east jobs are individually unreachable from the office before
+  // their early windows once verified coordinates replace regional centroids.
+  assert.ok(result.metrics.assigned >= 200);
   assert.equal(routed.size, result.metrics.assigned);
   for (const item of result.jobs) {
     assert.equal(item.engineerId ?? null, routed.get(item.id) ?? null);

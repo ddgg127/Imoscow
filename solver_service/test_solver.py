@@ -79,6 +79,22 @@ def test_impossible_time_window_is_dropped():
     assert "a" in result.droppedJobIds
 
 
+def test_cancelled_job_is_forced_inactive():
+    data = payload()
+    data["jobs"][0]["cancelled"] = True
+    result = solve_vrptw(SolveRequest.model_validate(data))
+    assert "a" in result.droppedJobIds
+    assert all("a" not in route.jobIds for route in result.routes)
+
+
+def test_allowed_transport_list_is_honoured():
+    data = payload()
+    data["engineers"][0]["transport"] = "Велосипед"
+    data["jobs"][0]["allowedTransports"] = ["Автомобиль", "Велосипед"]
+    result = solve_vrptw(SolveRequest.model_validate(data))
+    assert "a" not in result.droppedJobIds
+
+
 def test_bad_matrix_is_rejected():
     data = payload()
     data["matrix"]["distancesKm"][0][1] = -1

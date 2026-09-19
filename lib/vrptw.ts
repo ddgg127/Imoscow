@@ -4,8 +4,9 @@ export type Region = "Восток" | "Юго-восток" | "Югоцентр"
 export type Job = {
   id: string; time: string; windowStart: number; windowEnd: number; area: string; address: string;
   kind: string; tone: string; region: Region; engineerId: string | null; baselineEngineerId: string | null;
-  coordinates: Coordinate; risk: boolean; equipment: string; requiredTransport: string; priority: number;
-  serviceMinutes: number; source: string; status: string; baselineUnassignedReason?: string; geocodeVerified?: boolean;
+  coordinates: Coordinate; risk: boolean; equipment: string; requiredTransport: string; allowedTransports?: string[]; priority: number;
+  serviceMinutes: number; source: string; status: string; workType?: string; cancelled?: boolean;
+  baselineUnassignedReason?: string; geocodeVerified?: boolean; geocodeQuality?: "house" | "street" | "fallback"; geocodeDisplayName?: string;
   unassignedReason?: string;
 };
 export type Engineer = {
@@ -196,7 +197,7 @@ export function applyAverageWindows(jobs: Job[], averageMinutes: number): Job[] 
 }
 
 function compatible(engineer: Engineer, job: Job) {
-  return engineer.region === job.region && engineer.transport === job.requiredTransport && engineer.equipment.includes(job.equipment) && engineer.skills.includes(job.kind);
+  return !job.cancelled && engineer.region === job.region && (job.allowedTransports?.includes(engineer.transport) ?? engineer.transport === job.requiredTransport) && engineer.equipment.includes(job.equipment) && engineer.skills.includes(job.kind);
 }
 
 function simulate(engineer: Engineer, route: Job[], hardWindows = true, speedKmh = SPEED_KMH, travel?: TravelMatrix): RoutePlan | null {
@@ -679,7 +680,9 @@ function finish(engineers: Engineer[], inputJobs: Job[], jobs: Job[], assignment
     const eligible = engineers.filter(engineer => compatible(engineer, job));
     let unassignedReason: string | undefined;
     if (!engineerId) {
-      if (!eligible.length) {
+      if (job.cancelled) {
+        unassignedReason = "Заявка отменена диспетчером и исключена из расчёта.";
+      } else if (!eligible.length) {
         unassignedReason = "В регионе нет инженера с нужным навыком, оборудованием и транспортом.";
       } else if (!eligible.some(engineer => simulate(engineer, [job], true, speedKmh, travel))) {
         const earliest = Math.min(...eligible.map(engineer => engineer.shiftStart + travelMinutes(engineer.start, job.coordinates, speedKmh, travel)));
