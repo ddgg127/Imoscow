@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { geocodeMany } from "./geocode.mjs";
+import { geocodeMany, loadGeocodeCache } from "./geocode.mjs";
 
 const root = process.cwd();
 const sourceDir = path.join(root, "data", "csv");
@@ -71,6 +71,9 @@ for (const table of tables) {
 }
 
 const geocoded = await geocodeMany(uniqueAddresses, fallbacks);
+const geocodeCache = loadGeocodeCache();
+const fallbackAddresses = uniqueAddresses.filter(address => !geocodeCache[address] || geocodeCache[address].type === "fallback");
+const geocoding = { uniqueAddresses: uniqueAddresses.length, fallbackAddresses: fallbackAddresses.length, resolvedAddresses: uniqueAddresses.length - fallbackAddresses.length };
 const offices = {};
 for (const table of tables) {
   offices[table.region] = {
@@ -140,6 +143,6 @@ const engineers = [...engineerSeed.values()].map((seed, index) => ({
   shiftEnd: 1320,
 }));
 
-const output = `/* Generated from data/csv by scripts/import-csv.mjs. Coordinates come from Nominatim house-level geocoding. */\nexport const csvJobs = ${JSON.stringify(jobs, null, 2)};\nexport const csvEngineers = ${JSON.stringify(engineers, null, 2)};\nexport const csvMeta = ${JSON.stringify({ rows: jobs.length, regions: specs.map(item => item.region), generatedAt: new Date().toISOString().slice(0, 10), geocoded: true, offices }, null, 2)};\n`;
+const output = `/* Generated from data/csv by scripts/import-csv.mjs. Coordinates are cached geocodes or explicitly counted fallbacks. */\nexport const csvJobs = ${JSON.stringify(jobs, null, 2)};\nexport const csvEngineers = ${JSON.stringify(engineers, null, 2)};\nexport const csvMeta = ${JSON.stringify({ rows: jobs.length, regions: specs.map(item => item.region), generatedAt: new Date().toISOString().slice(0, 10), geocoding, offices }, null, 2)};\n`;
 fs.writeFileSync(path.join(root, "lib", "csv-data.generated.ts"), output, "utf8");
 console.log(`Imported ${jobs.length} jobs and ${engineers.length} engineers from CSV.`);

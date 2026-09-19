@@ -134,7 +134,7 @@ export function TimeDrum({ start, end, time, playing, speed, onTime, onPlaying, 
           title={`1 с экрана = ${speed} ${minutesWord(speed)} смены`}
           onClick={() => setSpeedOpen(open => !open)}
         >
-          ×{speed}
+          ×{speed}<small>мин/с</small>
         </button>
         {speedOpen && (
           <div className="time-drum-speed-menu" role="listbox" aria-label="Скорость симуляции">

@@ -1,4 +1,4 @@
-/* Generated from data/csv by scripts/import-csv.mjs. Coordinates come from Nominatim house-level geocoding. */
+/* Generated from data/csv by scripts/import-csv.mjs. Coordinates are cached geocodes or explicitly counted fallbacks. */
 export const csvJobs = [
   {
     "id": "74198",
@@ -5929,7 +5929,11 @@ export const csvMeta = {
     "Югоцентр"
   ],
   "generatedAt": "2026-09-18",
-  "geocoded": true,
+  "geocoding": {
+    "uniqueAddresses": 198,
+    "fallbackAddresses": 24,
+    "resolvedAddresses": 174
+  },
   "offices": {
     "Восток": {
       "address": "г. Москва, ул Юных Ленинцев, д 83с 4",
