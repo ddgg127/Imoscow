@@ -17,7 +17,16 @@ export type RouteStop = { jobId: string; arrival: number; start: number; end: nu
 export type RoutePlan = { engineerId: string; stops: RouteStop[]; distanceKm: number; durationMinutes: number; load: number };
 export type PlanMetrics = { assigned: number; total: number; unassigned: number; activeEngineers: number; distanceKm: number; slaPercent: number; late: number; utilization: number };
 export type ZoneMetric = { name: Region; jobs: number; assigned: number; baselineAssigned: number; sla: number; distance: number; baselineDistance: number; engineers: number; baselineEngineers: number };
-export type PlanComparison = { sameAssignedJobs: boolean; distanceDeltaPercent: number | null; reason: string | null };
+export type PlanComparison = {
+  sameAssignedJobs: boolean;
+  commonAssigned: number;
+  baselineOnly: number;
+  optimizedOnly: number;
+  baselineComparableDistanceKm: number | null;
+  optimizedComparableDistanceKm: number | null;
+  distanceDeltaPercent: number | null;
+  reason: string | null;
+};
 export type OptimizationResult = { jobs: Job[]; routes: RoutePlan[]; baselineRoutes: RoutePlan[]; metrics: PlanMetrics; baseline: PlanMetrics; comparison: PlanComparison; zones: ZoneMetric[]; runtimeMs: number };
 export type TravelMatrix = {
   distanceKm: (a: Coordinate, b: Coordinate) => number;
@@ -237,14 +246,52 @@ export function comparePlans(baselineRoutes: RoutePlan[], routes: RoutePlan[]): 
   const baselineIds = baselineRoutes.flatMap(route => route.stops.map(stop => stop.jobId)).sort();
   const optimizedIds = routes.flatMap(route => route.stops.map(stop => stop.jobId)).sort();
   if (baselineIds.length !== optimizedIds.length || baselineIds.some((id, index) => id !== optimizedIds[index])) {
-    return { sameAssignedJobs: false, distanceDeltaPercent: null, reason: "Планы выполняют разные заявки: процент изменения пробега некорректен." };
+    const baselineSet = new Set(baselineIds);
+    const optimizedSet = new Set(optimizedIds);
+    const commonAssigned = baselineIds.filter(id => optimizedSet.has(id)).length;
+    return { sameAssignedJobs: false, commonAssigned, baselineOnly: baselineIds.filter(id => !optimizedSet.has(id)).length, optimizedOnly: optimizedIds.filter(id => !baselineSet.has(id)).length, baselineComparableDistanceKm: null, optimizedComparableDistanceKm: null, distanceDeltaPercent: null, reason: "Планы выполняют разные заявки: для процента требуется сравнение общего набора." };
   }
   const baselineDistance = baselineRoutes.reduce((sum, route) => sum + route.distanceKm, 0);
   const optimizedDistance = routes.reduce((sum, route) => sum + route.distanceKm, 0);
-  return { sameAssignedJobs: true, distanceDeltaPercent: baselineDistance > 0 ? (optimizedDistance / baselineDistance - 1) * 100 : null, reason: baselineDistance > 0 ? null : "Нет исходного пробега для сравнения." };
+  return { sameAssignedJobs: true, commonAssigned: baselineIds.length, baselineOnly: 0, optimizedOnly: 0, baselineComparableDistanceKm: baselineDistance, optimizedComparableDistanceKm: optimizedDistance, distanceDeltaPercent: baselineDistance > 0 ? (optimizedDistance / baselineDistance - 1) * 100 : null, reason: baselineDistance > 0 ? null : "Нет исходного пробега для сравнения." };
 }
 
-/** Specification baseline: input job order, first feasible engineer in input order, append-only visits. */
+/** Compare distance only for job IDs served by both plans, preserving each plan's own visit order. */
+export function comparePlansStrict(engineers: Engineer[], jobs: Job[], baselineRoutes: RoutePlan[], routes: RoutePlan[], speedKmh = SPEED_KMH, travel?: TravelMatrix): PlanComparison {
+  const baselineIds = new Set(baselineRoutes.flatMap(route => route.stops.map(stop => stop.jobId)));
+  const optimizedIds = new Set(routes.flatMap(route => route.stops.map(stop => stop.jobId)));
+  const common = new Set([...baselineIds].filter(id => optimizedIds.has(id)));
+  const byEngineer = new Map(engineers.map(engineer => [engineer.id, engineer]));
+  const byJob = new Map(jobs.map(job => [job.id, job]));
+  const projectedDistance = (plans: RoutePlan[]) => plans.reduce((total, plan) => {
+    const engineer = byEngineer.get(plan.engineerId);
+    if (!engineer) return total;
+    let point = engineer.start;
+    for (const stop of plan.stops) {
+      if (!common.has(stop.jobId)) continue;
+      const job = byJob.get(stop.jobId);
+      if (!job) continue;
+      total += travelDistance(point, job.coordinates, speedKmh, travel);
+      point = job.coordinates;
+    }
+    return total;
+  }, 0);
+  const baselineDistance = common.size ? projectedDistance(baselineRoutes) : 0;
+  const optimizedDistance = common.size ? projectedDistance(routes) : 0;
+  const sameAssignedJobs = baselineIds.size === optimizedIds.size && baselineIds.size === common.size;
+  return {
+    sameAssignedJobs,
+    commonAssigned: common.size,
+    baselineOnly: [...baselineIds].filter(id => !optimizedIds.has(id)).length,
+    optimizedOnly: [...optimizedIds].filter(id => !baselineIds.has(id)).length,
+    baselineComparableDistanceKm: common.size ? baselineDistance : null,
+    optimizedComparableDistanceKm: common.size ? optimizedDistance : null,
+    distanceDeltaPercent: baselineDistance > 0 ? (optimizedDistance / baselineDistance - 1) * 100 : null,
+    reason: !common.size ? "Нет общего набора выполненных заявок для сопоставимого сравнения." : sameAssignedJobs ? null : `Пробег сопоставлен строго на ${common.size} заявках, выполненных обоими планами. Покрытие показано отдельно.`,
+  };
+}
+
+/** Simple deterministic baseline: input order and cheapest feasible insertion, without local/global search. */
 export function baselinePlan(engineers: Engineer[], jobs: Job[], speedKmh = SPEED_KMH, travel?: TravelMatrix) {
   const assigned = new Map(engineers.map(engineer => [engineer.id, [] as Job[]]));
   const plans = new Map<string, RoutePlan>();
@@ -256,18 +303,24 @@ export function baselinePlan(engineers: Engineer[], jobs: Job[], speedKmh = SPEE
       unassignedReasons.set(job.id, "Нет инженера с нужными навыком, оборудованием и транспортом в регионе.");
       continue;
     }
-    let selected = false;
+    let selected: { engineer: Engineer; route: Job[]; plan: RoutePlan; score: number } | null = null;
     for (const engineer of compatibleEngineers) {
-      const candidate = [...assigned.get(engineer.id)!, job];
-      const plan = simulate(engineer, candidate, true, speedKmh, travel);
-      if (!plan) continue;
-      assigned.set(engineer.id, candidate);
-      plans.set(engineer.id, plan);
-      assignmentById.set(job.id, engineer.id);
-      selected = true;
-      break;
+      const current = assigned.get(engineer.id)!;
+      const currentPlan = current.length ? simulate(engineer, current, true, speedKmh, travel) : null;
+      for (let position = 0; position <= current.length; position++) {
+        const route = [...current.slice(0, position), job, ...current.slice(position)];
+        const plan = simulate(engineer, route, true, speedKmh, travel);
+        if (!plan) continue;
+        const addedDistance = plan.distanceKm - (currentPlan?.distanceKm ?? 0);
+        const score = addedDistance + (current.length ? 0 : 20) + plan.durationMinutes / 100000;
+        if (!selected || score < selected.score) selected = { engineer, route, plan, score };
+      }
     }
-    if (!selected) unassignedReasons.set(job.id, "Нет места в конце маршрута: не соблюдается окно заявки или конец смены.");
+    if (selected) {
+      assigned.set(selected.engineer.id, selected.route);
+      plans.set(selected.engineer.id, selected.plan);
+      assignmentById.set(job.id, selected.engineer.id);
+    } else unassignedReasons.set(job.id, "Жадная вставка не нашла допустимого окна без перестройки уже созданных маршрутов.");
   }
   const routes = engineers.map(engineer => plans.get(engineer.id)).filter((route): route is RoutePlan => Boolean(route));
   return { routes, metrics: metricsFrom(engineers, jobs, routes), assignmentById, unassignedReasons };
@@ -281,7 +334,7 @@ export function idleOptimization(engineers: Engineer[], jobs: Job[], speedKmh = 
     const baseRoutes = baseline.routes.filter(route => ids.has(route.engineerId));
     return { name, jobs: zoneJobs.length, assigned: 0, baselineAssigned: baseRoutes.reduce((sum, route) => sum + route.stops.length, 0), sla: 0, distance: 0, baselineDistance: baseRoutes.reduce((sum, route) => sum + route.distanceKm, 0), engineers: 0, baselineEngineers: baseRoutes.length };
   });
-  return { jobs: jobs.map(job => ({ ...job, engineerId: null, baselineEngineerId: baseline.assignmentById.get(job.id) ?? null, baselineUnassignedReason: baseline.unassignedReasons.get(job.id) })), routes: [], baselineRoutes: baseline.routes, metrics: { assigned: 0, total: jobs.length, unassigned: jobs.length, activeEngineers: 0, distanceKm: 0, slaPercent: 0, late: 0, utilization: 0 }, baseline: baseline.metrics, comparison: comparePlans(baseline.routes, []), zones, runtimeMs: 0 };
+  return { jobs: jobs.map(job => ({ ...job, engineerId: null, baselineEngineerId: baseline.assignmentById.get(job.id) ?? null, baselineUnassignedReason: baseline.unassignedReasons.get(job.id) })), routes: [], baselineRoutes: baseline.routes, metrics: { assigned: 0, total: jobs.length, unassigned: jobs.length, activeEngineers: 0, distanceKm: 0, slaPercent: 0, late: 0, utilization: 0 }, baseline: baseline.metrics, comparison: comparePlansStrict(engineers, jobs, baseline.routes, [], speedKmh, travel), zones, runtimeMs: 0 };
 }
 
 function hashSeed(jobs: Job[], engineers: Engineer[]) {
@@ -653,7 +706,36 @@ function finish(engineers: Engineer[], inputJobs: Job[], jobs: Job[], assignment
     const onTime = zoneRoutes.reduce((sum, route) => sum + route.stops.filter(stop => stop.onTime).length, 0);
     return { name, jobs: zoneJobs.length, assigned, baselineAssigned: baseRoutes.reduce((sum, route) => sum + route.stops.length, 0), sla: assigned ? Math.round(onTime / assigned * 100) : 0, distance: zoneRoutes.reduce((sum, route) => sum + route.distanceKm, 0), baselineDistance: baseRoutes.reduce((sum, route) => sum + route.distanceKm, 0), engineers: zoneRoutes.length, baselineEngineers: baseRoutes.length };
   });
-  return { jobs: resultJobs, routes, baselineRoutes: baseline.routes, metrics, baseline: baseline.metrics, comparison: comparePlans(baseline.routes, routes), zones, runtimeMs: Math.round((performance.now() - started) * 10) / 10 };
+  return { jobs: resultJobs, routes, baselineRoutes: baseline.routes, metrics, baseline: baseline.metrics, comparison: comparePlansStrict(engineers, inputJobs, baseline.routes, routes, speedKmh, travel), zones, runtimeMs: Math.round((performance.now() - started) * 10) / 10 };
+}
+
+/** Validate and evaluate route orders returned by an external solver. */
+export function resultFromRouteOrder(engineers: Engineer[], inputJobs: Job[], routeOrders: Array<{ engineerId: string; jobIds: string[] }>, options: OptimizeOptions = {}): OptimizationResult {
+  const speedKmh = options.speedKmh ?? SPEED_KMH;
+  const travel = options.travel;
+  const started = performance.now();
+  const jobs = inputJobs.map(job => ({ ...job, engineerId: null, risk: false }));
+  const byJob = new Map(jobs.map(job => [job.id, job]));
+  const byEngineer = new Map(engineers.map(engineer => [engineer.id, engineer]));
+  const assignments = new Map(engineers.map(engineer => [engineer.id, [] as Job[]]));
+  const seen = new Set<string>();
+  for (const order of routeOrders) {
+    const engineer = byEngineer.get(order.engineerId);
+    if (!engineer) throw new Error(`Solver returned unknown engineer ${order.engineerId}`);
+    const route: Job[] = [];
+    for (const id of order.jobIds) {
+      const job = byJob.get(id);
+      if (!job) throw new Error(`Solver returned unknown job ${id}`);
+      if (seen.has(id)) throw new Error(`Solver assigned job ${id} more than once`);
+      if (!compatible(engineer, job)) throw new Error(`Solver violated resources for job ${id}`);
+      seen.add(id);
+      route.push(job);
+    }
+    if (!simulate(engineer, route, true, speedKmh, travel)) throw new Error(`Solver returned infeasible route for ${engineer.id}`);
+    assignments.set(engineer.id, route);
+  }
+  syncAssignments(engineers, jobs, assignments);
+  return finish(engineers, inputJobs, jobs, assignments, speedKmh, travel, started);
 }
 
 export function optimizeVrptw(engineers: Engineer[], inputJobs: Job[], options: OptimizeOptions = {}): OptimizationResult {

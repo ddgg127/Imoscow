@@ -45,14 +45,16 @@ export function TimeDrum({ start, end, time, playing, speed, onTime, onPlaying, 
   const speedValueRef = useRef(speed);
   const dragRef = useRef<{ y: number } | null>(null);
   const [speedOpen, setSpeedOpen] = useState(false);
-  timeRef.current = time;
-  startRef.current = start;
-  endRef.current = end;
-  onTimeRef.current = onTime;
-  onPlayingRef.current = onPlaying;
-  onSpeedRef.current = onSpeed;
-  disabledRef.current = disabled;
-  speedValueRef.current = speed;
+  useEffect(() => {
+    timeRef.current = time;
+    startRef.current = start;
+    endRef.current = end;
+    onTimeRef.current = onTime;
+    onPlayingRef.current = onPlaying;
+    onSpeedRef.current = onSpeed;
+    disabledRef.current = disabled;
+    speedValueRef.current = speed;
+  }, [time, start, end, onTime, onPlaying, onSpeed, disabled, speed]);
 
   const ticks = useMemo(() => {
     const list: number[] = [];

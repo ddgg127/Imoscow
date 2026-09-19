@@ -204,6 +204,8 @@ function useRoadRoutes(
   const baselineByEngineer = useMemo(() => new Map(baselineRoutes.map(route => [route.engineerId, route])), [baselineRoutes]);
   useEffect(() => {
     if (!routingEnabled) {
+      // Reset cached external routing state when road routing is disabled.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setRoadRoutes({});
       setRouteStatus("idle");
       onRoutingState("idle");
@@ -226,6 +228,8 @@ function useRoadRoutes(
   }, [routingEnabled, visibleEngineers, visibleJobs, planByEngineer, providerId, apiKey, onRoutingState]);
   useEffect(() => {
     if (!routingEnabled || !compare) {
+      // The comparison layer must disappear immediately when its toggle closes.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setBaselineRoads({});
       return;
     }
@@ -373,6 +377,8 @@ export function MapCanvas(props: CanvasProps) {
   }, [markerJobs, markerEngineers, fitCoords]);
   useEffect(() => {
     let cancelled = false;
+    const vehicles = vehiclesRef.current;
+    const markers = markersRef.current;
     void (async () => {
       const maplibre = await import("maplibre-gl");
       if (cancelled || !containerRef.current || mapRef.current) return;
@@ -414,9 +420,9 @@ export function MapCanvas(props: CanvasProps) {
     })();
     return () => {
       cancelled = true;
-      vehiclesRef.current.forEach(marker => marker.remove());
-      vehiclesRef.current.clear();
-      markersRef.current.forEach(marker => marker.remove());
+      vehicles.forEach(marker => marker.remove());
+      vehicles.clear();
+      markers.forEach(marker => marker.remove());
       mapRef.current?.remove();
       mapRef.current = null;
       loadedRef.current = false;
@@ -433,7 +439,7 @@ export function MapCanvas(props: CanvasProps) {
     const map = mapRef.current;
     if (!map || !loadedRef.current) return;
     markersRef.current.forEach(marker => marker.remove());
-    markersRef.current = [];
+    markersRef.current.length = 0;
     void import("maplibre-gl").then(({ Marker }) => {
       if (!mapRef.current) return;
       if (!simulating) {
@@ -471,19 +477,21 @@ export function MapCanvas(props: CanvasProps) {
   const simSpeedRef = useRef(simSpeed);
   const simTimeRef = useRef(simTime);
   const simEndRef = useRef(simEnd);
-  simPlayingRef.current = simPlaying;
-  simSpeedRef.current = simSpeed;
-  simTimeRef.current = simTime;
-  simEndRef.current = simEnd;
   const fleetRef = useRef({ visibleEngineers, visibleJobs, engineers, selectedEngineerId, planByEngineer, routeFor, onSelectEngineer, onSimTime, onSimPlaying, compare, routeData, baselineData });
-  fleetRef.current = { visibleEngineers, visibleJobs, engineers, selectedEngineerId, planByEngineer, routeFor, onSelectEngineer, onSimTime, onSimPlaying, compare, routeData, baselineData };
+  useEffect(() => {
+    simPlayingRef.current = simPlaying;
+    simSpeedRef.current = simSpeed;
+    simTimeRef.current = simTime;
+    simEndRef.current = simEnd;
+    fleetRef.current = { visibleEngineers, visibleJobs, engineers, selectedEngineerId, planByEngineer, routeFor, onSelectEngineer, onSimTime, onSimPlaying, compare, routeData, baselineData };
+  }, [simPlaying, simSpeed, simTime, simEnd, visibleEngineers, visibleJobs, engineers, selectedEngineerId, planByEngineer, routeFor, onSelectEngineer, onSimTime, onSimPlaying, compare, routeData, baselineData]);
   useEffect(() => {
     const map = mapRef.current;
     const clearVehicles = () => {
       vehiclesRef.current.forEach(marker => marker.remove());
       vehiclesRef.current.clear();
     };
-    if (!map || !loadedRef.current || simTime == null) {
+    if (!map || !loadedRef.current || simTimeRef.current == null) {
       clearVehicles();
       if (clockRef.current) clockRef.current.textContent = "";
       if (actionBoxRef.current) actionBoxRef.current.hidden = true;
@@ -493,7 +501,7 @@ export function MapCanvas(props: CanvasProps) {
     let frame = 0;
     let last = performance.now();
     let emit = 0;
-    let clock = simTime;
+    let clock = simTimeRef.current;
     let wasPlaying = simPlayingRef.current;
     const writeHud = (time: number, movers: Engineer[]) => {
       const focus = fleetRef.current.engineers.find(item => item.id === fleetRef.current.selectedEngineerId) ?? movers[0];
