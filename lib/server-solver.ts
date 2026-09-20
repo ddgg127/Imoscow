@@ -9,15 +9,16 @@ export type SolverPayload = {
   jobs: Job[];
   speedKmh: number;
   urgentId?: string;
+  forcedAssignments?: Record<string, string>;
   timeLimitSeconds?: number;
   matrix: { points: [number, number][]; distancesKm: number[][]; durationsMin: number[][] };
 };
 
-export function createSolverPayload(engineers: Engineer[], jobs: Job[], speedKmh: number, travel: TravelMatrix, urgentId?: string): SolverPayload {
+export function createSolverPayload(engineers: Engineer[], jobs: Job[], speedKmh: number, travel: TravelMatrix, urgentId?: string, forcedAssignments?: Record<string, string>): SolverPayload {
   const points = uniquePoints(engineers, jobs);
   const distancesKm = points.map(from => points.map(to => Number(travel.distanceKm(from, to).toFixed(4))));
   const durationsMin = points.map(from => points.map(to => Number(travel.durationMin(from, to).toFixed(3))));
-  return { engineers, jobs, speedKmh, urgentId, timeLimitSeconds: 12, matrix: { points, distancesKm, durationsMin } };
+  return { engineers, jobs, speedKmh, urgentId, forcedAssignments, timeLimitSeconds: forcedAssignments ? 8 : 12, matrix: { points, distancesKm, durationsMin } };
 }
 
 export function travelFromSolverPayload(payload: SolverPayload): TravelMatrix {
@@ -63,4 +64,15 @@ export async function solveVrptwServer(engineers: Engineer[], jobs: Job[], speed
   const result = resultFromRouteOrder(engineers, jobs, server.routes, { speedKmh, travel });
   result.runtimeMs = Math.round((server.runtimeMs + result.runtimeMs) * 10) / 10;
   return { result, engine: "ortools" };
+}
+
+export async function solveCounterfactualServer(engineers: Engineer[], jobs: Job[], speedKmh: number, travel: TravelMatrix, jobId: string, engineerId: string): Promise<OptimizationResult> {
+  const payload = createSolverPayload(engineers, jobs, speedKmh, travel, undefined, { [jobId]: engineerId });
+  const response = await fetch("/api/solver", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
+  const server = await response.json().catch(() => null) as (SolverResponse & { error?: string }) | null;
+  if (!response.ok) throw new Error(server?.error ?? `OR-Tools API ${response.status}`);
+  if (!validResponse(server)) throw new Error("Контрфактический расчёт не подтверждён OR-Tools");
+  const result = resultFromRouteOrder(engineers, jobs, server.routes, { speedKmh, travel });
+  result.runtimeMs = Math.round((server.runtimeMs + result.runtimeMs) * 10) / 10;
+  return result;
 }

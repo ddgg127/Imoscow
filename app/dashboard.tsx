@@ -1,11 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { AlertTriangle, BarChart3, Bell, CalendarDays, Check, ChevronDown, CircleHelp, Clock3, Contrast, Database, Download, FileJson, Layers3, MapPin, Menu, MoreHorizontal, Play, Plus, Route, Search, Sparkles, SunMoon, Upload, UsersRound, Wrench, X, Zap } from "lucide-react";
+import { AlertTriangle, BarChart3, Check, ChevronDown, Clock3, Contrast, Database, Download, FileJson, Layers3, MapPin, Menu, MoreHorizontal, Play, Plus, Route, Search, Sparkles, SunMoon, Upload, UsersRound, Wrench, X, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,12 +16,13 @@ import { loadRoadTravel } from "@/lib/road-travel";
 import { csvEngineers, csvJobs, csvMeta } from "@/lib/csv-data.generated";
 import { downloadPlan } from "@/lib/export-plan";
 import { importPlanFile } from "@/lib/import-data";
-import { solveVrptwServer, type SolverEngine } from "@/lib/server-solver";
+import { solveCounterfactualServer, solveVrptwServer, type SolverEngine } from "@/lib/server-solver";
 import { applyAverageWindows, compareReplannedPlans, explainAssignment, fallbackTravel, idleOptimization, minutesLabel, scaleEngineers, scaleJobs, type Engineer, type Job, type OptimizationResult, type Region, type ReplanChange, type RoutePlan, type TravelMatrix } from "@/lib/vrptw";
 
 type ThemeId = "light" | "dark" | "beeline" | "ocean" | "graphite" | "contrast";
 type ViewId = "plan" | "requests" | "team" | "analytics";
 type PlanConfig = { engineers: number; jobs: number; speedKmh: number; windowMinutes: number };
+type CounterfactualAssessment = { status: "loading" | "success" | "error"; summary?: string; error?: string; runtimeMs?: number };
 const sourceJobs = csvJobs as Job[];
 const sourceEngineers = csvEngineers as Engineer[];
 const defaultConfig: PlanConfig = { engineers: sourceEngineers.length, jobs: sourceJobs.length, speedKmh: 24, windowMinutes: 240 };
@@ -219,9 +219,64 @@ function ReplanImpactPanel({ changes }: { changes: ReplanChange[] }) {
   </section>;
 }
 
-function JobDetailsDialog({ job, engineer, plan, baselineEngineer, baselinePlan, jobs, engineers, routes, travel, speedKmh, onClose, onToggleCancelled }: { job: Job | null; engineer?: Engineer; plan?: RoutePlan; baselineEngineer?: Engineer; baselinePlan?: RoutePlan; jobs: Job[]; engineers: Engineer[]; routes: RoutePlan[]; travel?: TravelMatrix; speedKmh: number; onClose: () => void; onToggleCancelled: (id: string) => void }) {
+function routeAssignments(routes: RoutePlan[]) {
+  return new Map(routes.flatMap(route => route.stops.map(stop => [stop.jobId, route.engineerId] as const)));
+}
+function signed(value: number, digits = 1) { return `${value > 0 ? "+" : value < 0 ? "−" : "±"}${Math.abs(value).toFixed(digits).replace(".", ",")}`; }
+function summarizeCounterfactual(current: OptimizationResult, forced: OptimizationResult, jobId: string, engineerId: string) {
+  const currentAssignments = routeAssignments(current.routes);
+  const forcedAssignments = routeAssignments(forced.routes);
+  const comparedJobIds = new Set([...currentAssignments.keys(), ...forcedAssignments.keys()]);
+  const changed = [...comparedJobIds].filter(id => currentAssignments.get(id) !== forcedAssignments.get(id)).length;
+  const forcedRoute = forced.routes.find(route => route.engineerId === engineerId);
+  const stop = forcedRoute?.stops.find(item => item.jobId === jobId);
+  const distanceDelta = forced.metrics.distanceKm - current.metrics.distanceKm;
+  const fleetDelta = forced.metrics.activeEngineers - current.metrics.activeEngineers;
+  const assignedDelta = forced.metrics.assigned - current.metrics.assigned;
+  const lateDelta = forced.metrics.late - current.metrics.late;
+  const verdict = assignedDelta < 0
+    ? `Сценарий хуже: теряется ${Math.abs(assignedDelta)} заявок.`
+    : fleetDelta > 0
+      ? `Сценарий хуже: требуется ${fleetDelta} дополнительный инженер.`
+      : lateDelta > 0
+        ? `Сценарий хуже: появляется ${lateDelta} дополнительных опозданий.`
+        : distanceDelta > 0.05
+          ? `Сценарий хуже: общий пробег увеличивается на ${distanceDelta.toFixed(1).replace(".", ",")} км.`
+          : changed > 1
+            ? `По целевой функции сценарий равноценен, но дестабилизирует план: меняются назначения ${changed} заявок; текущий вариант сохраняется по tie-break OR-Tools.`
+            : `По целевой функции сценарий равноценен; текущий инженер выбран по стабильному tie-break OR-Tools.`;
+  const effects = [
+    `пробег ${signed(distanceDelta)} км`,
+    `активные инженеры ${signed(fleetDelta, 0)}`,
+    `выполненные заявки ${signed(assignedDelta, 0)}`,
+    `опоздания ${signed(lateDelta, 0)}`,
+    `SLA ${signed(forced.metrics.slaPercent - current.metrics.slaPercent)} п.п.`,
+    `переназначений ${changed}`,
+  ];
+  return `${verdict} Если назначить принудительно: ${stop ? `прибытие ${minutesLabel(stop.arrival)}, работа ${minutesLabel(stop.start)}–${minutesLabel(stop.end)}; ` : ""}${effects.join("; ")}.`;
+}
+
+function JobDetailsDialog({ job, engineer, plan, baselineEngineer, baselinePlan, jobs, engineers, routes, result, travel, speedKmh, onClose, onToggleCancelled }: { job: Job | null; engineer?: Engineer; plan?: RoutePlan; baselineEngineer?: Engineer; baselinePlan?: RoutePlan; jobs: Job[]; engineers: Engineer[]; routes: RoutePlan[]; result: OptimizationResult; travel?: TravelMatrix; speedKmh: number; onClose: () => void; onToggleCancelled: (id: string) => void }) {
   const byId = useMemo(() => new Map(jobs.map(item => [item.id, item])), [jobs]);
   const explanation = useMemo(() => job && engineer && plan ? explainAssignment(job, engineer, plan, engineers, routes, jobs, speedKmh, travel) : null, [job, engineer, plan, engineers, routes, jobs, speedKmh, travel]);
+  const [counterfactuals, setCounterfactuals] = useState<Record<string, CounterfactualAssessment>>({});
+  const counterfactualIds = useMemo(() => explanation?.alternatives.filter(item => item.feasible).map(item => item.engineerId) ?? [], [explanation]);
+  useEffect(() => {
+    let active = true;
+    void Promise.resolve().then(async () => {
+      if (!job || !engineer || !travel || !counterfactualIds.length) { if (active) setCounterfactuals({}); return; }
+      setCounterfactuals(Object.fromEntries(counterfactualIds.map(id => [id, { status: "loading" as const }])));
+      await Promise.all(counterfactualIds.map(async engineerId => {
+        try {
+          const forced = await solveCounterfactualServer(engineers, jobs, speedKmh, travel, job.id, engineerId);
+          if (active) setCounterfactuals(current => ({ ...current, [engineerId]: { status: "success", summary: summarizeCounterfactual(result, forced, job.id, engineerId), runtimeMs: forced.runtimeMs } }));
+        } catch (error) {
+          if (active) setCounterfactuals(current => ({ ...current, [engineerId]: { status: "error", error: error instanceof Error ? error.message : "Контрфактический расчёт недоступен" } }));
+        }
+      }));
+    });
+    return () => { active = false; };
+  }, [job, engineer, engineers, jobs, result, speedKmh, travel, counterfactualIds]);
   return <Dialog open={Boolean(job)} onOpenChange={open => !open && onClose()}>
     <DialogContent className="explain-dialog job-inspect-dialog">
       <DialogHeader>
@@ -247,7 +302,7 @@ function JobDetailsDialog({ job, engineer, plan, baselineEngineer, baselinePlan,
           {explanation && <div className="assignment-explanation">
             <div className="explanation-summary"><Sparkles /><p><b>Почему выбран этот инженер</b>{explanation.summary}</p></div>
             <div className="reason-list">{explanation.checks.map((reason, index) => <p key={reason}><i>{index + 1}</i><span>{reason}</span></p>)}</div>
-            <div className="alternative-list"><b>Почему не ближайшие альтернативы</b>{explanation.alternatives.length ? explanation.alternatives.map(item => <p key={item.engineerId}><span>{item.engineerName}</span><small>{item.reason}</small></p>) : <p><small>Других инженеров в выбранном пуле нет.</small></p>}</div>
+            <div className="alternative-list"><b>Строгая проверка альтернатив</b><em>Для допустимых кандидатов запускается отдельный OR-Tools с принудительным назначением этой заявки.</em>{explanation.alternatives.length ? explanation.alternatives.map(item => { const check = counterfactuals[item.engineerId]; return <p key={item.engineerId}><span>{item.engineerName}</span><small>Предварительная вставка: {item.reason}</small>{item.feasible && <small className={`counterfactual ${check?.status ?? "loading"}`}>{!check || check.status === "loading" ? "OR-Tools рассчитывает сценарий…" : check.status === "success" ? `${check.summary} Расчёт ${check.runtimeMs?.toFixed(0)} мс.` : `Принудительный сценарий недопустим: ${check.error}`}</small>}</p>; }) : <p><small>Других инженеров в выбранном пуле нет.</small></p>}</div>
           </div>}
           <div className="pool-list">
             <b>Пулл выполнения</b>
@@ -300,7 +355,7 @@ export default function Dashboard() {
   }, [simulationOn, simRange.start, simRange.end]);
   useEffect(() => { const saved = window.localStorage.getItem("fieldflow-theme") as ThemeId | null; if (saved && themes.some(item => item.id === saved)) { // eslint-disable-next-line react-hooks/set-state-in-effect
     setTheme(saved); } }, []); useEffect(() => { document.documentElement.dataset.theme = theme; window.localStorage.setItem("fieldflow-theme", theme); }, [theme]);
-  const selectEngineer = useCallback((id: string) => { setSelectedEngineerId(current => current === id ? null : id); setSelectedJobId(null); setCompare(false); }, []); const selectJob = useCallback((id: string) => { setSelectedJobId(id); setSelectedEngineerId(plannedJobs.find(item => item.id === id)?.engineerId ?? null); setCompare(false); }, [plannedJobs]); const updateRoutingState = useCallback((state: RoutingState) => setRoutingState(state), []); const navigate = useCallback((next: ViewId) => { setView(next); setMobileNavOpen(false); }, []);
+  const selectEngineer = useCallback((id: string) => { setSelectedEngineerId(current => current === id ? null : id); setSelectedJobId(null); setCompare(false); }, []); const selectJob = useCallback((id: string) => { setSelectedJobId(id); setSelectedEngineerId(plannedJobs.find(item => item.id === id)?.engineerId ?? null); setCompare(false); }, [plannedJobs]); const updateRoutingState = useCallback((state: RoutingState) => setRoutingState(state), []); const navigate = useCallback((next: ViewId) => { setView(next); setMobileNavOpen(false); setThemeOpen(false); }, []);
   const focusEngineer = useCallback((id: string) => { setSelectedEngineerId(id); setSelectedJobId(null); setSelectedEngineerDetailsId(null); setCompare(false); const engineer = activeEngineers.find(item => item.id === id); if (engineer) setRegion(engineer.region); setView("plan"); }, [activeEngineers]);
   const inspectJob = useCallback((id: string) => { setSelectedJobId(id); }, []);
   const openEngineerOnMap = focusEngineer; const detailsEngineer = activeEngineers.find(item => item.id === selectedEngineerDetailsId) ?? null;
@@ -391,9 +446,9 @@ export default function Dashboard() {
 const titles = { plan: ["План работ", started ? "17 августа 2026 · VRPTW по трём регионам" : "Задайте параметры справа и запустите построение маршрутов"], requests: ["Заявки", "CSV, JSON и срочные работы"], team: ["Инженеры", "Ресурсы, доступность и рассчитанная загрузка"], analytics: ["Аналитика", "Показатели текущего VRPTW-плана"] } as const; const distanceDataReady = baseJobs.every(job => job.geocodeVerified === true) && (applied?.jobs ?? 0) <= baseJobs.length && (applied?.engineers ?? 0) <= baseEngineers.length && extraJobs.every(job => job.geocodeVerified === true) && !matrixFallback; const distanceReady = started && result.comparison.commonAssigned > 0 && result.comparison.distanceDeltaPercent != null && distanceDataReady; const distanceWarning = !started ? "Запустите построение маршрутов для сравнения." : !distanceDataReady ? ((applied?.jobs ?? 0) > baseJobs.length || (applied?.engineers ?? 0) > baseEngineers.length ? "Синтетически добавленные точки не геокодированы. Пробег показан как оценка." : baseJobs.some(job => job.geocodeVerified !== true) ? "Не все адреса импортированного набора геокодированы. Пробег показан как оценка." : extraJobs.some(job => job.geocodeVerified !== true) ? "У срочной заявки не подтверждены координаты. Пробег показан как оценка." : "Часть дорожной матрицы заменена приближённым расстоянием. Пробег показан как оценка.") : result.comparison.reason ?? "Нет сопоставимых назначений для расчёта пробега.";
   const heavyRun = draft.engineers > 500 || draft.jobs > 500 || draft.engineers * draft.jobs > 150000;
   const routingLabel = optimizing || routingState === "loading" ? "Строим маршруты" : matrixFallback ? "Резервный режим" : routingState === "ready" ? "OSRM подключён" : routingState === "idle" ? "Ожидание запуска" : "Резервный режим";
-  return <main className="app-shell">{mobileNavOpen && <button className="mobile-nav-backdrop" aria-label="Закрыть меню" onClick={() => setMobileNavOpen(false)} />}<aside className={`sidebar${mobileNavOpen ? " mobile-open" : ""}`}><div className="sidebar-brand-row"><Logo /><button className="mobile-nav-close" aria-label="Закрыть меню" onClick={() => setMobileNavOpen(false)}><X /></button></div><nav aria-label="Основная навигация"><button className={`nav-item${view === "plan" ? " active" : ""}`} onClick={() => navigate("plan")}><Route /><span>Планирование</span></button><button className={`nav-item${view === "requests" ? " active" : ""}`} onClick={() => navigate("requests")}><Wrench /><span>Заявки</span><b>{plannedJobs.length}</b></button><button className={`nav-item${view === "team" ? " active" : ""}`} onClick={() => navigate("team")}><UsersRound /><span>Инженеры</span></button><button className={`nav-item${view === "analytics" ? " active" : ""}`} onClick={() => navigate("analytics")}><BarChart3 /><span>Аналитика</span></button></nav><div className="sidebar-bottom"><button className="nav-item theme-nav" onClick={() => setThemeOpen(open => !open)}><SunMoon /><span>Тема</span></button><button className="nav-item"><CircleHelp /><span>Помощь</span></button><div className="profile"><span>ДК</span><div><strong>Диспетчер</strong><small>В сети</small></div><MoreHorizontal size={17} /></div></div></aside><section className="workspace" id="plan"><header className="topbar"><button className="mobile-menu" aria-label="Открыть меню" aria-expanded={mobileNavOpen} onClick={() => setMobileNavOpen(true)}><Menu /></button><div><h1>{titles[view][0]}</h1><p>{titles[view][1]}</p></div><div className="top-actions"><button className="theme-button" onClick={() => setThemeOpen(open => !open)}><Contrast /><span>{themes.find(item => item.id === theme)?.name}</span><ChevronDown /></button><button className="icon-button" aria-label="Уведомления"><Bell /><i /></button><Button className="urgent-button" onClick={() => setUrgentOpen(true)}><Zap />Срочная заявка</Button></div></header>
+  return <main className="app-shell">{mobileNavOpen && <button className="mobile-nav-backdrop" aria-label="Закрыть меню" onClick={() => setMobileNavOpen(false)} />}<aside className={`sidebar${mobileNavOpen ? " mobile-open" : ""}`}><div className="sidebar-brand-row"><Logo /><button className="mobile-nav-close" aria-label="Закрыть меню" onClick={() => setMobileNavOpen(false)}><X /></button></div><nav aria-label="Основная навигация"><button className={`nav-item${view === "plan" ? " active" : ""}`} onClick={() => navigate("plan")}><Route /><span>Планирование</span></button><button className={`nav-item${view === "requests" ? " active" : ""}`} onClick={() => navigate("requests")}><Wrench /><span>Заявки</span><b>{plannedJobs.length}</b></button><button className={`nav-item${view === "team" ? " active" : ""}`} onClick={() => navigate("team")}><UsersRound /><span>Инженеры</span></button><button className={`nav-item${view === "analytics" ? " active" : ""}`} onClick={() => navigate("analytics")}><BarChart3 /><span>Аналитика</span></button></nav><div className="sidebar-bottom"><button className="nav-item theme-nav" onClick={() => setThemeOpen(open => !open)}><SunMoon /><span>Тема</span></button><div className="profile"><span>ДК</span><div><strong>Диспетчер</strong><small>В сети</small></div><MoreHorizontal size={17} /></div></div></aside><section className="workspace" id="plan"><header className="topbar"><button className="mobile-menu" aria-label="Открыть меню" aria-expanded={mobileNavOpen} onClick={() => setMobileNavOpen(true)}><Menu /></button><div><h1>{titles[view][0]}</h1><p>{titles[view][1]}</p></div><div className="top-actions"><button className="theme-button" onClick={() => setThemeOpen(open => !open)}><Contrast /><span>{themes.find(item => item.id === theme)?.name}</span><ChevronDown /></button><Button className="urgent-button" onClick={() => setUrgentOpen(true)}><Zap />Срочная заявка</Button></div></header>
     {themeOpen && <div className="theme-menu" role="menu">{themes.map(item => <button key={item.id} className={theme === item.id ? "active" : ""} onClick={() => { setTheme(item.id); setThemeOpen(false); }}><span className="theme-swatches">{item.colors.map(color => <i key={color} style={{ background: color }} />)}</span><b>{item.name}</b>{theme === item.id && <Check />}</button>)}</div>}
-    {view === "plan" && <><div className="filter-row"><Tabs defaultValue="day"><TabsList><TabsTrigger value="day">День</TabsTrigger><TabsTrigger value="week">Неделя</TabsTrigger></TabsList></Tabs><button className="date-control"><CalendarDays />17 авг. 2026<ChevronDown /></button><div className="region-select">{(["Все зоны", "Восток", "Юго-восток", "Югоцентр"] as const).map(item => <button key={item} className={region === item ? "selected" : ""} onClick={() => { setRegion(item); setSelectedEngineerId(null); setSelectedJobId(null); }}>{item}</button>)}</div><div className="plan-state"><span className={routingState === "ready" ? "state-dot" : routingState === "loading" ? "state-dot changed" : routingState === "idle" ? "state-dot idle" : "state-dot risk-dot"} />{routingLabel}{started ? ` · ${solverLabels[solverEngine]}` : ""}</div>{started && <ExportButtons result={result} engineers={activeEngineers} solver={solverEngine} speedKmh={applied?.speedKmh ?? draft.speedKmh} />}</div>
+    {view === "plan" && <><div className="filter-row"><div className="region-select">{(["Все зоны", "Восток", "Юго-восток", "Югоцентр"] as const).map(item => <button key={item} className={region === item ? "selected" : ""} onClick={() => { setRegion(item); setSelectedEngineerId(null); setSelectedJobId(null); }}>{item}</button>)}</div><div className="plan-state"><span className={routingState === "ready" ? "state-dot" : routingState === "loading" ? "state-dot changed" : routingState === "idle" ? "state-dot idle" : "state-dot risk-dot"} />{routingLabel}{started ? ` · ${solverLabels[solverEngine]}` : ""}</div>{started && <ExportButtons result={result} engineers={activeEngineers} solver={solverEngine} speedKmh={applied?.speedKmh ?? draft.speedKmh} />}</div>
       {solverError && <div className="impact-banner error-banner"><span><AlertTriangle /></span><div><strong>OR-Tools недоступен — расчёт заблокирован</strong><p>{solverError}. Эвристический fallback намеренно не используется.</p></div><button onClick={() => setSolverError("")}>Скрыть</button></div>}
       {replanned && started && !solverError && <div className="impact-banner"><span><Sparkles /></span><div><strong>OR-Tools VRPTW рассчитан за {result.runtimeMs} мс</strong><p>Назначено {result.metrics.assigned} из {result.metrics.total}; движок подтверждён ответом сервера.</p></div><button onClick={() => setReplanned(false)}>Скрыть уведомление</button></div>}
       <ReplanImpactPanel changes={replanChanges} />
@@ -410,5 +465,5 @@ const titles = { plan: ["План работ", started ? "17 августа 2026
     <label><span>Транспорт</span><select value={urgentForm.transport} onChange={event => setUrgentForm(value => ({ ...value, transport: event.target.value }))}><option>Автомобиль</option><option>Общественный транспорт</option><option>Велосипед</option><option>Пешком</option></select></label>
   </div>{formError && <p className="form-error">{formError}</p>}<div className="dialog-note"><Sparkles /><span><b>Что учтёт оптимизатор</b>Навыки, оборудование, транспорт, смену, приоритет и временное окно.</span></div><DialogFooter><Button variant="outline" onClick={() => setUrgentOpen(false)}>Отмена</Button><Button onClick={() => void addUrgent()}><Zap />{started ? "Добавить и пересчитать" : "Добавить заявку"}</Button></DialogFooter></DialogContent></Dialog>
 <EngineerDetailsDialog engineer={detailsEngineer} route={detailsEngineer ? routeByEngineer.get(detailsEngineer.id) : undefined} unavailable={Boolean(detailsEngineer && unavailableEngineerIds.includes(detailsEngineer.id))} onClose={() => setSelectedEngineerDetailsId(null)} onOpenRoute={openEngineerOnMap} onToggleAvailability={toggleEngineerAvailability} />
-<JobDetailsDialog job={selectedJob} engineer={selectedEngineer} plan={selectedJob?.engineerId ? routeByEngineer.get(selectedJob.engineerId) : undefined} baselineEngineer={activeEngineers.find(item => item.id === selectedJob?.baselineEngineerId)} baselinePlan={result.baselineRoutes.find(route => route.engineerId === selectedJob?.baselineEngineerId)} jobs={plannedJobs} engineers={availableEngineers} routes={result.routes} travel={travel} speedKmh={applied?.speedKmh ?? draft.speedKmh} onClose={() => setSelectedJobId(null)} onToggleCancelled={toggleJobCancelled} /></main>;
+    <JobDetailsDialog job={selectedJob} engineer={selectedEngineer} plan={selectedJob?.engineerId ? routeByEngineer.get(selectedJob.engineerId) : undefined} baselineEngineer={activeEngineers.find(item => item.id === selectedJob?.baselineEngineerId)} baselinePlan={result.baselineRoutes.find(route => route.engineerId === selectedJob?.baselineEngineerId)} jobs={plannedJobs} engineers={availableEngineers} routes={result.routes} result={result} travel={travel} speedKmh={applied?.speedKmh ?? draft.speedKmh} onClose={() => setSelectedJobId(null)} onToggleCancelled={toggleJobCancelled} /></main>;
 }

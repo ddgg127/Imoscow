@@ -93,3 +93,15 @@ html,body,.workspace{transition:background-color .22s ease,color .22s ease}.side
 .engineer-details-dialog{width:min(94vw,640px);max-width:min(94vw,640px);height:min(560px,calc(100dvh - 32px));max-height:calc(100dvh - 32px);grid-template-rows:auto minmax(0,1fr) auto;overflow:hidden}.engineer-details-content{min-height:0;max-height:none;overflow-y:auto;overscroll-behavior:contain;padding-right:4px;scrollbar-gutter:stable}.engineer-details-dialog [data-slot="dialog-footer"]{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:8px}.engineer-details-dialog [data-slot="dialog-footer"] button{min-width:0;height:auto;min-height:40px;white-space:normal;line-height:1.25;text-align:center}
 @media(max-width:600px){.job-inspect-dialog,.engineer-details-dialog{width:calc(100vw - 16px);max-width:calc(100vw - 16px);height:calc(100dvh - 16px);max-height:calc(100dvh - 16px);padding:16px}.job-inspect-dialog [data-slot="dialog-footer"]{display:grid;grid-template-columns:1fr;gap:8px}.job-inspect-dialog [data-slot="dialog-footer"] button{width:100%}.engineer-details-dialog [data-slot="dialog-footer"]{grid-template-columns:1fr 1fr}.engineer-details-dialog [data-slot="dialog-footer"] button:last-child{grid-column:1/-1}}
 @media(max-width:420px){.engineer-details-dialog [data-slot="dialog-footer"]{grid-template-columns:1fr}.engineer-details-dialog [data-slot="dialog-footer"] button:last-child{grid-column:auto}}
+
+/* Theme choices must stay above page-level search and filter overlays. */
+.theme-menu{z-index:100}
+
+/* A forced OR-Tools run makes every feasible alternative auditable. */
+.alternative-list>em{color:var(--muted-foreground);font-size:11px;font-style:normal;line-height:1.45}
+.alternative-list p{gap:7px 10px}
+.alternative-list .counterfactual{grid-column:2;padding:8px 9px;border-radius:7px;background:var(--card);color:var(--foreground)}
+.alternative-list .counterfactual.loading{color:var(--muted-foreground)}
+.alternative-list .counterfactual.success{border-left:3px solid #24a373}
+.alternative-list .counterfactual.error{border-left:3px solid var(--destructive);color:var(--destructive)}
+@media(max-width:760px){.alternative-list .counterfactual{grid-column:1}}

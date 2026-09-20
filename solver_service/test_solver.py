@@ -100,3 +100,22 @@ def test_bad_matrix_is_rejected():
     data["matrix"]["distancesKm"][0][1] = -1
     response = TestClient(app).post("/solve", json=data)
     assert response.status_code == 422
+
+
+def test_forced_assignment_runs_a_real_counterfactual():
+    data = payload()
+    data["forcedAssignments"] = {"a": "e2"}
+    result = TestClient(app).post("/solve", json=data)
+    assert result.status_code == 200, result.text
+    routes = {route["engineerId"]: route["jobIds"] for route in result.json()["routes"]}
+    assert "a" in routes["e2"]
+    assert result.json()["engine"] == "ortools"
+
+
+def test_impossible_forced_assignment_is_rejected_explicitly():
+    data = payload()
+    data["engineers"][1]["skills"] = ["Диагностика"]
+    data["forcedAssignments"] = {"a": "e2"}
+    result = TestClient(app).post("/solve", json=data)
+    assert result.status_code == 422
+    assert "forced assignment" in result.text

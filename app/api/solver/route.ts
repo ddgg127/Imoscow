@@ -8,6 +8,8 @@ function validPayload(value: unknown): value is SolverPayload {
   return Array.isArray(body.engineers) && body.engineers.length > 0 && body.engineers.length <= 500
     && Array.isArray(body.jobs) && body.jobs.length <= 1000
     && Number.isFinite(body.speedKmh) && Number(body.speedKmh) >= 5 && Number(body.speedKmh) <= 200
+    && (body.forcedAssignments == null || (typeof body.forcedAssignments === "object"
+      && Object.entries(body.forcedAssignments).every(([jobId, engineerId]) => Boolean(jobId) && typeof engineerId === "string" && Boolean(engineerId))))
     && n >= 2 && n <= 1500
     && body.matrix!.distancesKm.length === n && body.matrix!.durationsMin.length === n
     && body.matrix!.distancesKm.every(row => Array.isArray(row) && row.length === n)

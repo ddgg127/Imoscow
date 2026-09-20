@@ -56,6 +56,7 @@ class SolveRequest(BaseModel):
     jobs: list[Job] = Field(max_length=1000)
     speedKmh: float = Field(ge=5, le=200)
     urgentId: str | None = None
+    forcedAssignments: dict[str, str] = Field(default_factory=dict)
     matrix: Matrix
     timeLimitSeconds: int = Field(default=12, ge=1, le=60)
 
@@ -103,6 +104,14 @@ def solve_vrptw(data: SolveRequest) -> SolveResponse:
         raise HTTPException(status_code=422, detail=f"matrix misses coordinate {exc.args[0]}") from exc
 
     engineer_count = len(data.engineers)
+    engineer_index = {engineer.id: index for index, engineer in enumerate(data.engineers)}
+    job_ids = {job.id for job in data.jobs}
+    unknown_jobs = sorted(set(data.forcedAssignments) - job_ids)
+    unknown_engineers = sorted(set(data.forcedAssignments.values()) - set(engineer_index))
+    if unknown_jobs:
+        raise HTTPException(status_code=422, detail=f"forced assignment references unknown jobs: {', '.join(unknown_jobs)}")
+    if unknown_engineers:
+        raise HTTPException(status_code=422, detail=f"forced assignment references unknown engineers: {', '.join(unknown_engineers)}")
     node_count = len(node_points)
     starts = list(range(engineer_count))
     ends = list(range(engineer_count))
@@ -167,14 +176,25 @@ def solve_vrptw(data: SolveRequest) -> SolveResponse:
             work_start = max(job.windowStart, engineer.shiftStart + travel)
             if work_start <= job.windowEnd and work_start + job.serviceMinutes <= engineer.shiftEnd:
                 allowed.append(vehicle)
+        forced_engineer_id = data.forcedAssignments.get(job.id)
+        forced_vehicle = engineer_index.get(forced_engineer_id) if forced_engineer_id else None
         if allowed:
             time_dimension.CumulVar(index).SetRange(job.windowStart, job.windowEnd)
             # VehicleVar is used instead of SetAllowedVehiclesForIndex because
             # OR-Tools 9.15 on Windows has a SWIG Span conversion regression.
             routing.VehicleVar(index).SetValues(allowed)
-        penalty = dropped_job_weight + job.priority * priority_weight
-        routing.AddDisjunction([index], penalty)
-        if not allowed:
+        if forced_engineer_id:
+            if forced_vehicle not in allowed:
+                raise HTTPException(
+                    status_code=422,
+                    detail=f"forced assignment {job.id} -> {forced_engineer_id} violates resources, shift or SLA",
+                )
+            routing.VehicleVar(index).SetValue(forced_vehicle)
+            routing.ActiveVar(index).SetValue(1)
+        else:
+            penalty = dropped_job_weight + job.priority * priority_weight
+            routing.AddDisjunction([index], penalty)
+        if not allowed and not forced_engineer_id:
             # An optional node without an allowed vehicle must be forced inactive;
             # otherwise OR-Tools treats an empty allow-list as unrestricted.
             routing.ActiveVar(index).SetValue(0)

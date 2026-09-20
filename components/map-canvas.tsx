@@ -409,6 +409,11 @@ export function MapCanvas(props: CanvasProps) {
         setMapReady(false);
         map.setStyle(OSM_RASTER_STYLE);
       });
+      map.on("styleimagemissing", event => {
+        if (!map.hasImage(event.id)) {
+          map.addImage(event.id, { width: 1, height: 1, data: new Uint8Array([0, 0, 0, 0]) });
+        }
+      });
       map.on("style.load", () => {
         loadedRef.current = true;
         (map.getContainer() as HTMLElement & { __ffMap?: MapLibreMap }).__ffMap = map;

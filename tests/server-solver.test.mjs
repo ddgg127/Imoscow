@@ -13,6 +13,12 @@ test("solver payload contains a dense reusable travel matrix", () => {
   assert.equal(travelFromSolverPayload(payload).durationMin([0, 0], [1, 0]), 5);
 });
 
+test("solver payload carries a forced assignment for counterfactual runs", () => {
+  const payload = createSolverPayload([engineer], [job], 24, travel, undefined, { a: "e1" });
+  assert.deepEqual(payload.forcedAssignments, { a: "e1" });
+  assert.equal(payload.timeLimitSeconds, 8);
+});
+
 test("server fallback response is complete and reconstructable", () => {
   const response = heuristicServerResponse(createSolverPayload([engineer], [job], 24, travel));
   assert.equal(response.engine, "heuristic-server");
