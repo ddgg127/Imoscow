@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { applyAverageWindows, baselinePlan, comparePlans, comparePlansStrict, optimizeVrptw, resultFromRouteOrder } from "../lib/vrptw.ts";
+import { applyAverageWindows, baselinePlan, comparePlans, comparePlansStrict, compareReplannedPlans, explainAssignment, optimizeVrptw, resultFromRouteOrder } from "../lib/vrptw.ts";
 import { csvEngineers, csvJobs } from "../lib/csv-data.generated.ts";
 
 const travel = {
@@ -17,17 +17,24 @@ const job = (id, x, windowStart = 480, windowEnd = 580, kind = "Монтаж") =
   baselineEngineerId: "e2", priority: 1,
 });
 
-test("baseline is deterministic, ignores control assignment and uses feasible cheapest insertion", () => {
+test("official baseline uses job order, first feasible engineer and append-only routes", () => {
   const jobs = [job("late", 1, 510, 580), job("early", 2, 480, 525), job("third", 3, 480, 580)];
   const result = baselinePlan([engineer("e1"), engineer("e2")], jobs, 32, travel);
   assert.deepEqual(result.routes.map(route => [route.engineerId, route.stops.map(stop => stop.jobId)]), [
-    ["e1", ["early", "late"]], ["e2", ["third"]],
+    ["e1", ["late", "third"]], ["e2", ["early"]],
   ]);
   assert.deepEqual(result.routes, baselinePlan([engineer("e1"), engineer("e2")], jobs, 32, travel).routes);
   assert.equal(result.metrics.assigned, 3);
   assert.equal(result.metrics.activeEngineers, 2);
   assert.equal(result.metrics.late, 0);
-  assert.equal(result.metrics.distanceKm, 60);
+  assert.equal(result.metrics.distanceKm, 50);
+});
+
+test("official baseline does not choose a cheaper later engineer", () => {
+  const farFirst = { ...engineer("e1"), start: [-5, 0], shiftEnd: 900 };
+  const nearSecond = { ...engineer("e2"), start: [0.9, 0], shiftEnd: 900 };
+  const result = baselinePlan([farFirst, nearSecond], [job("a", 1, 480, 850)], 32, travel);
+  assert.equal(result.assignmentById.get("a"), "e1");
 });
 
 test("baseline leaves impossible jobs unassigned with the right reason", () => {
@@ -103,4 +110,27 @@ test("CSV optimization recovers feasible jobs and explains the remaining unassig
     assert.equal(item.engineerId ?? null, routed.get(item.id) ?? null);
     if (!item.engineerId) assert.match(item.unassignedReason ?? "", /навык|оборудован|окн|смен|возможност/);
   }
+});
+
+test("replanning diff reports reassignment, order, route and fleet changes", () => {
+  const engineers = [engineer("e1"), engineer("e2")];
+  const jobs = [job("a", 1), job("b", 2), job("c", 3)];
+  const before = resultFromRouteOrder(engineers, jobs, [{ engineerId: "e1", jobIds: ["a", "b"] }], { travel });
+  const after = resultFromRouteOrder(engineers, jobs, [{ engineerId: "e1", jobIds: ["b"] }, { engineerId: "e2", jobIds: ["a", "c"] }], { travel });
+  const changes = compareReplannedPlans(before, after, engineers);
+  assert.ok(changes.some(item => item.kind === "assignment" && /№a/.test(item.message)));
+  assert.ok(changes.some(item => item.kind === "order" && /№b/.test(item.message)));
+  assert.ok(changes.some(item => item.kind === "route" && /e1/.test(item.message)));
+  assert.ok(changes.some(item => item.kind === "fleet" && /e2/.test(item.message)));
+});
+
+test("assignment explanation proves constraints and compares alternatives", () => {
+  const engineers = [engineer("e1"), engineer("e2")];
+  const jobs = [job("a", 1)];
+  const result = resultFromRouteOrder(engineers, jobs, [{ engineerId: "e1", jobIds: ["a"] }], { travel });
+  const explanation = explainAssignment(result.jobs[0], engineers[0], result.routes[0], engineers, result.routes, result.jobs, 32, travel);
+  assert.match(explanation.summary, /e1/);
+  assert.ok(explanation.checks.some(item => /Навык/.test(item)));
+  assert.ok(explanation.checks.some(item => /SLA/.test(item)));
+  assert.equal(explanation.alternatives[0].engineerId, "e2");
 });
