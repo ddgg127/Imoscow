@@ -307,6 +307,12 @@ function markerButton(className: string, text: string, color: string, title: str
   return el;
 }
 
+export function engineerMarkerLabel(engineer: Pick<Engineer, "name" | "initials">) {
+  const words = engineer.name.trim().split(/\s+/).filter(Boolean);
+  const label = words.slice(0, 2).map(word => word[0]?.toLocaleUpperCase("ru-RU") ?? "").join("");
+  return label || engineer.initials || "И";
+}
+
 export function MapCanvas(props: CanvasProps) {
   const { visibleJobs, baselineJobs, engineers, selectedEngineerId, selectedJobId, simTime, simPlaying, simSpeed, simEnd, onSimTime, onSimPlaying, compare, routingEnabled, routes, baselineRoutes, onSelectEngineer, onSelectJob, onInspectJob, onRoutingState } = props;
   const containerRef = useRef<HTMLDivElement>(null);
@@ -377,6 +383,7 @@ export function MapCanvas(props: CanvasProps) {
   }, [markerJobs, markerEngineers, fitCoords]);
   useEffect(() => {
     let cancelled = false;
+    let resizeObserver: ResizeObserver | null = null;
     const vehicles = vehiclesRef.current;
     const markers = markersRef.current;
     void (async () => {
@@ -391,6 +398,8 @@ export function MapCanvas(props: CanvasProps) {
         attributionControl: false,
         style: OPENFREEMAP_STYLE,
       });
+      resizeObserver = new ResizeObserver(() => map.resize());
+      resizeObserver.observe(containerRef.current);
       map.addControl(new maplibre.AttributionControl({ compact: true }), "bottom-right");
       let usedRasterFallback = false;
       map.on("error", event => {
@@ -415,11 +424,13 @@ export function MapCanvas(props: CanvasProps) {
           map.addLayer({ id: "routes", type: "line", source: "routes", paint: { "line-color": ["get", "color"], "line-width": ["case", ["==", ["get", "selected"], 1], 6, 3.5], "line-opacity": ["*", ["case", ["==", ["get", "selected"], 1], 1, .72], ["coalesce", ["get", "opacity"], 1]] } });
         }
         setMapReady(true);
+        requestAnimationFrame(() => map.resize());
       });
       mapRef.current = map;
     })();
     return () => {
       cancelled = true;
+      resizeObserver?.disconnect();
       vehicles.forEach(marker => marker.remove());
       vehicles.clear();
       markers.forEach(marker => marker.remove());
@@ -444,7 +455,7 @@ export function MapCanvas(props: CanvasProps) {
       if (!mapRef.current) return;
       if (!simulating) {
         markerEngineers.forEach(engineer => {
-          const el = markerButton(`engineer-map-marker${selectedEngineerId === engineer.id ? " selected" : ""}`, engineer.initials, engineer.color, engineer.name, () => onSelectEngineer(engineer.id));
+          const el = markerButton(`engineer-map-marker${selectedEngineerId === engineer.id ? " selected" : ""}`, engineerMarkerLabel(engineer), engineer.color, engineer.name, () => onSelectEngineer(engineer.id));
           markersRef.current.push(new Marker({ element: el }).setLngLat(engineer.start).addTo(mapRef.current!));
         });
       }
@@ -520,7 +531,7 @@ export function MapCanvas(props: CanvasProps) {
         actionJobRef.current.dataset.job = "";
         actionJobRef.current.textContent = "";
       }
-      if (action.phase === "travel") actionMetaRef.current.textContent = `До прибытия ${remainingLabel(action.remaining)} · заявка ${action.index} из ${action.total}${fleetRef.current.routeFor(focus).length < 2 ? " · показана последняя известная точка" : ""}`;
+      if (action.phase === "travel") actionMetaRef.current.textContent = `До прибытия ${remainingLabel(action.remaining)} · заявка ${action.index} из ${action.total}${fleetRef.current.routeFor(focus).length < 2 ? " · положение оценивается между точками" : ""}`;
       else if (action.phase === "wait") actionMetaRef.current.textContent = `До начала окна ${remainingLabel(action.remaining)}`;
       else if (action.phase === "service") actionMetaRef.current.textContent = `Осталось ${remainingLabel(action.remaining)}`;
       else if (action.phase === "done") actionMetaRef.current.textContent = "Маршрут инженера закрыт";
@@ -542,17 +553,20 @@ export function MapCanvas(props: CanvasProps) {
         const coords = coordsOf(engineer);
         const plan = plans.get(engineer.id) ?? null;
         const hasRoad = coords.length >= 2;
-        const pose = hasRoad && plan
-          ? positionAtSimTime(engineer, plan, jobs, coords, time)
+        const fallbackCoords = plan ? routeCoordinates(engineer, jobs, false, plan) : [engineer.start];
+        const animationCoords = hasRoad ? coords : fallbackCoords;
+        const pose = plan && animationCoords.length >= 2
+          ? positionAtSimTime(engineer, plan, jobs, animationCoords, time)
           : { line: [] as Coordinate[], point: positionAtKnownStop(engineer, plan!, jobs, time), done: time >= (plan?.stops.at(-1)?.end ?? engineer.shiftEnd) };
+        const label = engineerMarkerLabel(engineer);
         let marker = vehiclesRef.current.get(engineer.id);
         if (!marker) {
           const el = document.createElement("button");
           el.type = "button";
           el.className = `route-vehicle-marker${hasRoad ? "" : " estimated"}`;
           el.style.setProperty("--marker", engineer.color);
-          el.textContent = hasRoad ? engineer.initials : "?";
-          el.title = `${engineer.name} · ${hasRoad ? "положение на маршруте" : "последняя известная точка; в пути положение неизвестно"}`;
+          el.textContent = label;
+          el.title = `${engineer.name} · ${hasRoad ? "положение на дорожном маршруте" : "оценочное положение между точками"}`;
           el.setAttribute("aria-label", el.title);
           el.onclick = () => select(engineer.id);
           marker = new Marker({ element: el, anchor: "center" }).setLngLat(pose.point).addTo(host);
@@ -560,8 +574,8 @@ export function MapCanvas(props: CanvasProps) {
         } else {
           marker.setLngLat(pose.point);
           marker.getElement().classList.toggle("estimated", !hasRoad);
-          marker.getElement().textContent = hasRoad ? engineer.initials : "?";
-          marker.getElement().title = `${engineer.name} · ${hasRoad ? "положение на маршруте" : "последняя известная точка; в пути положение неизвестно"}`;
+          marker.getElement().textContent = label;
+          marker.getElement().title = `${engineer.name} · ${hasRoad ? "положение на дорожном маршруте" : "оценочное положение между точками"}`;
           marker.getElement().setAttribute("aria-label", marker.getElement().title);
         }
       }
