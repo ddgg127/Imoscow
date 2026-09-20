@@ -23,7 +23,10 @@ async function callOrTools(payload: SolverPayload): Promise<SolverResponse> {
   const base = solverBase();
   if (!base) throw new Error("SOLVER_URL не настроен: расчёт без OR-Tools запрещён");
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 25_000);
+  // Free Render instances can need about a minute to wake after inactivity.
+  // Keep the request bounded, but do not reject the first real calculation
+  // before the mandatory OR-Tools service has had a chance to start.
+  const timeout = setTimeout(() => controller.abort(), 90_000);
   try {
     const response = await fetch(`${base}/solve`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload), signal: controller.signal });
     if (!response.ok) throw new Error(`OR-Tools service ${response.status}`);
@@ -49,7 +52,7 @@ export async function GET() {
   const base = solverBase();
   if (!base) return NextResponse.json({ status: "unavailable", solver: "ortools", error: "SOLVER_URL не настроен" }, { status: 503 });
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 8_000);
+  const timeout = setTimeout(() => controller.abort(), 70_000);
   try {
     const response = await fetch(`${base}/health`, { signal: controller.signal });
     const health = await response.json() as { status?: string; solver?: string };

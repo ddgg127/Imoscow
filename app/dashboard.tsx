@@ -322,7 +322,9 @@ export default function Dashboard() {
     }
     try {
       const solved = await solveVrptwServer(engineers, jobs, speedKmh, nextTravel ?? fallbackTravel(speedKmh), urgentId);
-      setReplanChanges(planResult ? compareReplannedPlans(planResult, solved.result, engineers) : []);
+      // Keep unavailable engineers in the name directory so the change log can
+      // explain whose old route was removed instead of showing an internal id.
+      setReplanChanges(planResult ? compareReplannedPlans(planResult, solved.result, activeEngineers) : []);
       setPlanResult(solved.result);
       setSolverEngine(solved.engine);
       setReplanned(true);
@@ -333,7 +335,7 @@ export default function Dashboard() {
     } finally {
       setOptimizing(false);
     }
-  }, [travel, planResult]);
+  }, [travel, planResult, activeEngineers]);
   const startPlanning = useCallback(() => {
     const config = { ...draft };
     setApplied(config);
