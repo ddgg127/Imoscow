@@ -228,7 +228,7 @@ function JobDetailsDialog({ job, engineer, plan, baselineEngineer, baselinePlan,
         <DialogTitle>Заявка № {job?.id}</DialogTitle>
         <DialogDescription>{job?.kind} · {job?.area} · {job?.address}{job?.cancelled ? " · отменена" : ""}</DialogDescription>
       </DialogHeader>
-      {job && <>
+      {job && <div className="job-inspect-body">
         <div className="dialog-grid">
           <label><span>Тип работы</span><b>{job.workType ?? job.kind}</b></label>
           <label><span>Приоритет</span><b>{job.priority >= 10 ? "P0 срочная" : job.priority >= 5 ? "P1 высокий" : job.priority >= 3 ? "P2 плановый" : "P3 обычный"}</b></label>
@@ -263,7 +263,7 @@ function JobDetailsDialog({ job, engineer, plan, baselineEngineer, baselinePlan,
             })}
           </div>
         </> : <div className="dialog-note"><AlertTriangle /><span><b>Нет допустимого назначения</b>{job.unassignedReason ?? "План ещё не построен или не найден допустимый маршрут."}</span></div>}
-      </>}
+      </div>}
       <DialogFooter><Button variant="outline" onClick={() => { if (job) onToggleCancelled(job.id); }}>{job?.cancelled ? "Восстановить заявку" : "Отменить заявку"}</Button><Button onClick={onClose}>Закрыть</Button></DialogFooter>
     </DialogContent>
   </Dialog>;
