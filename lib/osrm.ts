@@ -6,6 +6,7 @@ const SNAP = 35;
 const MAX_TABLE = 90;
 
 const legCache = new Map<string, { geometry: Point[]; distanceMeters: number; durationSeconds: number }>();
+const routeCache = new Map<string, { geometry: { type: "LineString"; coordinates: Point[] }; distanceMeters: number; durationSeconds: number; provider: "osrm" }>();
 const tableCache = new Map<string, { distances: Array<Array<number | null>>; durations: Array<Array<number | null>> }>();
 
 export function pointKey(point: Point) {
@@ -58,6 +59,24 @@ export async function osrmLeg(from: Point, to: Point, mode: unknown = "driving")
 }
 
 export async function osrmRouteLegs(points: Point[], mode: unknown = "driving") {
+  if (points.length > 2) {
+    const profile = profileOf(mode);
+    const key = `${profile}:${points.map(pointKey).join("|")}`;
+    const cached = routeCache.get(key);
+    if (cached) return cached;
+    const coords = points.map(point => `${point[0]},${point[1]}`).join(";");
+    const radiuses = points.map(() => "100").join(";");
+    const response = await fetchOsrm(`${OSRM}/route/v1/${profile}/${coords}?overview=full&geometries=geojson&steps=false&radiuses=${radiuses}`);
+    if (!response.ok) throw new Error(`OSRM route ${response.status}`);
+    const data = await response.json() as { routes?: Array<{ geometry?: { coordinates?: Point[] }; distance?: number; duration?: number }> };
+    const route = data.routes?.[0];
+    const geometry = route?.geometry?.coordinates;
+    if (!geometry || geometry.length < 2 || !Number.isFinite(route?.distance) || !Number.isFinite(route?.duration)) throw new Error("Пустой маршрут OSRM");
+    const value = { geometry: { type: "LineString" as const, coordinates: geometry }, distanceMeters: route!.distance!, durationSeconds: route!.duration!, provider: "osrm" as const };
+    if (routeCache.size > 1000) routeCache.clear();
+    routeCache.set(key, value);
+    return value;
+  }
   const coordinates: Point[] = [];
   let distanceMeters = 0;
   let durationSeconds = 0;

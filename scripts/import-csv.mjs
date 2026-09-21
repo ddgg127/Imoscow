@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { geocodeMany } from "./geocode.mjs";
+import { geocodeMany, loadGeocodeCache } from "./geocode.mjs";
 
 const root = process.cwd();
 const sourceDir = path.join(root, "data", "csv");
@@ -47,6 +47,46 @@ function initials(name) {
   return name.split(/\s+/).filter(Boolean).slice(0, 2).map(part => part[0]).join("").toUpperCase();
 }
 
+const skillCatalog = ["Локальные работы", "Подключение и модернизация", "Аварийно-восстановительные работы"];
+
+function canonicalSkill(workType) {
+  if (/авар|повреж|обрыв|нет\s*(?:линк|связ)|восстанов|недоступ/i.test(workType)) return skillCatalog[2];
+  if (/подключ|монтаж|дозаказ|gpon|гигабит|конверг|миграц|замен/i.test(workType)) return skillCatalog[1];
+  return skillCatalog[0];
+}
+
+function serviceMinutes(workType, skill) {
+  if (skill === skillCatalog[2]) return /кабел|обрыв|повреж/i.test(workType) ? 90 : 60;
+  if (skill === skillCatalog[1]) return /gpon|гигабит|гбит|кабел|монтаж/i.test(workType) ? 60 : 45;
+  return /информ|консультац|монитор|настрой|диагност/i.test(workType) ? 30 : 45;
+}
+
+function jobPriority(workType, skill) {
+  if (skill === skillCatalog[2]) return 5;
+  if (/подключ|монтаж|дозаказ/i.test(workType)) return 3;
+  return 2;
+}
+
+function equipmentFor(workType, skill) {
+  if (skill === skillCatalog[2]) return "Рефлектометр";
+  if (/гигабит|gpon/i.test(workType)) return "Комплект GPON";
+  if (skill === skillCatalog[1]) return "ONT";
+  return "Диагностический комплект";
+}
+
+function transportForEngineer(engineerId) {
+  const bucket = hash(engineerId) % 10;
+  if (bucket < 5) return "Автомобиль";
+  if (bucket < 8) return "Общественный транспорт";
+  if (bucket === 8) return "Велосипед";
+  return "Пешком";
+}
+
+function transportForUnassigned(jobId, skill) {
+  if (skill === skillCatalog[2]) return "Автомобиль";
+  return ["Автомобиль", "Общественный транспорт", "Велосипед", "Пешком"][hash(jobId) % 4];
+}
+
 const tables = specs.map(spec => ({
   ...spec,
   office: parseOffice(path.join(sourceDir, `${spec.key}-synthetic.csv`)),
@@ -71,6 +111,14 @@ for (const table of tables) {
 }
 
 const geocoded = await geocodeMany(uniqueAddresses, fallbacks);
+const geocodeCache = loadGeocodeCache();
+const fallbackAddresses = uniqueAddresses.filter(address => !geocodeCache[address]?.verified || geocodeCache[address].type === "fallback");
+const quality = uniqueAddresses.reduce((counts, address) => {
+  const key = geocodeCache[address]?.quality ?? "fallback";
+  counts[key] = (counts[key] ?? 0) + 1;
+  return counts;
+}, {});
+const geocoding = { uniqueAddresses: uniqueAddresses.length, fallbackAddresses: fallbackAddresses.length, resolvedAddresses: uniqueAddresses.length - fallbackAddresses.length, verifiedAddresses: uniqueAddresses.filter(address => geocodeCache[address]?.verified).length, quality };
 const offices = {};
 for (const table of tables) {
   offices[table.region] = {
@@ -87,11 +135,18 @@ for (const table of tables) {
     const assignment = table.control[index] ?? {};
     const name = engineerName(assignment["Бригада"] ?? "");
     const engineerId = name ? `${table.key}-${hash(name).toString(36)}` : null;
-    const kind = row["Тип заявки HD"] || row["Тип заявки BK"] || "Выездные работы";
-    const equipment = /гигабит|gpon/i.test(`${kind} ${row["Гигабитное подключение"]}`) ? "GPON" : /авар|повреж|диагност/i.test(kind) ? "Рефлектометр" : "ONT";
+    const workType = row["Тип заявки HD"] || row["Тип заявки BK"] || "Выездные работы";
+    const kind = canonicalSkill(workType);
+    const equipment = equipmentFor(`${workType} ${row["Гигабитное подключение"]}`, kind);
     const start = minutes(row["Начало"]);
     const end = minutes(row["Окончание"]);
     const id = String(row["Заявка"]);
+    const requiredTransport = engineerId ? transportForEngineer(engineerId) : transportForUnassigned(id, kind);
+    const allowedTransports = kind === skillCatalog[2]
+      ? [...new Set([requiredTransport, "Автомобиль"])]
+      : equipment === "Комплект GPON"
+        ? [...new Set([requiredTransport, "Автомобиль", "Общественный транспорт"])]
+        : ["Автомобиль", "Общественный транспорт", "Велосипед", "Пешком"];
     const job = {
       id,
       time: `${String(Math.floor(start / 60)).padStart(2, "0")}:${String(start % 60).padStart(2, "0")}–${String(Math.floor(end / 60)).padStart(2, "0")}:${String(end % 60).padStart(2, "0")}`,
@@ -100,16 +155,21 @@ for (const table of tables) {
       area: row["Район"],
       address: row["Адрес"],
       kind,
+      workType,
       tone: ["violet", "blue", "amber", "green"][hash(id) % 4],
       region: table.region,
       engineerId,
       baselineEngineerId: engineerId,
       coordinates: geocoded.get(row["Адрес"]) ?? officeCoords,
+      geocodeVerified: geocodeCache[row["Адрес"]]?.verified === true,
+      geocodeQuality: geocodeCache[row["Адрес"]]?.quality ?? "fallback",
+      geocodeDisplayName: geocodeCache[row["Адрес"]]?.displayName ?? "",
       risk: false,
       equipment,
-      requiredTransport: "Автомобиль",
-      priority: 1,
-      serviceMinutes: 45,
+      requiredTransport,
+      allowedTransports,
+      priority: jobPriority(workType, kind),
+      serviceMinutes: serviceMinutes(`${workType} ${row["Гигабитное подключение"] ?? ""}`, kind),
       source: "CSV",
       status: assignment["Статус BK"] || "Не назначена",
     };
@@ -129,17 +189,17 @@ const engineers = [...engineerSeed.values()].map((seed, index) => ({
   route: `Маршрут ${String(index + 1).padStart(2, "0")}`,
   jobs: seed.jobs.length,
   distance: "0 км",
-  load: Math.min(100, Math.round(seed.jobs.length * 45 / 720 * 100)),
+  load: Math.min(100, Math.round(seed.jobs.reduce((sum, job) => sum + job.serviceMinutes, 0) / 840 * 100)),
   color: colors[index % colors.length],
   region: seed.region,
   start: offices[seed.region].coordinates,
   skills: [...new Set(seed.jobs.map(job => job.kind))],
-  equipment: [...new Set(["ONT", "GPON", "Рефлектометр", ...seed.jobs.map(job => job.equipment)])],
-  transport: "Автомобиль",
+  equipment: [...new Set(seed.jobs.map(job => job.equipment))],
+  transport: transportForEngineer(seed.id),
   shiftStart: 480,
   shiftEnd: 1320,
 }));
 
-const output = `/* Generated from data/csv by scripts/import-csv.mjs. Coordinates come from Nominatim house-level geocoding. */\nexport const csvJobs = ${JSON.stringify(jobs, null, 2)};\nexport const csvEngineers = ${JSON.stringify(engineers, null, 2)};\nexport const csvMeta = ${JSON.stringify({ rows: jobs.length, regions: specs.map(item => item.region), generatedAt: new Date().toISOString().slice(0, 10), geocoded: true, offices }, null, 2)};\n`;
+const output = `/* Generated from data/csv by scripts/import-csv.mjs. Coordinates are cached geocodes or explicitly counted fallbacks. */\nexport const csvJobs = ${JSON.stringify(jobs, null, 2)};\nexport const csvEngineers = ${JSON.stringify(engineers, null, 2)};\nexport const csvMeta = ${JSON.stringify({ rows: jobs.length, regions: specs.map(item => item.region), generatedAt: new Date().toISOString().slice(0, 10), geocoding, offices }, null, 2)};\n`;
 fs.writeFileSync(path.join(root, "lib", "csv-data.generated.ts"), output, "utf8");
 console.log(`Imported ${jobs.length} jobs and ${engineers.length} engineers from CSV.`);

@@ -16,6 +16,7 @@ export async function loadRoadTravel(
     if (points.length < 2) continue;
     try {
       const table = await routing.buildMatrix(points, "driving");
+      if (table.distances.some((row, i) => points.some((_, j) => i !== j && (row?.[j] == null || table.durations[i]?.[j] == null)))) provider = "fallback";
       parts.push(travelFromTable(points, table.distances, table.durations, speedKmh));
     } catch {
       parts.push(fallbackTravel(speedKmh));
