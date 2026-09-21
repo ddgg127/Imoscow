@@ -1,0 +1,92 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+  --ff-bg: #0a0c10;
+  --ff-fg: #e8eaef;
+  --ff-muted: #8b919c;
+  --ff-accent: #f0b429;
+  --ff-line: #2a3038;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+  background: var(--ff-bg);
+  color: var(--ff-fg);
+}
+
+.lab {
+  max-width: 52rem;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 3rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.35rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  color: var(--ff-accent);
+}
+
+h1 {
+  margin: 0 0 1.5rem;
+  font-size: 1.35rem;
+  font-weight: 600;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: 0.75rem 1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.82rem;
+  color: var(--ff-muted);
+}
+
+.field input {
+  background: #12151b;
+  color: var(--ff-fg);
+  border: 1px solid var(--ff-line);
+  border-radius: 4px;
+  padding: 0.4rem 0.5rem;
+  font: inherit;
+}
+
+.summary {
+  margin: 1.5rem 0 1rem;
+  padding: 0.9rem 1rem;
+  background: #12151b;
+  border: 1px solid var(--ff-line);
+  font-size: 0.85rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.actions button {
+  background: var(--ff-accent);
+  color: #16120a;
+  border: 0;
+  border-radius: 4px;
+  padding: 0.45rem 0.9rem;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
