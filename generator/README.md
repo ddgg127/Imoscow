@@ -25,3 +25,5 @@ npm run generate -- --engineers 12 --jobs 40 --seed 42 --out datasets/sample
 - `npm run fetch-buildings` — обновить каталог домов OSM (нужна сеть)
 
 Выход: `datasets/sample` (демо) или `datasets/latest` (последний прогон, в git не попадает).
+
+FieldFlow читает `dataset.json` и CSV генератора на вкладке «Заявки». Навыки каталога сжимаются в три навыка планировщика, «Пешеход» становится «Пешком».

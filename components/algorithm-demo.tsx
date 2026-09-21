@@ -86,19 +86,24 @@ export function AlgorithmDemoView() {
     }];
     return { problem, result, frames };
   }, [mode, points, vehicles, seed]);
+  /* eslint-disable react-hooks/set-state-in-effect -- playback cursor follows the latest search trace */
   useEffect(() => {
     setCursor(0);
     setPlaying(false);
   }, [run]);
   useEffect(() => {
     if (!playing) return;
-    if (cursor >= run.frames.length - 1) {
-      setPlaying(false);
-      return;
-    }
-    const timer = window.setTimeout(() => setCursor(value => Math.min(run.frames.length - 1, value + 1)), 160);
+    if (cursor >= run.frames.length - 1) return;
+    const timer = window.setTimeout(() => {
+      setCursor(value => {
+        const next = Math.min(run.frames.length - 1, value + 1);
+        if (next >= run.frames.length - 1) setPlaying(false);
+        return next;
+      });
+    }, 160);
     return () => window.clearTimeout(timer);
   }, [playing, cursor, run.frames.length]);
+  /* eslint-enable react-hooks/set-state-in-effect */
   const frame: TraceFrame = run.frames[Math.min(cursor, run.frames.length - 1)] ?? run.frames[0];
   const chart = run.frames.map(item => item.distanceKm);
   const maxKm = Math.max(1, ...chart);
