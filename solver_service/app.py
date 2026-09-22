@@ -180,9 +180,12 @@ def solve_vrptw(data: SolveRequest) -> SolveResponse:
         forced_vehicle = engineer_index.get(forced_engineer_id) if forced_engineer_id else None
         if allowed:
             time_dimension.CumulVar(index).SetRange(job.windowStart, job.windowEnd)
+            # An optional node has vehicle -1 when dropped. Keep that value in
+            # the domain; excluding it silently makes every compatible job
+            # mandatory and can render an overloaded schedule infeasible.
             # VehicleVar is used instead of SetAllowedVehiclesForIndex because
             # OR-Tools 9.15 on Windows has a SWIG Span conversion regression.
-            routing.VehicleVar(index).SetValues(allowed)
+            routing.VehicleVar(index).SetValues([-1, *allowed])
         if forced_engineer_id:
             if forced_vehicle not in allowed:
                 raise HTTPException(

@@ -79,6 +79,18 @@ def test_impossible_time_window_is_dropped():
     assert "a" in result.droppedJobIds
 
 
+def test_compatible_jobs_can_be_dropped_when_schedule_is_overloaded():
+    data = payload()
+    data["engineers"] = data["engineers"][:1]
+    data["jobs"][0].update(windowStart=483, windowEnd=483, serviceMinutes=60)
+    data["jobs"][1].update(coordinates=[1, 0], windowStart=483, windowEnd=483, serviceMinutes=60)
+    # Both jobs fit the same engineer individually, but only one fits the day.
+    # The solver must return a partial plan rather than 422/no feasible plan.
+    result = solve_vrptw(SolveRequest.model_validate(data))
+    assert sum(len(route.jobIds) for route in result.routes) == 1
+    assert len(result.droppedJobIds) == 1
+
+
 def test_cancelled_job_is_forced_inactive():
     data = payload()
     data["jobs"][0]["cancelled"] = True
