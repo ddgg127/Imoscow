@@ -6,7 +6,7 @@ export function generateDataset(sourceJobs: Job[], sourceEngineers: Engineer[], 
   const jobs = applyAverageWindows(scaleJobs(sourceJobs, options.jobs), options.windowMinutes).map(job => ({
     ...job, engineerId: null, baselineEngineerId: null, status: job.cancelled ? "Отменена" : "Новая",
   }));
-  return { jobs, engineers: scaleEngineers(sourceEngineers, options.engineers), speedKmh: options.speedKmh };
+  return { jobs, engineers: scaleEngineers(sourceEngineers, options.engineers, jobs), speedKmh: options.speedKmh };
 }
 
 const columns = ["recordType", "id", "region", "area", "address", "kind", "workType", "lon", "lat", "geocodeQuality", "windowStart", "windowEnd", "serviceMinutes", "equipment", "requiredTransport", "allowedTransports", "priority", "status", "cancelled", "name", "initials", "skills", "transport", "shiftStart", "shiftEnd", "color", "speedKmh"] as const;

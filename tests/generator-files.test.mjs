@@ -50,3 +50,37 @@ test("generator JSON is importable and routable without losing planning fields",
 test("generator CSV is importable and routable without losing planning fields", () => {
   verifyRoundTrip("generated.csv", generatedCsv(sample));
 });
+
+test("average window is a mean, not a uniform duration", () => {
+  for (const average of [60, 240, 480]) {
+    for (const count of [1, 2, 25, 250, 300, 350]) {
+      const dataset = generateDataset(csvJobs, csvEngineers, { jobs: count, engineers: 25, windowMinutes: average, speedKmh: 24 });
+      const widths = dataset.jobs.map(job => job.windowEnd - job.windowStart);
+      assert.equal(widths.reduce((sum, width) => sum + width, 0) / count, average);
+      assert.ok(dataset.jobs.every(job => job.windowStart >= 480 && job.windowEnd <= 1320));
+      if (count > 1) assert.ok(new Set(widths).size > 1);
+    }
+  }
+});
+
+test("small engineer pools cover all regions and generated work stays distributed", () => {
+  for (const count of [250, 300, 350]) {
+    const dataset = generateDataset(csvJobs, csvEngineers, { jobs: count, engineers: 25, windowMinutes: 240, speedKmh: 24 });
+    const regions = new Set(csvJobs.map(job => job.region));
+    assert.deepEqual(new Set(dataset.engineers.map(engineer => engineer.region)), regions);
+    const added = dataset.jobs.slice(csvJobs.length);
+    assert.ok(regions.size === 3 && [...regions].every(region => added.some(job => job.region === region)));
+    assert.equal(new Set(dataset.jobs.map(job => job.id)).size, count);
+  }
+});
+
+test("large generated CSV and JSON keep variable windows and the selected team", () => {
+  const dataset = generateDataset(csvJobs, csvEngineers, { jobs: 300, engineers: 25, windowMinutes: 240, speedKmh: 24 });
+  for (const [file, text] of [["generated.csv", generatedCsv(dataset)], ["generated.json", generatedJson(dataset)]]) {
+    const imported = importPlanText(text, file, centers);
+    assert.equal(imported.jobs.length, 300);
+    assert.equal(imported.engineers.length, 25);
+    assert.deepEqual(imported.jobs.map(job => [job.id, job.windowStart, job.windowEnd]), dataset.jobs.map(job => [job.id, job.windowStart, job.windowEnd]));
+    assert.deepEqual(imported.engineers.map(engineer => engineer.id), dataset.engineers.map(engineer => engineer.id));
+  }
+});

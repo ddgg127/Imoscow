@@ -89,6 +89,12 @@ test("external route orders are validated before becoming application results", 
   assert.throws(() => resultFromRouteOrder(engineers, jobs, [{ engineerId: "e1", jobIds: ["a", "a"] }], { travel }), /more than once/);
 });
 
+test("an idle compatible engineer is reported as an optimization gap, not an impossibility", () => {
+  const result = resultFromRouteOrder([engineer("e1")], [job("a", 1)], [], { travel });
+  assert.match(result.jobs[0].unassignedReason, /Свободный подходящий инженер/);
+  assert.equal(result.metrics.unassigned, 1);
+});
+
 test("optimization returns baseline assignments and consistent side-by-side metrics", () => {
   const input = [job("a", 1), job("b", 2)];
   const result = optimizeVrptw([engineer("e1"), engineer("e2")], input, { travel, innerBudget: 4, zoneBudget: 4 });

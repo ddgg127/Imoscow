@@ -157,13 +157,60 @@ function travelDistance(a: Coordinate, b: Coordinate, speedKmh: number, travel?:
   return (travel ?? fallbackTravel(speedKmh)).distanceKm(a, b);
 }
 
-export function scaleEngineers(source: Engineer[], count: number): Engineer[] {
+/** Select a smaller team against the actual workload, retaining source order for the baseline. */
+export function scaleEngineers(source: Engineer[], count: number, jobs: Job[] = []): Engineer[] {
   const n = Math.max(1, Math.round(count));
   if (!source.length) return [];
+  if (n < source.length && jobs.length) {
+    const relevant = jobs.filter(job => !job.cancelled);
+    const travel = fallbackTravel(SPEED_KMH);
+    const regions = [...new Set(source.map(engineer => engineer.region))];
+    const demand = new Map(regions.map(region => [region, 0]));
+    for (const job of relevant) {
+      const local = source.filter(engineer => engineer.region === job.region);
+      if (!local.length) continue;
+      const nearest = Math.min(...local.map(engineer => travel.durationMin(engineer.start, job.coordinates)));
+      demand.set(job.region, (demand.get(job.region) ?? 0) + job.serviceMinutes + Math.min(40, nearest * 0.5));
+    }
+    const quotas = new Map(regions.map(region => [region, 0]));
+    const positive = regions.filter(region => (demand.get(region) ?? 0) > 0);
+    if (n >= positive.length) for (const region of positive) quotas.set(region, 1);
+    for (let slot = [...quotas.values()].reduce((sum, value) => sum + value, 0); slot < n; slot++) {
+      let bestRegion: Region | null = null;
+      let bestDeficit = -Infinity;
+      const totalDemand = [...demand.values()].reduce((sum, value) => sum + value, 0);
+      for (const region of regions) {
+        const current = quotas.get(region) ?? 0;
+        if (current >= source.filter(engineer => engineer.region === region).length) continue;
+        const target = totalDemand ? (demand.get(region) ?? 0) / totalDemand * n : source.filter(engineer => engineer.region === region).length / source.length * n;
+        const deficit = target - current;
+        if (deficit > bestDeficit) { bestDeficit = deficit; bestRegion = region; }
+      }
+      if (bestRegion) quotas.set(bestRegion, (quotas.get(bestRegion) ?? 0) + 1);
+    }
+    const coveredBy = source.map(engineer => relevant.map((job, index) => compatible(engineer, job) ? index : -1).filter(index => index >= 0));
+    const coverage = new Uint16Array(relevant.length);
+    const chosen = new Set<number>();
+    for (let slot = 0; slot < n; slot++) {
+      let bestIndex = -1;
+      let bestScore = -1;
+      for (let index = 0; index < source.length; index++) {
+        const region = source[index].region;
+        if (chosen.has(index) || [...chosen].filter(selected => source[selected].region === region).length >= (quotas.get(region) ?? 0)) continue;
+        // Diminishing returns favour an unrepresented region or resource class,
+        // then add capacity where the compatible workload is still largest.
+        const score = coveredBy[index].reduce((sum, jobIndex) => sum + relevant[jobIndex].serviceMinutes / (1 + coverage[jobIndex]) ** 2, 0);
+        if (score > bestScore) { bestScore = score; bestIndex = index; }
+      }
+      chosen.add(bestIndex);
+      for (const jobIndex of coveredBy[bestIndex]) coverage[jobIndex]++;
+    }
+    return source.filter((_, index) => chosen.has(index)).map(item => ({ ...item, start: [...item.start] as Coordinate, skills: [...item.skills], equipment: [...item.equipment] }));
+  }
   if (n <= source.length) return source.slice(0, n).map(item => ({ ...item, start: [...item.start] as Coordinate, skills: [...item.skills], equipment: [...item.equipment] }));
   const result = source.map(item => ({ ...item, start: [...item.start] as Coordinate, skills: [...item.skills], equipment: [...item.equipment] }));
   for (let i = source.length; i < n; i++) {
-    const base = source[i % source.length];
+    const base = source[spreadIndex(i - source.length, source.length)];
     const wave = Math.floor(i / source.length);
     const angle = i * 2.399963;
     const radius = 0.008 + wave % 12 * 0.004;
@@ -181,13 +228,24 @@ export function scaleEngineers(source: Engineer[], count: number): Engineer[] {
   return result;
 }
 
+function spreadIndex(index: number, length: number) {
+  const gcd = (a: number, b: number): number => b ? gcd(b, a % b) : a;
+  let step = Math.max(2, Math.round(length * 0.36));
+  while (gcd(step, length) !== 1) step++;
+  return index * step % length;
+}
+
 export function scaleJobs(source: Job[], count: number): Job[] {
   const n = Math.max(0, Math.round(count));
   if (!source.length || n === 0) return [];
-  if (n <= source.length) return source.slice(0, n).map(job => ({ ...job, coordinates: [...job.coordinates] as Coordinate }));
+  if (n < source.length) {
+    const selected = new Set(Array.from({ length: n }, (_, index) => spreadIndex(index, source.length)));
+    return source.filter((_, index) => selected.has(index)).map(job => ({ ...job, coordinates: [...job.coordinates] as Coordinate }));
+  }
+  if (n === source.length) return source.map(job => ({ ...job, coordinates: [...job.coordinates] as Coordinate }));
   const result = source.map(job => ({ ...job, coordinates: [...job.coordinates] as Coordinate }));
   for (let i = source.length; i < n; i++) {
-    const base = source[i % source.length];
+    const base = source[spreadIndex(i - source.length, source.length)];
     result.push({
       ...base,
       id: `${base.id}-g${i}`,
@@ -202,7 +260,7 @@ export function scaleJobs(source: Job[], count: number): Job[] {
   return result;
 }
 
-/** Stretch SLA windows around shared day-bands. Service time stays unchanged. */
+/** Vary SLA windows around a requested mean; paired widths keep that mean exact. */
 export function applyAverageWindows(jobs: Job[], averageMinutes: number): Job[] {
   const dayStart = 480;
   const dayEnd = 1320;
@@ -210,7 +268,8 @@ export function applyAverageWindows(jobs: Job[], averageMinutes: number): Job[] 
   const mean = Math.min(daySpan, Math.max(60, Math.round(averageMinutes / 15) * 15));
   const bandCount = Math.max(1, Math.round(daySpan / mean));
   const pitch = bandCount === 1 ? 0 : (daySpan - mean) / (bandCount - 1);
-  return jobs.map(job => {
+  const amplitude = Math.max(0, Math.min(60, mean - 30, daySpan - mean));
+  return jobs.map((job, index) => {
     if (job.source === "Срочная форма") return { ...job, coordinates: [...job.coordinates] as Coordinate };
     const center = (job.windowStart + job.windowEnd) / 2;
     let band = 0;
@@ -222,8 +281,11 @@ export function applyAverageWindows(jobs: Job[], averageMinutes: number): Job[] 
         band = i;
       }
     }
-    const width = mean;
-    let start = Math.round((dayStart + band * pitch) / 15) * 15;
+    const pairAmplitude = Math.min(amplitude, 30 + Math.floor(index / 2) % 3 * 15);
+    const offset = jobs.length % 2 && index === jobs.length - 1 ? 0 : index % 2 ? pairAmplitude : -pairAmplitude;
+    const width = mean + offset;
+    const bandCenter = dayStart + band * pitch + mean / 2;
+    let start = Math.round((bandCenter - width / 2) / 15) * 15;
     let end = start + width;
     if (end > dayEnd) {
       start = dayEnd - width;
@@ -914,12 +976,14 @@ function finish(engineers: Engineer[], inputJobs: Job[], jobs: Job[], assignment
         unassignedReason = earliest > job.windowEnd
           ? `Даже свободный подходящий инженер приедет не раньше ${minutesLabel(earliest)}, а окно заканчивается в ${minutesLabel(job.windowEnd)}.`
           : "Даже свободный подходящий инженер не успевает выполнить заявку до конца своей смены.";
+      } else if (eligible.some(engineer => !(assignments.get(engineer.id)?.length) && simulate(engineer, [job], true, speedKmh, travel))) {
+        unassignedReason = "Свободный подходящий инженер мог бы выполнить заявку отдельно, но она не вошла в найденный план. Пересчитайте маршрут или увеличьте время поиска.";
       } else if (eligible.length === 1) {
         const only = eligible[0];
         const count = assignments.get(only.id)?.length ?? 0;
-        unassignedReason = `Единственный подходящий инженер — ${only.name}; у него уже ${count} заявки. Не найдено перестановки, сохраняющей все окна SLA и смену.`;
+        unassignedReason = `Единственный подходящий инженер — ${only.name}; у него уже ${count} заявки. В найденном плане не удалось добавить работу без нарушения окна или смены.`;
       } else {
-        unassignedReason = `${eligible.length} инженеров подходят по навыку и ресурсам, но после распределения работ не найден допустимый маршрут в пределах SLA и смены.`;
+        unassignedReason = `${eligible.length} инженеров подходят по навыку и ресурсам, но их маршруты в найденном плане ограничены SLA и сменой.`;
       }
     }
     return { ...job, engineerId, baselineEngineerId: baseline.assignmentById.get(job.id) ?? null, baselineUnassignedReason: baseline.unassignedReasons.get(job.id), unassignedReason, risk: !engineerId };

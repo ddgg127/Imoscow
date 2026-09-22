@@ -210,7 +210,35 @@ function AnalyticsView({ result, engineers, distanceReady, distanceWarning, solv
 function GeneratorView({ draft, setDraft, generated, generatedFrom, onGenerate, onPlan }: { draft: PlanConfig; setDraft: React.Dispatch<React.SetStateAction<PlanConfig>>; generated: GeneratedDataset | null; generatedFrom: PlanConfig | null; onGenerate: () => void; onPlan: () => void }) {
   const fresh = generated && generatedFrom && Object.keys(draft).every(key => draft[key as keyof PlanConfig] === generatedFrom[key as keyof PlanConfig]);
   const heavyRun = draft.engineers * draft.jobs > 150000;
-  return <section className="page-view generator-view"><div className="generator-layout"><article className="panel generator-config"><div className="panel-header"><div><h2>Параметры набора</h2><p>Заявки и инженеры из исходного набора всех регионов</p></div></div><div className="config-body"><ConfigNumberField label="Инженеры" hint={`В исходном наборе ${sourceEngineers.length}. Свыше — синтетические копии.`} value={draft.engineers} onChange={value => setDraft(current => ({ ...current, engineers: value }))} sliderMax={500} snapStep={50} suffix="чел." /><ConfigNumberField label="Заявки" hint={`В исходном наборе ${sourceJobs.length}. Свыше — повторные работы по тем же подтверждённым адресам.`} value={draft.jobs} onChange={value => setDraft(current => ({ ...current, jobs: value }))} sliderMax={500} snapStep={50} suffix="шт." /><ConfigNumberField label="Среднее окно заявки" hint="Изменяет окна заявок в создаваемом наборе. Норматив работ остаётся исходным." value={draft.windowMinutes} onChange={value => setDraft(current => ({ ...current, windowMinutes: value }))} sliderMin={60} sliderMax={480} inputMin={60} inputMax={840} snapStep={30} suffix="мин" /><ConfigNumberField label="Средняя скорость" hint="Сохраняется в CSV/JSON и применяется при расчёте дорог после загрузки." value={draft.speedKmh} onChange={value => setDraft(current => ({ ...current, speedKmh: value }))} sliderMin={10} sliderMax={80} inputMin={5} inputMax={200} snapStep={10} suffix="км/ч" />{heavyRun && <p className="config-warning">Большой набор: построение дорожной матрицы и расчёт могут занять заметное время.</p>}<button className="optimize-button start-run-button" onClick={onGenerate}><Sparkles />Создать набор заявок</button></div></article><article className="panel generator-output"><div className="panel-header"><div><h2>Готовый набор</h2><p>Файлы подходят для загрузки во вкладке «Заявки»</p></div></div>{generated ? <div className="generator-result"><div className="generator-facts"><span><b>{generated.jobs.length}</b>заявок</span><span><b>{generated.engineers.length}</b>инженеров</span><span><b>{generated.speedKmh}</b>км/ч</span></div><p>{fresh ? "Набор подключён к текущему плану. Скачайте файл или перейдите к построению маршрутов." : "Параметры изменены. Нажмите «Создать набор заявок», чтобы обновить данные и файлы."}</p><div className="generator-actions"><button type="button" disabled={!fresh} onClick={() => downloadGeneratedDataset(generated, "csv")}><Download /> Скачать CSV</button><button type="button" disabled={!fresh} onClick={() => downloadGeneratedDataset(generated, "json")}><FileJson /> Скачать JSON</button></div><button type="button" className="generator-plan-link" disabled={!fresh} onClick={onPlan}><Route /> Перейти к планированию</button></div> : <div className="generator-empty"><Database /><strong>Набор ещё не создан</strong><p>Выберите объём работ и нажмите «Создать набор заявок». Затем можно работать с ним здесь или скачать файл.</p></div>}</article></div></section>;
+  const widths = generated?.jobs.map(job => job.windowEnd - job.windowStart) ?? [];
+  const minWindow = widths.length ? Math.min(...widths) : 0;
+  const maxWindow = widths.length ? Math.max(...widths) : 0;
+  const meanWindow = widths.length ? Math.round(widths.reduce((sum, width) => sum + width, 0) / widths.length) : 0;
+  return <section className="page-view generator-view">
+    <div className="generator-layout">
+      <article className="panel generator-config">
+        <div className="panel-header"><div><h2>Параметры набора</h2><p>Заявки и инженеры из исходного набора всех регионов</p></div></div>
+        <div className="config-body">
+          <ConfigNumberField label="Инженеры" hint={`В исходном наборе ${sourceEngineers.length}. При сокращении команда подбирается по регионам и ресурсам.`} value={draft.engineers} onChange={value => setDraft(current => ({ ...current, engineers: value }))} sliderMax={500} snapStep={50} suffix="чел." />
+          <ConfigNumberField label="Заявки" hint={`В исходном наборе ${sourceJobs.length}. Дополнительные работы распределяются по всем регионам.`} value={draft.jobs} onChange={value => setDraft(current => ({ ...current, jobs: value }))} sliderMax={500} snapStep={50} suffix="шт." />
+          <ConfigNumberField label="Среднее окно заявки" hint="Окна будут разной длины, но их среднее останется выбранным. Норматив работ не меняется." value={draft.windowMinutes} onChange={value => setDraft(current => ({ ...current, windowMinutes: value }))} sliderMin={60} sliderMax={480} inputMin={60} inputMax={840} snapStep={30} suffix="мин" />
+          <ConfigNumberField label="Средняя скорость" hint="Сохраняется в CSV/JSON и применяется при расчёте дорог после загрузки." value={draft.speedKmh} onChange={value => setDraft(current => ({ ...current, speedKmh: value }))} sliderMin={10} sliderMax={80} inputMin={5} inputMax={200} snapStep={10} suffix="км/ч" />
+          {heavyRun && <p className="config-warning">Большой набор: построение дорожной матрицы и расчёт могут занять заметное время.</p>}
+          <button className="optimize-button start-run-button" onClick={onGenerate}><Sparkles />Создать набор заявок</button>
+        </div>
+      </article>
+      <article className="panel generator-output">
+        <div className="panel-header"><div><h2>Готовый набор</h2><p>Файлы подходят для загрузки во вкладке «Заявки»</p></div></div>
+        {generated ? <div className="generator-result">
+          <div className="generator-facts"><span><b>{generated.jobs.length}</b>заявок</span><span><b>{generated.engineers.length}</b>инженеров</span><span><b>{generated.speedKmh}</b>км/ч</span></div>
+          <p>Окна: {minWindow}–{maxWindow} мин, среднее {meanWindow} мин.</p>
+          <p>{fresh ? "Набор подключён к текущему плану. Скачайте файл или перейдите к построению маршрутов." : "Параметры изменены. Нажмите «Создать набор заявок», чтобы обновить данные и файлы."}</p>
+          <div className="generator-actions"><button type="button" disabled={!fresh} onClick={() => downloadGeneratedDataset(generated, "csv")}><Download /> Скачать CSV</button><button type="button" disabled={!fresh} onClick={() => downloadGeneratedDataset(generated, "json")}><FileJson /> Скачать JSON</button></div>
+          <button type="button" className="generator-plan-link" disabled={!fresh} onClick={onPlan}><Route /> Перейти к планированию</button>
+        </div> : <div className="generator-empty"><Database /><strong>Набор ещё не создан</strong><p>Выберите объём работ и нажмите «Создать набор заявок». Затем можно работать с ним здесь или скачать файл.</p></div>}
+      </article>
+    </div>
+  </section>;
 }
 
 function ReplanImpactPanel({ changes }: { changes: ReplanChange[] }) {
@@ -339,9 +367,9 @@ export default function Dashboard() {
   const baseJobs = importedJobs ?? sourceJobs;
   const baseEngineers = importedEngineers?.length ? importedEngineers : sourceEngineers;
   const started = Boolean(applied);
-  const activeEngineers = useMemo(() => applied ? scaleEngineers(baseEngineers, applied.engineers) : baseEngineers, [applied, baseEngineers]);
-  const availableEngineers = useMemo(() => activeEngineers.filter(engineer => !unavailableEngineerIds.includes(engineer.id)), [activeEngineers, unavailableEngineerIds]);
   const activeJobs = useMemo(() => applied ? composePlanJobs(baseJobs, applied.jobs, importedJobs ? null : applied.windowMinutes, extraJobs, cancelledJobIds) : composePlanJobs(baseJobs, baseJobs.length, importedJobs ? null : draft.windowMinutes, extraJobs, cancelledJobIds), [applied, baseJobs, importedJobs, extraJobs, cancelledJobIds, draft.windowMinutes]);
+  const activeEngineers = useMemo(() => applied ? scaleEngineers(baseEngineers, applied.engineers, activeJobs) : baseEngineers, [applied, baseEngineers, activeJobs]);
+  const availableEngineers = useMemo(() => activeEngineers.filter(engineer => !unavailableEngineerIds.includes(engineer.id)), [activeEngineers, unavailableEngineerIds]);
   const result = planResult ?? idleOptimization(availableEngineers, activeJobs, applied?.speedKmh ?? draft.speedKmh, travel);
   const plannedJobs = result.jobs; const visibleJobs = useMemo(() => plannedJobs.filter(job => !job.cancelled && (region === "Все зоны" || job.region === region)), [plannedJobs, region]); const baselineJobs = useMemo(() => plannedJobs.filter(job => !job.cancelled && (region === "Все зоны" || job.region === region)), [plannedJobs, region]); const selectedJob = plannedJobs.find(job => job.id === selectedJobId) ?? null; const selectedEngineer = activeEngineers.find(item => item.id === selectedJob?.engineerId); const routeByEngineer = useMemo(() => new Map(result.routes.map(route => [route.engineerId, route])), [result.routes]); const visibleEngineers = useMemo(() => activeEngineers.filter(engineer => region === "Все зоны" || engineer.region === region), [activeEngineers, region]); const visibleBaselineRoutes = useMemo(() => result.baselineRoutes.filter(route => { const engineer = activeEngineers.find(item => item.id === route.engineerId); return Boolean(engineer) && (region === "Все зоны" || engineer?.region === region); }), [result.baselineRoutes, activeEngineers, region]);
   const simRange = useMemo(() => {
@@ -400,8 +428,8 @@ export default function Dashboard() {
   const startPlanning = useCallback(() => {
     const config = { ...draft };
     setApplied(config);
-    const engineers = scaleEngineers(baseEngineers, config.engineers).filter(engineer => !unavailableEngineerIds.includes(engineer.id));
     const jobs = composePlanJobs(baseJobs, config.jobs, importedJobs ? null : config.windowMinutes, extraJobs, cancelledJobIds);
+    const engineers = scaleEngineers(baseEngineers, config.engineers, jobs).filter(engineer => !unavailableEngineerIds.includes(engineer.id));
     void runOptimize(engineers, jobs, config.speedKmh);
   }, [draft, extraJobs, runOptimize, baseEngineers, baseJobs, importedJobs, unavailableEngineerIds, cancelledJobIds]);
   const createGenerated = useCallback(() => {
@@ -411,7 +439,7 @@ export default function Dashboard() {
     setExtraJobs([]); setCancelledJobIds([]); setUnavailableEngineerIds([]); setApplied(null); setPlanResult(null); setTravel(undefined); setMatrixFallback(false); setReplanChanges([]); setSelectedJobId(null); setSelectedEngineerId(null); setSolverError("");
     setImportStatus(`Создано ${dataset.jobs.length} заявок и ${dataset.engineers.length} инженеров. Данные готовы к расчёту.`);
   }, [draft]);
-  const addUrgent = useCallback(async () => { setFormError(""); if (!urgentForm.address.trim()) { setFormError("Укажите адрес заявки"); return; } const start = Number(urgentForm.start.slice(0, 2)) * 60 + Number(urgentForm.start.slice(3)); const end = Number(urgentForm.end.slice(0, 2)) * 60 + Number(urgentForm.end.slice(3)); if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) { setFormError("Проверьте временное окно"); return; } let coordinates = regionCenters[urgentForm.region]; let geocodeVerified = false; try { const resolved = await new BackendGeocodingProvider("nominatim").geocode(urgentForm.address); if (resolved) { coordinates = resolved; geocodeVerified = true; } } catch { /* fallback */ } const id = `URG-${Date.now().toString().slice(-6)}`; const serviceMinutes = urgentForm.kind === "Аварийно-восстановительные работы" ? 90 : urgentForm.kind === "Подключение и модернизация" ? 60 : 30; const job: Job = { id, time: `${urgentForm.start}–${urgentForm.end}`, windowStart: start, windowEnd: end, area: urgentForm.region, address: urgentForm.address, kind: urgentForm.kind, workType: urgentForm.kind, tone: "amber", region: urgentForm.region, engineerId: null, baselineEngineerId: null, coordinates, geocodeVerified, geocodeQuality: geocodeVerified ? "street" : "fallback", risk: false, equipment: urgentForm.equipment, requiredTransport: urgentForm.transport, priority: 10, serviceMinutes, source: "Срочная форма", status: "Новая" }; const nextExtras = [...extraJobs, job]; setExtraJobs(nextExtras); setUrgentOpen(false); setSelectedJobId(id); setUrgentForm(current => ({ ...current, address: "" })); if (applied) { const engineers = scaleEngineers(baseEngineers, applied.engineers).filter(engineer => !unavailableEngineerIds.includes(engineer.id)); const merged = composePlanJobs(baseJobs, applied.jobs, importedJobs ? null : applied.windowMinutes, nextExtras, cancelledJobIds).map(item => planResult?.jobs.find(prev => prev.id === item.id && prev.cancelled === item.cancelled) ?? item); void runOptimize(engineers, merged, applied.speedKmh, job.id); } }, [urgentForm, applied, extraJobs, planResult, runOptimize, baseEngineers, baseJobs, importedJobs, unavailableEngineerIds, cancelledJobIds]);
+  const addUrgent = useCallback(async () => { setFormError(""); if (!urgentForm.address.trim()) { setFormError("Укажите адрес заявки"); return; } const start = Number(urgentForm.start.slice(0, 2)) * 60 + Number(urgentForm.start.slice(3)); const end = Number(urgentForm.end.slice(0, 2)) * 60 + Number(urgentForm.end.slice(3)); if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) { setFormError("Проверьте временное окно"); return; } let coordinates = regionCenters[urgentForm.region]; let geocodeVerified = false; try { const resolved = await new BackendGeocodingProvider("nominatim").geocode(urgentForm.address); if (resolved) { coordinates = resolved; geocodeVerified = true; } } catch { /* fallback */ } const id = `URG-${Date.now().toString().slice(-6)}`; const serviceMinutes = urgentForm.kind === "Аварийно-восстановительные работы" ? 90 : urgentForm.kind === "Подключение и модернизация" ? 60 : 30; const job: Job = { id, time: `${urgentForm.start}–${urgentForm.end}`, windowStart: start, windowEnd: end, area: urgentForm.region, address: urgentForm.address, kind: urgentForm.kind, workType: urgentForm.kind, tone: "amber", region: urgentForm.region, engineerId: null, baselineEngineerId: null, coordinates, geocodeVerified, geocodeQuality: geocodeVerified ? "street" : "fallback", risk: false, equipment: urgentForm.equipment, requiredTransport: urgentForm.transport, priority: 10, serviceMinutes, source: "Срочная форма", status: "Новая" }; const nextExtras = [...extraJobs, job]; setExtraJobs(nextExtras); setUrgentOpen(false); setSelectedJobId(id); setUrgentForm(current => ({ ...current, address: "" })); if (applied) { const merged = composePlanJobs(baseJobs, applied.jobs, importedJobs ? null : applied.windowMinutes, nextExtras, cancelledJobIds).map(item => planResult?.jobs.find(prev => prev.id === item.id && prev.cancelled === item.cancelled) ?? item); const engineers = scaleEngineers(baseEngineers, applied.engineers, merged).filter(engineer => !unavailableEngineerIds.includes(engineer.id)); void runOptimize(engineers, merged, applied.speedKmh, job.id); } }, [urgentForm, applied, extraJobs, planResult, runOptimize, baseEngineers, baseJobs, importedJobs, unavailableEngineerIds, cancelledJobIds]);
   const handleImport = useCallback(async (file: File) => {
     setImportStatus(`Читаем ${file.name}…`);
     try {
@@ -443,8 +471,8 @@ export default function Dashboard() {
     setUnavailableEngineerIds(next);
     setSelectedEngineerDetailsId(null);
     if (applied) {
-      const engineers = scaleEngineers(baseEngineers, applied.engineers).filter(engineer => !next.includes(engineer.id));
       const jobs = composePlanJobs(baseJobs, applied.jobs, importedJobs ? null : applied.windowMinutes, extraJobs, cancelledJobIds);
+      const engineers = scaleEngineers(baseEngineers, applied.engineers, jobs).filter(engineer => !next.includes(engineer.id));
       void runOptimize(engineers, jobs, applied.speedKmh);
     }
   }, [unavailableEngineerIds, applied, baseEngineers, baseJobs, importedJobs, extraJobs, cancelledJobIds, runOptimize]);
@@ -453,8 +481,8 @@ export default function Dashboard() {
     setCancelledJobIds(next);
     setSelectedJobId(null);
     if (applied) {
-      const engineers = scaleEngineers(baseEngineers, applied.engineers).filter(engineer => !unavailableEngineerIds.includes(engineer.id));
       const jobs = composePlanJobs(baseJobs, applied.jobs, importedJobs ? null : applied.windowMinutes, extraJobs, next);
+      const engineers = scaleEngineers(baseEngineers, applied.engineers, jobs).filter(engineer => !unavailableEngineerIds.includes(engineer.id));
       void runOptimize(engineers, jobs, applied.speedKmh);
     }
   }, [cancelledJobIds, applied, baseEngineers, baseJobs, importedJobs, extraJobs, unavailableEngineerIds, runOptimize]);
