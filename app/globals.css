@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "../vendor/shadcn-tailwind-4.13.0.css";
+@import "../components/assignment-board.css";
 
 :root{--background:#f3f5f9;--foreground:#151827;--card:#fff;--card-foreground:#151827;--popover:#fff;--popover-foreground:#151827;--primary:#6547e7;--primary-foreground:#fff;--secondary:#f1efff;--secondary-foreground:#4b34bc;--muted:#f4f5f8;--muted-foreground:#74798b;--accent:#efedff;--accent-foreground:#4b34bc;--destructive:#db3f55;--border:#e6e8ef;--input:#e6e8ef;--ring:#846fff;--radius:.875rem;--sidebar:#171525;--sidebar-foreground:#f8f7ff;--sidebar-primary:#7a5cff;--sidebar-primary-foreground:#fff;--sidebar-accent:#2a263b;--sidebar-accent-foreground:#fff;--sidebar-border:#302c42;--sidebar-ring:#8c78ff}
 [data-theme="dark"]{--background:#0d111b;--foreground:#edf0f7;--card:#151b28;--card-foreground:#edf0f7;--popover:#151b28;--popover-foreground:#edf0f7;--primary:#8e7cff;--primary-foreground:#fff;--secondary:#24213f;--secondary-foreground:#d8d1ff;--muted:#1b2231;--muted-foreground:#9ca5b5;--accent:#282348;--accent-foreground:#ded9ff;--border:#293244;--input:#293244;--ring:#9d8cff;--sidebar:#080b12;--sidebar-accent:#1b2130;--sidebar-border:#252d3d}

@@ -1,0 +1,29 @@
+.assignment-board { display: flex; flex: 1; min-height: 0; flex-direction: column; }
+.assignment-tools { padding: 12px 14px 10px; display: grid; gap: 10px; }
+.assignment-search { height: 36px; display: flex; align-items: center; gap: 8px; padding: 0 10px; border: 1px solid var(--border); border-radius: 10px; background: var(--muted); color: var(--muted-foreground); }
+.assignment-search > svg { width: 16px; height: 16px; flex: none; }
+.assignment-search input { min-width: 0; width: 100%; border: 0; outline: 0; background: transparent; color: var(--foreground); font-size: 12px; }
+.assignment-search input::placeholder { color: var(--muted-foreground); }
+.assignment-search button { width: 22px; height: 22px; flex: none; display: grid; place-items: center; border: 0; background: transparent; color: var(--muted-foreground); }
+.assignment-search button svg { width: 14px; height: 14px; }
+.assignment-filters { display: flex; flex-wrap: wrap; gap: 5px; }
+.assignment-filters button { min-height: 27px; padding: 4px 8px; border: 1px solid var(--border); border-radius: 7px; background: var(--card); color: var(--muted-foreground); font-size: 10px; font-weight: 700; }
+.assignment-filters button.active { border-color: color-mix(in srgb, var(--primary) 42%, var(--border)); background: var(--secondary); color: var(--secondary-foreground); }
+.assignment-table-head, .assignment-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+.assignment-table-head { padding: 8px 14px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); background: var(--muted); color: var(--muted-foreground); font-size: 10px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+.assignment-table { max-height: 460px; min-height: 0; overflow: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
+.assignment-row { padding: 6px 10px; border-bottom: 1px solid var(--border); }
+.assignment-row:hover { background: color-mix(in srgb, var(--accent) 45%, var(--card)); }
+.assignment-job, .assignment-engineer { min-width: 0; min-height: 50px; padding: 6px; display: flex; align-items: center; gap: 7px; border: 1px solid transparent; border-radius: 9px; background: transparent; color: var(--foreground); text-align: left; }
+.assignment-job:hover, .assignment-engineer:hover, .assignment-job.selected, .assignment-engineer.selected { border-color: color-mix(in srgb, var(--primary) 30%, var(--border)); background: var(--accent); }
+.assignment-job:focus-visible, .assignment-engineer:focus-visible, .assignment-filters button:focus-visible, .assignment-show-all:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+.assignment-tone { width: 4px; height: 30px; flex: none; border-radius: 4px; background: var(--primary); }
+.assignment-tone.blue { background: #4c88d8; }.assignment-tone.amber { background: #f3a74e; }.assignment-tone.green { background: #29aa7d; }
+.assignment-cell-copy { min-width: 0; display: block; }.assignment-cell-copy strong, .assignment-cell-copy small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.assignment-cell-copy strong { font-size: 11px; line-height: 1.35; }.assignment-cell-copy small { margin-top: 3px; color: var(--muted-foreground); font-size: 10px; line-height: 1.3; }
+.assignment-avatar { width: 26px; height: 26px; flex: none; display: grid; place-items: center; border-radius: 8px; font-size: 9px; font-weight: 800; }
+.assignment-unassigned { min-width: 0; display: flex; align-items: center; padding: 6px; color: var(--muted-foreground); font-size: 11px; }
+.assignment-no-results { padding: 24px 14px; color: var(--muted-foreground); font-size: 12px; text-align: center; }
+.assignment-show-all { margin: 10px 14px 14px; padding: 9px 12px; border: 1px solid var(--border); border-radius: 9px; background: var(--secondary); color: var(--secondary-foreground); font-size: 11px; font-weight: 750; text-align: center; }
+@media (max-width: 1100px) { .assignment-table { max-height: 380px; } }
+@media (max-width: 760px) { .assignment-tools { padding: 12px; }.assignment-table-head { padding: 8px 12px; }.assignment-row { padding: 6px 8px; }.assignment-table { max-height: 420px; } }
