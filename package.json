@@ -16,6 +16,8 @@
     "typecheck": "tsc --noEmit",
     "test": "node --test tests/*.test.mjs",
     "test:solver": "python -m pytest solver_service -q",
+    "dev:generator": "npm --prefix generator run dev",
+    "generate:data": "npm --prefix generator run generate",
     "db:generate": "drizzle-kit generate"
   },
   "dependencies": {

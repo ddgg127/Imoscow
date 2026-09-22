@@ -38,3 +38,37 @@ test("CSV upload accepts Russian headers and explicit coordinates", async () => 
   assert.equal(result.jobs[0].geocodeVerified, true);
   assert.deepEqual(result.jobs[0].coordinates, [37.59, 55.75]);
 });
+
+test("generator dataset JSON maps into planner jobs and engineers", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const text = await readFile(new URL("../generator/datasets/sample/dataset.json", import.meta.url), "utf8");
+  const file = new File([text], "dataset.json", { type: "application/json" });
+  const centers = { "Восток": [37.78, 55.71], "Юго-восток": [37.67, 55.59], "Югоцентр": [37.61, 55.65] };
+  const result = await importPlanFile(file, centers);
+  assert.equal(result.jobs.length, 11);
+  assert.equal(result.engineers?.length, 7);
+  assert.ok(result.jobs.every(job => job.geocodeVerified && job.serviceMinutes >= 5));
+  assert.ok(result.engineers?.every(engineer => engineer.transport !== "Пешеход" && engineer.skills.length >= 1));
+  assert.equal(result.jobs.find(job => job.id === "J001")?.windowStart, 15 * 60 + 25);
+});
+
+test("generator jobs CSV skips Excel sep= header", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const bytes = await readFile(new URL("../generator/datasets/sample/jobs.csv", import.meta.url));
+  const file = new File([bytes], "jobs.csv", { type: "text/csv" });
+  const centers = { "Восток": [37.78, 55.71], "Юго-восток": [37.67, 55.59], "Югоцентр": [37.61, 55.65] };
+  const result = await importPlanFile(file, centers);
+  assert.equal(result.jobs[0].id, "J001");
+  assert.equal(result.jobs.length, 11);
+});
+
+test("generator engineers CSV can be imported separately", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const bytes = await readFile(new URL("../generator/datasets/sample/engineers.csv", import.meta.url));
+  const file = new File([bytes], "engineers.csv", { type: "text/csv" });
+  const centers = { "Восток": [37.78, 55.71], "Юго-восток": [37.67, 55.59], "Югоцентр": [37.61, 55.65] };
+  const result = await importPlanFile(file, centers);
+  assert.equal(result.jobs.length, 0);
+  assert.equal(result.engineers?.length, 7);
+  assert.ok(result.engineers?.every(engineer => engineer.skills.length && engineer.shiftEnd > engineer.shiftStart));
+});

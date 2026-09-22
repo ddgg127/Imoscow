@@ -15,6 +15,7 @@ const eslintConfig = defineConfig([
     // Prebuilt third-party MapLibre bundles are copied as-is for offline use.
     "public/maplibre/**",
     ".venv/**",
+    "generator/**",
   ]),
   {
     files: ["components/ui/**/*.{ts,tsx}", "hooks/use-mobile.ts"],
