@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { type SolverPayload, type SolverResponse } from "@/lib/server-solver";
+import { solverServiceError } from "@/lib/solver-error";
 
 function validPayload(value: unknown): value is SolverPayload {
   if (!value || typeof value !== "object") return false;
@@ -31,7 +32,7 @@ async function callOrTools(payload: SolverPayload): Promise<SolverResponse> {
   const timeout = setTimeout(() => controller.abort(), 90_000);
   try {
     const response = await fetch(`${base}/solve`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload), signal: controller.signal });
-    if (!response.ok) throw new Error(`OR-Tools service ${response.status}`);
+    if (!response.ok) throw new Error(solverServiceError(response.status, await response.json().catch(() => null)));
     const result = await response.json() as SolverResponse;
     if (result.engine !== "ortools") throw new Error("Внешний сервис не подтвердил движок OR-Tools");
     return result;
