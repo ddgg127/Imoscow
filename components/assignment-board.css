@@ -25,6 +25,6 @@
 .assignment-unassigned { min-width: 0; display: flex; align-items: center; padding: 6px; color: var(--muted-foreground); font-size: 11px; }
 .assignment-no-results { padding: 24px 14px; color: var(--muted-foreground); font-size: 12px; text-align: center; }
 .assignment-show-all { margin: 10px 14px 14px; padding: 9px 12px; border: 1px solid var(--border); border-radius: 9px; background: var(--secondary); color: var(--secondary-foreground); font-size: 11px; font-weight: 750; text-align: center; }
-@media (min-width: 1101px) { .content-grid { grid-template-columns: minmax(0, 1.3fr) minmax(350px, .9fr); } }
+@media (min-width: 1101px) { .content-grid.assignment-layout { grid-template-columns: minmax(0, 1.3fr) minmax(350px, .9fr); } }
 @media (max-width: 1100px) { .assignment-table { max-height: 380px; } }
 @media (max-width: 760px) { .assignment-tools { padding: 12px; }.assignment-table-head { padding: 8px 12px; }.assignment-row { padding: 6px 8px; }.assignment-table { max-height: 420px; } }
