@@ -46,11 +46,11 @@ export function AssignmentBoard({ jobs, engineers, routes, selectedJobId, select
         return <div className="assignment-row" role="listitem" key={job.id}>
           <button type="button" className={`assignment-job${selectedJobId === job.id ? " selected" : ""}`} onClick={() => onSelectJob(job.id)} title={`${job.address} · ${job.kind}`} aria-label={`Открыть заявку № ${job.id}, ${job.address}`}>
             <span className={`assignment-tone ${job.tone}`} aria-hidden="true" />
-            <span className="assignment-cell-copy"><strong>№ {job.id}</strong><small>{job.time} · {job.address}</small></span>
+            <span className="assignment-cell-copy"><strong>№ {job.id}</strong><small>{job.time} · {job.area}</small></span>
           </button>
           {engineer ? <button type="button" className={`assignment-engineer${selectedEngineerId === engineer.id ? " selected" : ""}`} onClick={() => onSelectEngineer(engineer.id)} title={`Показать маршрут: ${engineer.name}`} aria-label={`Показать маршрут инженера ${engineer.name} для заявки № ${job.id}`}>
             <span className="assignment-avatar" style={{ background: `${engineer.color}20`, color: engineer.color }}>{engineer.initials}</span>
-            <span className="assignment-cell-copy"><strong>{engineer.name}</strong><small>Точка {positionByJob.get(job.id) ?? "—"} в маршруте</small></span>
+            <span className="assignment-cell-copy"><strong>{engineer.name.replace(/^Инженер\s+/i, "")}</strong><small>{positionByJob.get(job.id) ?? "—"} в маршруте</small></span>
           </button> : <span className="assignment-unassigned">{loading ? "Расчёт…" : "Не назначен"}</span>}
         </div>;
       })}
