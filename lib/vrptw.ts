@@ -154,13 +154,11 @@ export function scaleJobs(source: Job[], count: number): Job[] {
   const result = source.map(job => ({ ...job, coordinates: [...job.coordinates] as Coordinate }));
   for (let i = source.length; i < n; i++) {
     const base = source[i % source.length];
-    const wave = Math.floor(i / source.length);
-    const angle = i * 1.718;
-    const radius = 0.006 + wave % 10 * 0.003;
     result.push({
       ...base,
       id: `${base.id}-g${i}`,
-      coordinates: [Number((base.coordinates[0] + Math.cos(angle) * radius).toFixed(5)), Number((base.coordinates[1] + Math.sin(angle) * radius).toFixed(5))],
+      // A repeated visit at the same address must retain its verified location.
+      coordinates: [...base.coordinates] as Coordinate,
       engineerId: null,
       baselineEngineerId: null,
       source: "Синтетика",
