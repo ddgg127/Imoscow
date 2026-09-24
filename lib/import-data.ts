@@ -164,7 +164,7 @@ function rowsToJobs(rows: Record<string, unknown>[], centers: Record<Region, Coo
       engineerId: null, baselineEngineerId: null, coordinates: point, geocodeVerified: verified,
       geocodeQuality: verified ? (value(row, ["geocodeQuality"]) === "street" ? "street" : "house") : "fallback", risk: false, equipment, requiredTransport: transport, allowedTransports: allowed.length ? allowed : kind === skills[2] ? [...new Set([transport, "Автомобиль"])] : transports, priority,
       serviceMinutes: serviceFor(value(row, ["serviceminutes", "service_minutes", "норматив", "длительность", "durationmin"]), kind),
-      source, status: value(row, ["status", "статус"]) || "Новая", cancelled: /^(true|1|да)$/i.test(value(row, ["cancelled", "отменена"])),
+      source, status: value(row, ["status", "статус"]) || "Новая", executionStatus: (["not_started", "in_progress", "completed"].includes(value(row, ["executionStatus", "execution_status", "выполнение"])) ? value(row, ["executionStatus", "execution_status", "выполнение"]) : "not_started") as Job["executionStatus"], cancelled: /^(true|1|да)$/i.test(value(row, ["cancelled", "отменена"])),
     };
   });
   const duplicates = jobs.filter((job, index) => jobs.findIndex(candidate => candidate.id === job.id) !== index);
@@ -191,7 +191,7 @@ function rowsToEngineers(rows: Record<string, unknown>[], centers: Record<Region
     if (lon == null || lat == null || lon < 30 || lon > 50 || lat < 50 || lat > 60 || !skillsValue.some(Boolean) || shiftStart < 0 || shiftEnd <= shiftStart) {
       throw new Error(`Инженер ${index + 1}: проверьте имя, регион, координаты, навыки и смену`);
     }
-    return { id, name, initials: value(row, ["initials"]) || initialsOf(name, id), route: value(row, ["route"]) || `Маршрут ${index + 1}`, jobs: 0, distance: "0 км", load: 0, color: value(row, ["color"]) || engineerColors[index % engineerColors.length], region, start: [lon, lat], skills: skillsValue.filter(Boolean), equipment: equipmentValue.filter(Boolean), transport: canonicalTransport(value(row, ["transport", "транспорт", "vehicle"])), shiftStart, shiftEnd };
+    return { id, name, initials: value(row, ["initials"]) || initialsOf(name, id), route: value(row, ["route"]) || `Маршрут ${index + 1}`, jobs: 0, distance: "0 км", load: 0, color: value(row, ["color"]) || engineerColors[index % engineerColors.length], region, start: [lon, lat], skills: skillsValue.filter(Boolean), equipment: equipmentValue.filter(Boolean), transport: canonicalTransport(value(row, ["transport", "транспорт", "vehicle"])), shiftStart, shiftEnd, speedKmh: numberValue(row, ["speedKmh", "speed_kmh", "скорость"]) ?? undefined };
   });
   if (new Set(engineers.map(item => item.id)).size !== engineers.length) throw new Error("Повторяются номера инженеров");
   return engineers;

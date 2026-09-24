@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { osrmRouteLegs } from "../lib/osrm.ts";
+import { decodePolyline6, osrmRouteLegs, osrmTable } from "../lib/osrm.ts";
 import { fallbackTravel, travelFromTable } from "../lib/vrptw.ts";
 
 test("multi-stop road geometry comes from one ordered OSRM route request", async () => {
@@ -19,6 +19,90 @@ test("multi-stop road geometry comes from one ordered OSRM route request", async
   } finally {
     globalThis.fetch = originalFetch;
   }
+});
+
+test("road geometry falls back to FOSSGIS and uses the pedestrian network", async () => {
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+  globalThis.fetch = async url => {
+    calls.push(String(url));
+    if (String(url).includes("router.project-osrm.org")) return new Response("unavailable", { status: 503 });
+    return new Response(JSON.stringify({ routes: [{ geometry: { coordinates: [[37.61, 55.71], [37.62, 55.72]] }, distance: 1000, duration: 600 }] }), { status: 200 });
+  };
+  try {
+    const car = await osrmRouteLegs([[37.61, 55.71], [37.62, 55.72], [37.63, 55.73]]);
+    assert.equal(car.provider, "osrm");
+    assert.ok(calls.some(url => url.includes("routing.openstreetmap.de/routed-car/route/v1/driving")));
+    calls.length = 0;
+    await osrmRouteLegs([[37.81, 55.71], [37.82, 55.72], [37.83, 55.73]], "walking");
+    assert.equal(calls.length, 1);
+    assert.match(calls[0], /routing\.openstreetmap\.de\/routed-foot\/route\/v1\/driving/);
+  } finally { globalThis.fetch = originalFetch; }
+});
+
+function encodePolyline6(points) {
+  let lastLat = 0, lastLon = 0;
+  let output = "";
+  for (const [lon, lat] of points) {
+    for (const delta of [Math.round(lat * 1e6) - lastLat, Math.round(lon * 1e6) - lastLon]) {
+      let value = delta < 0 ? ~(delta << 1) : delta << 1;
+      while (value >= 0x20) { output += String.fromCharCode((0x20 | (value & 0x1f)) + 63); value >>= 5; }
+      output += String.fromCharCode(value + 63);
+    }
+    lastLat = Math.round(lat * 1e6);
+    lastLon = Math.round(lon * 1e6);
+  }
+  return output;
+}
+
+test("transit route uses Valhalla multimodal shape, never a straight-line substitute", async () => {
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+  const road = [[37.601, 55.701], [37.603, 55.702], [37.604, 55.704]];
+  globalThis.fetch = async (url, options) => {
+    calls.push({ url: String(url), options });
+    return new Response(JSON.stringify({ trip: { legs: [{ shape: encodePolyline6(road) }], summary: { length: 1.2, time: 480 } } }), { status: 200 });
+  };
+  try {
+    assert.deepEqual(decodePolyline6(encodePolyline6(road)), road);
+    const result = await osrmRouteLegs([road[0], road.at(-1)], "transit");
+    assert.equal(result.provider, "valhalla");
+    assert.deepEqual(result.geometry.coordinates, road);
+    assert.equal(JSON.parse(calls[0].options.body).costing, "multimodal");
+    assert.match(calls[0].url, /valhalla1\.openstreetmap\.de\/route/);
+  } finally { globalThis.fetch = originalFetch; }
+});
+
+test("missing transit graph is labelled as a pedestrian estimate", async () => {
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+  globalThis.fetch = async url => {
+    calls.push(String(url));
+    if (String(url).includes("valhalla1")) return new Response("missing transit graph", { status: 400 });
+    return new Response(JSON.stringify({ routes: [{ geometry: { coordinates: [[37.605, 55.705], [37.607, 55.706], [37.615, 55.715]] }, distance: 1900, duration: 1200 }] }), { status: 200 });
+  };
+  try {
+    const result = await osrmRouteLegs([[37.605, 55.705], [37.615, 55.715]], "transit");
+    assert.equal(result.provider, "walking-estimate");
+    assert.equal(result.geometry.coordinates.length, 3);
+    assert.ok(calls.some(url => url.includes("routed-foot")));
+    assert.ok(!calls.some(url => url.includes("router.project-osrm.org")));
+  } finally { globalThis.fetch = originalFetch; }
+});
+
+test("walking matrix uses pedestrian graph rather than driving demo", async () => {
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+  globalThis.fetch = async url => {
+    calls.push(String(url));
+    return new Response(JSON.stringify({ distances: [[0, 1200], [1200, 0]], durations: [[0, 900], [900, 0]] }), { status: 200 });
+  };
+  try {
+    const matrix = await osrmTable([[37.711, 55.711], [37.712, 55.712]], "walking");
+    assert.equal(matrix.distances[0][1], 1200);
+    assert.match(calls[0], /routing\.openstreetmap\.de\/routed-foot\/table/);
+    assert.ok(!calls.some(url => url.includes("router.project-osrm.org")));
+  } finally { globalThis.fetch = originalFetch; }
 });
 
 test("unavailable road matrix uses conservative urban travel time", () => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Search, X } from "lucide-react";
 import type { Engineer, Job, RoutePlan } from "@/lib/vrptw";
 
@@ -19,6 +19,17 @@ export function AssignmentBoard({ jobs, engineers, routes, selectedJobId, select
 }) {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
+  const [restored, setRestored] = useState(false);
+  useEffect(() => {
+    // Restore plan-tab controls after hydration without changing server markup.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setQuery(window.sessionStorage.getItem("fieldflow-assignments-query") ?? "");
+    const saved = window.sessionStorage.getItem("fieldflow-assignments-filter");
+    if (saved === "all" || saved === "assigned" || saved === "unassigned") setFilter(saved);
+    setRestored(true);
+  }, []);
+  useEffect(() => { if (restored) window.sessionStorage.setItem("fieldflow-assignments-query", query); }, [query, restored]);
+  useEffect(() => { if (restored) window.sessionStorage.setItem("fieldflow-assignments-filter", filter); }, [filter, restored]);
   const byEngineer = useMemo(() => new Map(engineers.map(engineer => [engineer.id, engineer])), [engineers]);
   const positionByJob = useMemo(() => new Map(routes.flatMap(route => route.stops.map((stop, index) => [stop.jobId, `${index + 1}/${route.stops.length}`] as const))), [routes]);
   const assignedCount = jobs.filter(job => job.engineerId && byEngineer.has(job.engineerId)).length;

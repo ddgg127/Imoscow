@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-from solver_service.app import SolveRequest, app, solve_vrptw
+from solver_service.app import SolveRequest, app, solve_vrptw, vehicle_travel_minutes
 
 
 def payload(engineers=None, jobs=None, distances=None, durations=None):
@@ -99,6 +99,14 @@ def test_cancelled_job_is_forced_inactive():
     assert all("a" not in route.jobIds for route in result.routes)
 
 
+def test_completed_job_is_forced_inactive():
+    data = payload()
+    data["jobs"][0]["executionStatus"] = "completed"
+    result = solve_vrptw(SolveRequest.model_validate(data))
+    assert "a" in result.droppedJobIds
+    assert all("a" not in route.jobIds for route in result.routes)
+
+
 def test_allowed_transport_list_is_honoured():
     data = payload()
     data["engineers"][0]["transport"] = "Велосипед"
@@ -131,3 +139,55 @@ def test_impossible_forced_assignment_is_rejected_explicitly():
     result = TestClient(app).post("/solve", json=data)
     assert result.status_code == 422
     assert "forced assignment" in result.text
+
+
+def test_transport_modes_and_individual_speed_change_travel_time():
+    data = payload()
+    data["matrix"]["distancesKm"][0][2] = 10
+    data["matrix"]["durationsMin"][0][2] = 25
+    request = SolveRequest.model_validate(data)
+    assert vehicle_travel_minutes(request, 0, 0, 2) == 25
+    request.engineers[0].transport = "Велосипед"
+    assert vehicle_travel_minutes(request, 0, 0, 2) == 42
+    request.engineers[0].transport = "Пешком"
+    assert vehicle_travel_minutes(request, 0, 0, 2) == 122
+    request.engineers[0].transport = "Общественный транспорт"
+    assert vehicle_travel_minutes(request, 0, 0, 2) == 40
+    request.engineers[0].transport = "Автомобиль"
+    request.engineers[0].speedKmh = 12
+    assert vehicle_travel_minutes(request, 0, 0, 2) == 50
+
+
+def test_bicycle_uses_its_own_network_matrix_in_solver():
+    data = payload()
+    data["engineers"][0]["transport"] = "Велосипед"
+    data["jobs"][0]["allowedTransports"] = ["Велосипед"]
+    data["jobs"][0]["windowEnd"] = 505
+    data["jobs"][0]["serviceMinutes"] = 10
+    data["jobs"][1]["kind"] = "Другой навык"
+    data["matrix"]["distancesKm"][0][2] = 10
+    data["modeMatrices"] = {"cycling": {
+        "points": data["matrix"]["points"],
+        "distancesKm": [[0 if i == j else 1.2 for j in range(4)] for i in range(4)],
+        "durationsMin": [[0 if i == j else 7 for j in range(4)] for i in range(4)],
+    }}
+    request = SolveRequest.model_validate(data)
+    assert vehicle_travel_minutes(request, 0, 0, 2) == 7
+    result = solve_vrptw(request)
+    assert "a" not in result.droppedJobIds
+
+
+def test_slow_pedestrian_cannot_arrive_in_car_window():
+    data = payload()
+    data["engineers"] = data["engineers"][:1]
+    data["engineers"][0]["transport"] = "Пешком"
+    data["jobs"] = data["jobs"][:1]
+    data["jobs"][0]["allowedTransports"] = ["Пешком", "Автомобиль"]
+    data["jobs"][0]["windowEnd"] = 510
+    data["matrix"]["distancesKm"][0][2] = 10
+    data["matrix"]["durationsMin"][0][2] = 25
+    result = solve_vrptw(SolveRequest.model_validate(data))
+    assert result.droppedJobIds == ["a"]
+    data["engineers"][0]["transport"] = "Автомобиль"
+    result = solve_vrptw(SolveRequest.model_validate(data))
+    assert result.droppedJobIds == []

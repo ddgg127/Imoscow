@@ -13,6 +13,25 @@ test("solver payload contains a dense reusable travel matrix", () => {
   assert.equal(travelFromSolverPayload(payload).durationMin([0, 0], [1, 0]), 5);
 });
 
+test("solver payload keeps walking and cycling network matrices separate", () => {
+  const walk = { ...engineer, id: "walk", transport: "Пешком" };
+  const bike = { ...engineer, id: "bike", transport: "Велосипед" };
+  const modeTravel = {
+    ...travel,
+    forTransport: mode => mode === "Пешком"
+      ? { distanceKm: (a, b) => Math.abs(a[0] - b[0]) * 0.7, durationMin: (a, b) => Math.abs(a[0] - b[0]) * 12 }
+      : mode === "Велосипед"
+        ? { distanceKm: (a, b) => Math.abs(a[0] - b[0]) * 0.8, durationMin: (a, b) => Math.abs(a[0] - b[0]) * 4 }
+        : travel,
+  };
+  const payload = createSolverPayload([walk, bike], [job], 24, modeTravel);
+  assert.equal(payload.modeMatrices.walking.distancesKm[0][1], 0.7);
+  assert.equal(payload.modeMatrices.cycling.distancesKm[0][1], 0.8);
+  const restored = travelFromSolverPayload(payload);
+  assert.equal(restored.forTransport("Пешком").distanceKm(walk.start, job.coordinates), 0.7);
+  assert.equal(restored.forTransport("Велосипед").distanceKm(bike.start, job.coordinates), 0.8);
+});
+
 test("solver payload carries a forced assignment for counterfactual runs", () => {
   const payload = createSolverPayload([engineer], [job], 24, travel, undefined, { a: "e1" });
   assert.deepEqual(payload.forcedAssignments, { a: "e1" });

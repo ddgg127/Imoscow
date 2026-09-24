@@ -12,13 +12,18 @@ export type SolverPayload = {
   forcedAssignments?: Record<string, string>;
   timeLimitSeconds?: number;
   matrix: { points: [number, number][]; distancesKm: number[][]; durationsMin: number[][] };
+  modeMatrices?: Record<string, { points: [number, number][]; distancesKm: number[][]; durationsMin: number[][] }>;
 };
 
 export function createSolverPayload(engineers: Engineer[], jobs: Job[], speedKmh: number, travel: TravelMatrix, urgentId?: string, forcedAssignments?: Record<string, string>): SolverPayload {
   const points = uniquePoints(engineers, jobs);
-  const distancesKm = points.map(from => points.map(to => Number(travel.distanceKm(from, to).toFixed(4))));
-  const durationsMin = points.map(from => points.map(to => Number(travel.durationMin(from, to).toFixed(3))));
-  return { engineers, jobs, speedKmh, urgentId, forcedAssignments, timeLimitSeconds: forcedAssignments ? 8 : 12, matrix: { points, distancesKm, durationsMin } };
+  const dense = (matrix: TravelMatrix) => ({ points, distancesKm: points.map(from => points.map(to => Number(matrix.distanceKm(from, to).toFixed(4)))), durationsMin: points.map(from => points.map(to => Number(matrix.durationMin(from, to).toFixed(3)))) });
+  const modeMatrices: SolverPayload["modeMatrices"] = {};
+  if (travel.forTransport) {
+    if (engineers.some(engineer => ["Пешком", "Пешеход"].includes(engineer.transport))) modeMatrices.walking = dense(travel.forTransport("Пешком"));
+    if (engineers.some(engineer => engineer.transport === "Велосипед")) modeMatrices.cycling = dense(travel.forTransport("Велосипед"));
+  }
+  return { engineers, jobs, speedKmh, urgentId, forcedAssignments, timeLimitSeconds: forcedAssignments ? 8 : 12, matrix: dense(travel), modeMatrices };
 }
 
 export function travelFromSolverPayload(payload: SolverPayload): TravelMatrix {
@@ -29,11 +34,13 @@ export function travelFromSolverPayload(payload: SolverPayload): TravelMatrix {
     if (i == null || j == null || !Number.isFinite(table[i]?.[j])) throw new Error("Solver matrix does not contain a required point");
     return table[i][j];
   };
-  return {
-    distanceKm: (from, to) => lookup(payload.matrix.distancesKm, from, to),
-    durationMin: (from, to) => lookup(payload.matrix.durationsMin, from, to),
+  const matrixFor = (transport: string) => transport === "Пешком" || transport === "Пешеход" ? payload.modeMatrices?.walking ?? payload.matrix : transport === "Велосипед" ? payload.modeMatrices?.cycling ?? payload.matrix : payload.matrix;
+  const wrap = (matrix: SolverPayload["matrix"]): TravelMatrix => ({
+    distanceKm: (from, to) => lookup(matrix.distancesKm, from, to),
+    durationMin: (from, to) => lookup(matrix.durationsMin, from, to),
     knows: (from, to) => index.has(coordKey(from)) && index.has(coordKey(to)),
-  };
+  });
+  return { ...wrap(payload.matrix), forTransport: transport => wrap(matrixFor(transport)) };
 }
 
 export function heuristicServerResponse(payload: SolverPayload): SolverResponse {

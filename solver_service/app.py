@@ -16,6 +16,7 @@ class Engineer(BaseModel):
     skills: list[str]
     equipment: list[str]
     transport: str
+    speedKmh: float | None = Field(default=None, ge=2, le=200)
     shiftStart: int
     shiftEnd: int
 
@@ -33,6 +34,7 @@ class Job(BaseModel):
     windowEnd: int
     serviceMinutes: int
     cancelled: bool = False
+    executionStatus: Literal["not_started", "in_progress", "completed"] = "not_started"
 
 
 class Matrix(BaseModel):
@@ -58,6 +60,7 @@ class SolveRequest(BaseModel):
     urgentId: str | None = None
     forcedAssignments: dict[str, str] = Field(default_factory=dict)
     matrix: Matrix
+    modeMatrices: dict[str, Matrix] = Field(default_factory=dict)
     timeLimitSeconds: int = Field(default=12, ge=1, le=60)
 
 
@@ -84,11 +87,41 @@ def key(point: tuple[float, float]) -> str:
 def compatible(engineer: Engineer, job: Job) -> bool:
     return (
         not job.cancelled
+        and job.executionStatus != "completed"
         and engineer.region == job.region
         and engineer.transport in (job.allowedTransports or [job.requiredTransport])
         and job.equipment in engineer.equipment
         and job.kind in engineer.skills
     )
+
+
+TRANSPORT_SPEEDS = {
+    "Пешком": 5.0,
+    "Пешеход": 5.0,
+    "Велосипед": 15.0,
+    "Общественный транспорт": 18.0,
+}
+
+
+def vehicle_travel_minutes(data: SolveRequest, vehicle: int, from_point: int, to_point: int) -> int:
+    engineer = data.engineers[vehicle]
+    matrix = matrix_for_vehicle(data, vehicle)
+    road_km = matrix.distancesKm[from_point][to_point]
+    if road_km < 0.001:
+        return 0
+    speed = engineer.speedKmh or (data.speedKmh if engineer.transport == "Автомобиль" else TRANSPORT_SPEEDS.get(engineer.transport, data.speedKmh))
+    if engineer.transport == "Автомобиль":
+        minutes = matrix.durationsMin[from_point][to_point] * data.speedKmh / speed
+    else:
+        access = 6 if engineer.transport == "Общественный транспорт" else 2
+        minutes = road_km / speed * 60 + access
+    return max(1, math.ceil(minutes))
+
+
+def matrix_for_vehicle(data: SolveRequest, vehicle: int) -> Matrix:
+    transport = data.engineers[vehicle].transport
+    mode = "walking" if transport in ("Пешком", "Пешеход") else "cycling" if transport == "Велосипед" else "driving"
+    return data.modeMatrices.get(mode, data.matrix)
 
 
 def solve_vrptw(data: SolveRequest) -> SolveResponse:
@@ -118,31 +151,39 @@ def solve_vrptw(data: SolveRequest) -> SolveResponse:
     manager = pywrapcp.RoutingIndexManager(node_count, engineer_count, starts, ends)
     routing = pywrapcp.RoutingModel(manager)
 
-    def distance_callback(from_index: int, to_index: int) -> int:
-        if routing.IsEnd(to_index):
-            return 0
-        from_node = manager.IndexToNode(from_index)
-        to_node = manager.IndexToNode(to_index)
-        value = data.matrix.distancesKm[matrix_nodes[from_node]][matrix_nodes[to_node]]
-        return max(0, int(round(value * 1000)))
+    for name, matrix in data.modeMatrices.items():
+        if matrix.points != data.matrix.points:
+            raise HTTPException(status_code=422, detail=f"{name} matrix points must match the main matrix")
 
-    def time_callback(from_index: int, to_index: int) -> int:
-        from_node = manager.IndexToNode(from_index)
-        service = data.jobs[from_node - engineer_count].serviceMinutes if from_node >= engineer_count else 0
-        if routing.IsEnd(to_index):
-            return service
-        to_node = manager.IndexToNode(to_index)
-        travel = data.matrix.durationsMin[matrix_nodes[from_node]][matrix_nodes[to_node]]
-        return service + max(0, int(math.ceil(travel)))
+    def distance_callback(vehicle: int):
+        def distance(from_index: int, to_index: int) -> int:
+            if routing.IsEnd(to_index):
+                return 0
+            from_node = manager.IndexToNode(from_index)
+            to_node = manager.IndexToNode(to_index)
+            value = matrix_for_vehicle(data, vehicle).distancesKm[matrix_nodes[from_node]][matrix_nodes[to_node]]
+            return max(0, int(round(value * 1000)))
+        return distance
 
-    distance_index = routing.RegisterTransitCallback(distance_callback)
-    time_index = routing.RegisterTransitCallback(time_callback)
-    routing.SetArcCostEvaluatorOfAllVehicles(distance_index)
+    def time_callback(vehicle: int):
+        def transit(from_index: int, to_index: int) -> int:
+            from_node = manager.IndexToNode(from_index)
+            service = data.jobs[from_node - engineer_count].serviceMinutes if from_node >= engineer_count else 0
+            if routing.IsEnd(to_index):
+                return service
+            to_node = manager.IndexToNode(to_index)
+            return service + vehicle_travel_minutes(data, vehicle, matrix_nodes[from_node], matrix_nodes[to_node])
+        return transit
+
+    time_indices = [routing.RegisterTransitCallback(time_callback(vehicle)) for vehicle in range(engineer_count)]
+    distance_indices = [routing.RegisterTransitCallback(distance_callback(vehicle)) for vehicle in range(engineer_count)]
+    for vehicle, distance_index in enumerate(distance_indices):
+        routing.SetArcCostEvaluatorOfVehicle(distance_index, vehicle)
 
     # Exact integer weights implement a lexicographic objective rather than a
     # hand-tuned approximation:
     # served count -> served priority -> active fleet -> road distance.
-    max_arc_m = max(int(math.ceil(value * 1000)) for row in data.matrix.distancesKm for value in row)
+    max_arc_m = max(int(math.ceil(value * 1000)) for matrix in [data.matrix, *data.modeMatrices.values()] for row in matrix.distancesKm for value in row)
     max_total_distance = max(1, max_arc_m * len(data.jobs))
     vehicle_weight = max_total_distance + 1
     max_fleet_and_distance = len(data.engineers) * vehicle_weight + max_total_distance
@@ -157,7 +198,7 @@ def solve_vrptw(data: SolveRequest) -> SolveResponse:
         routing.SetFixedCostOfVehicle(vehicle_weight, vehicle)
 
     max_end = max(engineer.shiftEnd for engineer in data.engineers)
-    routing.AddDimension(time_index, max_end, max_end + 1440, False, "Time")
+    routing.AddDimensionWithVehicleTransits(time_indices, max_end, max_end + 1440, False, "Time")
     time_dimension = routing.GetDimensionOrDie("Time")
 
     for vehicle, engineer in enumerate(data.engineers):
@@ -172,7 +213,7 @@ def solve_vrptw(data: SolveRequest) -> SolveResponse:
         for vehicle, engineer in enumerate(data.engineers):
             if not compatible(engineer, job):
                 continue
-            travel = math.ceil(data.matrix.durationsMin[matrix_nodes[vehicle]][matrix_nodes[node]])
+            travel = vehicle_travel_minutes(data, vehicle, matrix_nodes[vehicle], matrix_nodes[node])
             work_start = max(job.windowStart, engineer.shiftStart + travel)
             if work_start <= job.windowEnd and work_start + job.serviceMinutes <= engineer.shiftEnd:
                 allowed.append(vehicle)

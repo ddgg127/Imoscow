@@ -3,7 +3,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type Ref } from "react";
 import type { Map as MapLibreMap, Marker } from "maplibre-gl";
 import { Layers3, Navigation } from "lucide-react";
-import { BackendRoutingProvider, type Coordinate } from "@/lib/map-providers";
+import { BackendRoutingProvider, type Coordinate, type TravelMode } from "@/lib/map-providers";
+import { roadLegForJob, waypointIndices } from "@/lib/route-leg";
+import { engineerSpeedKmh } from "@/lib/transport-speed";
 import { distanceKm, minutesLabel, type Engineer, type Job, type RoutePlan } from "@/lib/vrptw";
 
 export type RoutingState = "idle" | "loading" | "ready" | "fallback";
@@ -56,25 +58,6 @@ function sliceByFraction(coords: Coordinate[], fraction: number) {
     line.push(coords[i]);
   }
   return { line: coords, point: coords[coords.length - 1] };
-}
-
-function waypointIndices(coords: Coordinate[], waypoints: Coordinate[]) {
-  const indices = [0];
-  let from = 0;
-  for (let i = 1; i < waypoints.length; i++) {
-    let best = from;
-    let bestD = Infinity;
-    for (let j = from; j < coords.length; j++) {
-      const d = distanceKm(coords[j], waypoints[i]);
-      if (d < bestD) {
-        bestD = d;
-        best = j;
-      }
-    }
-    indices.push(Math.max(best, from));
-    from = indices[i];
-  }
-  return indices;
 }
 
 function positionAtSimTime(engineer: Engineer, plan: RoutePlan, jobs: Job[], coords: Coordinate[], simTime: number) {
@@ -143,16 +126,20 @@ function setLineSource(map: MapLibreMap, id: string, data: GeoJSON.FeatureCollec
   (map.getSource(id) as { setData: (data: GeoJSON.FeatureCollection) => void } | undefined)?.setData(data);
 }
 
-async function roadLine(waypoints: Coordinate[], provider: BackendRoutingProvider): Promise<[Coordinate[], boolean]> {
-  if (waypoints.length < 2) return [waypoints, false];
+function roadMode(transport: string): TravelMode {
+  return transport === "Пешком" || transport === "Пешеход" ? "walking" : transport === "Велосипед" ? "cycling" : transport === "Общественный транспорт" ? "transit" : "driving";
+}
+
+async function roadLine(waypoints: Coordinate[], provider: BackendRoutingProvider, mode: TravelMode = "driving"): Promise<[Coordinate[], boolean, string]> {
+  if (waypoints.length < 2) return [waypoints, false, "none"];
   try {
-    const result = await provider.buildRoute({ points: waypoints, mode: "driving" });
+    const result = await provider.buildRoute({ points: waypoints, mode });
     const coords = result.geometry.coordinates as Coordinate[];
-    if (result.provider !== "osrm" && result.provider !== "yandex") return [[], true];
-    if (coords.length < 2 || !Number.isFinite(result.distanceMeters)) return [[], true];
-    return [coords, false];
+    if (!["osrm", "yandex", "valhalla", "walking-estimate"].includes(result.provider)) return [[], true, "unavailable"];
+    if (coords.length < 2 || !Number.isFinite(result.distanceMeters)) return [[], true, "unavailable"];
+    return [coords, result.provider === "walking-estimate", result.provider];
   } catch {
-    return [[], true];
+    return [[], true, "unavailable"];
   }
 }
 
@@ -169,17 +156,18 @@ function positionAtKnownStop(engineer: Engineer, plan: RoutePlan, jobs: Job[], s
   return lastKnown;
 }
 
-async function fetchRoadLines(engineers: Engineer[], jobs: Job[], plans: Map<string, RoutePlan>, baseline: boolean, provider: BackendRoutingProvider, cancelled: () => boolean) {
-  const results: Array<readonly [string, Coordinate[], boolean]> = [];
+async function fetchRoadLines(engineers: Engineer[], jobs: Job[], plans: Map<string, RoutePlan>, baseline: boolean, provider: BackendRoutingProvider, cancelled: () => boolean, onBatch?: (batch: Array<readonly [string, Coordinate[], boolean, string]>) => void) {
+  const results: Array<readonly [string, Coordinate[], boolean, string]> = [];
   for (let offset = 0; offset < engineers.length; offset += 3) {
     const batch = await Promise.all(engineers.slice(offset, offset + 3).map(async engineer => {
       const waypoints = routeCoordinates(engineer, jobs, baseline, plans.get(engineer.id));
-      if (waypoints.length < 2) return [engineer.id, waypoints, false] as const;
-      const [line, failed] = await roadLine(waypoints, provider);
-      return [engineer.id, line, failed] as const;
+      if (waypoints.length < 2) return [engineer.id, waypoints, false, "none"] as const;
+      const [line, failed, source] = await roadLine(waypoints, provider, roadMode(engineer.transport));
+      return [engineer.id, line, failed, source] as const;
     }));
     results.push(...batch);
     if (cancelled()) break;
+    onBatch?.(batch);
   }
   return results;
 }
@@ -193,11 +181,13 @@ function useRoadRoutes(
   baselineEngineers: Engineer[],
   baselineJobs: Job[],
   baselineRoutes: RoutePlan[],
+  selectedEngineerId: string | null,
   providerId: "osrm" | "yandex",
   apiKey: string,
   onRoutingState: (state: RoutingState) => void,
 ) {
   const [roadRoutes, setRoadRoutes] = useState<Record<string, Coordinate[]>>({});
+  const [routeSources, setRouteSources] = useState<Record<string, string>>({});
   const [baselineRoads, setBaselineRoads] = useState<Record<string, Coordinate[]>>({});
   const [routeStatus, setRouteStatus] = useState<RoutingState>(routingEnabled ? "loading" : "idle");
   const planByEngineer = useMemo(() => new Map(routes.map(route => [route.engineerId, route])), [routes]);
@@ -207,6 +197,7 @@ function useRoadRoutes(
       // Reset cached external routing state when road routing is disabled.
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setRoadRoutes({});
+      setRouteSources({});
       setRouteStatus("idle");
       onRoutingState("idle");
       return;
@@ -214,18 +205,24 @@ function useRoadRoutes(
     let cancelled = false;
     setRouteStatus("loading");
     setRoadRoutes({});
+    setRouteSources({});
     onRoutingState("loading");
     const provider = new BackendRoutingProvider(providerId, "/api/routing", apiKey);
     void (async () => {
-      const results = await fetchRoadLines(visibleEngineers, visibleJobs, planByEngineer, false, provider, () => cancelled);
+      const prioritized = [...visibleEngineers].sort((a, b) => Number(b.id === selectedEngineerId) - Number(a.id === selectedEngineerId));
+      const results = await fetchRoadLines(prioritized, visibleJobs, planByEngineer, false, provider, () => cancelled, batch => {
+        setRoadRoutes(current => ({ ...current, ...Object.fromEntries(batch.map(([id, coords]) => [id, coords])) }));
+        setRouteSources(current => ({ ...current, ...Object.fromEntries(batch.map(([id, , , source]) => [id, source])) }));
+      });
       if (cancelled) return;
       const state: RoutingState = results.some(item => item[2]) ? "fallback" : "ready";
       setRoadRoutes(Object.fromEntries(results.map(([id, coords]) => [id, coords])));
+      setRouteSources(Object.fromEntries(results.map(([id, , , source]) => [id, source])));
       setRouteStatus(state);
       onRoutingState(state);
     })();
     return () => { cancelled = true; };
-  }, [routingEnabled, visibleEngineers, visibleJobs, planByEngineer, providerId, apiKey, onRoutingState]);
+  }, [routingEnabled, visibleEngineers, visibleJobs, planByEngineer, selectedEngineerId, providerId, apiKey, onRoutingState]);
   useEffect(() => {
     if (!routingEnabled || !compare) {
       // The comparison layer must disappear immediately when its toggle closes.
@@ -243,14 +240,14 @@ function useRoadRoutes(
     })();
     return () => { cancelled = true; };
   }, [routingEnabled, compare, baselineEngineers, baselineJobs, baselineByEngineer, providerId, apiKey]);
-  return { roadRoutes, baselineRoads, routeStatus };
+  return { roadRoutes, routeSources, baselineRoads, routeStatus };
 }
 
 function captionText(status: RoutingState) {
   if (status === "idle") return "OpenStreetMap · точки по адресам зданий";
-  if (status === "loading") return "OpenStreetMap · строим маршруты OSRM";
-  if (status === "ready") return "OpenStreetMap · маршруты OSRM по дорогам";
-  return "OSRM недоступен · дорожные линии скрыты";
+  if (status === "loading") return "OpenStreetMap · загружаем линии по дорогам";
+  if (status === "ready") return "OpenStreetMap · маршруты по дорожному графу";
+  return "Часть линий оценочная или недоступна · прямые скрыты";
 }
 
 function MapChrome({ caption, status, clockRef, onFit, onZoomIn, onZoomOut }: { caption: string; status: RoutingState; clockRef?: Ref<HTMLSpanElement>; onFit: () => void; onZoomIn: () => void; onZoomOut: () => void }) {
@@ -274,6 +271,7 @@ type CanvasProps = {
   simTime: number | null;
   simPlaying: boolean;
   simSpeed: number;
+  carSpeedKmh: number;
   simEnd: number;
   onSimTime: (time: number) => void;
   onSimPlaying: (playing: boolean) => void;
@@ -287,8 +285,8 @@ type CanvasProps = {
   onRoutingState: (state: RoutingState) => void;
 };
 
-function useVisibleMarkers(visibleJobs: Job[], engineers: Engineer[], routingEnabled: boolean, selectedEngineerId: string | null) {
-  const markerJobs = useMemo(() => (selectedEngineerId ? visibleJobs.filter(job => job.engineerId === selectedEngineerId) : visibleJobs).slice(0, 220), [visibleJobs, selectedEngineerId]);
+function useVisibleMarkers(visibleJobs: Job[], engineers: Engineer[], routingEnabled: boolean, selectedEngineerId: string | null, selectedJobId: string | null) {
+  const markerJobs = useMemo(() => (selectedJobId ? visibleJobs.filter(job => job.id === selectedJobId) : selectedEngineerId ? visibleJobs.filter(job => job.engineerId === selectedEngineerId) : visibleJobs).slice(0, 220), [visibleJobs, selectedEngineerId, selectedJobId]);
   const visibleEngineerIds = useMemo(() => new Set(visibleJobs.map(job => job.engineerId).filter(Boolean)), [visibleJobs]);
   const visibleRegions = useMemo(() => new Set(visibleJobs.map(job => job.region)), [visibleJobs]);
   const visibleEngineers = useMemo(() => engineers.filter(engineer => visibleEngineerIds.has(engineer.id)), [engineers, visibleEngineerIds]);
@@ -314,7 +312,7 @@ export function engineerMarkerLabel(engineer: Pick<Engineer, "name" | "initials"
 }
 
 export function MapCanvas(props: CanvasProps) {
-  const { visibleJobs, baselineJobs, engineers, selectedEngineerId, selectedJobId, simTime, simPlaying, simSpeed, simEnd, onSimTime, onSimPlaying, compare, routingEnabled, routes, baselineRoutes, onSelectEngineer, onSelectJob, onInspectJob, onRoutingState } = props;
+  const { visibleJobs, baselineJobs, engineers, selectedEngineerId, selectedJobId, simTime, simPlaying, simSpeed, carSpeedKmh, simEnd, onSimTime, onSimPlaying, compare, routingEnabled, routes, baselineRoutes, onSelectEngineer, onSelectJob, onInspectJob, onRoutingState } = props;
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const markersRef = useRef<Marker[]>([]);
@@ -327,23 +325,49 @@ export function MapCanvas(props: CanvasProps) {
   const loadedRef = useRef(false);
   const [mapReady, setMapReady] = useState(false);
   const simulating = simTime != null;
-  const { markerJobs, visibleEngineers, markerEngineers } = useVisibleMarkers(visibleJobs, engineers, routingEnabled, selectedEngineerId);
+  const { markerJobs, visibleEngineers, markerEngineers } = useVisibleMarkers(visibleJobs, engineers, routingEnabled, selectedEngineerId, selectedJobId);
   const baselineEngineers = useMemo(() => {
     const ids = new Set((baselineRoutes.length ? baselineRoutes.map(route => route.engineerId) : baselineJobs.map(job => job.baselineEngineerId)).filter((id): id is string => Boolean(id)));
     return engineers.filter(engineer => ids.has(engineer.id));
   }, [engineers, baselineRoutes, baselineJobs]);
-  const { roadRoutes, baselineRoads, routeStatus } = useRoadRoutes(routingEnabled, compare, visibleEngineers, visibleJobs, routes, baselineEngineers, baselineJobs, baselineRoutes, "osrm", "", onRoutingState);
+  const { roadRoutes, routeSources, baselineRoads, routeStatus } = useRoadRoutes(routingEnabled, compare, visibleEngineers, visibleJobs, routes, baselineEngineers, baselineJobs, baselineRoutes, selectedEngineerId ?? engineers.find(item => item.id === visibleJobs.find(job => job.id === selectedJobId)?.engineerId)?.id ?? null, "osrm", "", onRoutingState);
   const latestRef = useRef({ visibleJobs, visibleEngineers, compare, routingEnabled });
   useEffect(() => { latestRef.current = { visibleJobs, visibleEngineers, compare, routingEnabled }; }, [visibleJobs, visibleEngineers, compare, routingEnabled]);
   const planByEngineer = useMemo(() => new Map(routes.map(route => [route.engineerId, route])), [routes]);
   const selectedRouteEngineer = engineers.find(engineer => engineer.id === selectedEngineerId);
   const selectedRoutePlan = selectedEngineerId ? planByEngineer.get(selectedEngineerId) : undefined;
+  const [focusedRoad, setFocusedRoad] = useState<{ key: string; coordinates: Coordinate[]; source: string } | null>(null);
+  const rawSelectedLeg = useMemo(() => selectedJobId && selectedRouteEngineer && selectedRoutePlan
+    ? roadLegForJob(selectedRouteEngineer, selectedRoutePlan, visibleJobs, roadRoutes[selectedRouteEngineer.id] ?? [], selectedJobId)
+    : null, [selectedJobId, selectedRouteEngineer, selectedRoutePlan, visibleJobs, roadRoutes]);
+  const legKey = rawSelectedLeg && selectedJobId ? `${selectedJobId}:${rawSelectedLeg.origin.join(",")}:${rawSelectedLeg.destination.join(",")}` : "";
+  useEffect(() => {
+    if (!rawSelectedLeg || !selectedJobId) return;
+    let cancelled = false;
+    const provider = new BackendRoutingProvider("osrm", "/api/routing");
+    void roadLine([rawSelectedLeg.origin, rawSelectedLeg.destination], provider, roadMode(selectedRouteEngineer?.transport ?? "Автомобиль")).then(([coordinates, , source]) => {
+      if (!cancelled) setFocusedRoad({ key: legKey, coordinates, source });
+    });
+    return () => { cancelled = true; };
+    // The route request depends on the selected stop and endpoints, not on the
+    // background whole-route geometry used as a fallback while it loads.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [legKey]);
+  const selectedLeg = useMemo(() => rawSelectedLeg && selectedJobId
+    ? { ...rawSelectedLeg, coordinates: focusedRoad?.key === legKey && focusedRoad.coordinates.length >= 2 ? focusedRoad.coordinates : rawSelectedLeg.coordinates }
+    : null, [rawSelectedLeg, selectedJobId, focusedRoad, legKey]);
   const routeFor = useCallback((engineer: Engineer) => roadRoutes[engineer.id] ?? [], [roadRoutes]);
+  const selectedRoadSource = selectedLeg && focusedRoad?.key === legKey && focusedRoad.coordinates.length >= 2 ? focusedRoad.source : selectedRouteEngineer ? routeSources[selectedRouteEngineer.id] : undefined;
   const baselineFor = useCallback((engineer: Engineer) => {
     return baselineRoads[engineer.id] ?? [];
   }, [baselineRoads]);
   const routeData = useMemo<GeoJSON.FeatureCollection<GeoJSON.LineString>>(() => {
     if (!routingEnabled) return emptyLines;
+    if (selectedJobId) {
+      return selectedLeg?.coordinates.length && selectedRouteEngineer
+        ? { type: "FeatureCollection", features: [lineFeature({ ...selectedRouteEngineer, color: "#f43f5e" }, selectedLeg.coordinates, true)] }
+        : emptyLines;
+    }
     return {
       type: "FeatureCollection",
       features: visibleEngineers.filter(engineer => !selectedEngineerId || engineer.id === selectedEngineerId).map(engineer => {
@@ -353,9 +377,9 @@ export function MapCanvas(props: CanvasProps) {
         return lineFeature(engineer, coordinates, selected);
       }).filter((feature): feature is GeoJSON.Feature<GeoJSON.LineString> => Boolean(feature)),
     };
-  }, [routingEnabled, visibleEngineers, selectedEngineerId, routeFor]);
+  }, [routingEnabled, visibleEngineers, selectedEngineerId, selectedJobId, selectedLeg, selectedRouteEngineer, routeFor]);
   const baselineData = useMemo<GeoJSON.FeatureCollection<GeoJSON.LineString>>(() => {
-    if (!routingEnabled || !compare || selectedEngineerId) return emptyLines;
+    if (!routingEnabled || !compare || selectedEngineerId || selectedJobId) return emptyLines;
     return {
       type: "FeatureCollection",
       features: baselineEngineers.filter(engineer => !selectedEngineerId || engineer.id === selectedEngineerId)
@@ -365,7 +389,7 @@ export function MapCanvas(props: CanvasProps) {
         })
         .filter((feature): feature is GeoJSON.Feature<GeoJSON.LineString> => Boolean(feature)),
     };
-  }, [routingEnabled, compare, baselineEngineers, baselineFor, selectedEngineerId]);
+  }, [routingEnabled, compare, baselineEngineers, baselineFor, selectedEngineerId, selectedJobId]);
   const fitCoords = useCallback(async (points: Coordinate[], maxZoom = 13.2, selected = false) => {
     const map = mapRef.current;
     if (!map || !loadedRef.current || !points.length) return;
@@ -465,18 +489,26 @@ export function MapCanvas(props: CanvasProps) {
         });
       }
       markerJobs.forEach((job, index) => {
-        if (!job.engineerId && routingEnabled) return;
+        if (!job.engineerId && routingEnabled && selectedJobId !== job.id) return;
         const engineer = engineers.find(item => item.id === job.engineerId);
         const color = engineer?.color ?? "#6b7280";
         const el = markerButton(`job-map-marker${selectedJobId === job.id ? " selected" : ""}`, String(index + 1), color, `№ ${job.id} · ${job.address}`, () => onSelectJob(job.id));
         markersRef.current.push(new Marker({ element: el }).setLngLat(job.coordinates).addTo(mapRef.current!));
       });
+      if (selectedLeg) {
+        const origin = markerButton("leg-origin-marker", "ОТ", "#18213a", selectedLeg.originLabel, () => {});
+        markersRef.current.push(new Marker({ element: origin }).setLngLat(selectedLeg.origin).addTo(mapRef.current!));
+      }
     });
-  }, [compare, routingEnabled, simulating, selectedEngineerId, selectedJobId, markerEngineers, markerJobs, engineers, onSelectEngineer, onSelectJob, mapReady]);
+  }, [compare, routingEnabled, simulating, selectedEngineerId, selectedJobId, selectedLeg, markerEngineers, markerJobs, engineers, onSelectEngineer, onSelectJob, mapReady]);
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !loadedRef.current) return;
     const job = visibleJobs.find(item => item.id === selectedJobId);
+    if (job && selectedLeg) {
+      void fitCoords(selectedLeg.coordinates.length >= 2 ? selectedLeg.coordinates : [selectedLeg.origin, selectedLeg.destination], 15.5, true);
+      return;
+    }
     if (job) {
       map.flyTo({ center: job.coordinates, zoom: 16, duration: 500 });
       return;
@@ -488,19 +520,19 @@ export function MapCanvas(props: CanvasProps) {
       return;
     }
     void fitVisible();
-  }, [selectedJobId, selectedEngineerId, visibleJobs, engineers, routeFor, fitCoords, fitVisible, mapReady]);
+  }, [selectedJobId, selectedEngineerId, selectedLeg, visibleJobs, engineers, routeFor, fitCoords, fitVisible, mapReady]);
   const simPlayingRef = useRef(simPlaying);
   const simSpeedRef = useRef(simSpeed);
   const simTimeRef = useRef(simTime);
   const simEndRef = useRef(simEnd);
-  const fleetRef = useRef({ visibleEngineers, visibleJobs, engineers, selectedEngineerId, planByEngineer, routeFor, onSelectEngineer, onSimTime, onSimPlaying, compare, routeData, baselineData });
+  const fleetRef = useRef({ visibleEngineers, visibleJobs, engineers, selectedEngineerId, planByEngineer, routeFor, routeSources, onSelectEngineer, onSimTime, onSimPlaying, compare, routeData, baselineData });
   useEffect(() => {
     simPlayingRef.current = simPlaying;
     simSpeedRef.current = simSpeed;
     simTimeRef.current = simTime;
     simEndRef.current = simEnd;
-    fleetRef.current = { visibleEngineers, visibleJobs, engineers, selectedEngineerId, planByEngineer, routeFor, onSelectEngineer, onSimTime, onSimPlaying, compare, routeData, baselineData };
-  }, [simPlaying, simSpeed, simTime, simEnd, visibleEngineers, visibleJobs, engineers, selectedEngineerId, planByEngineer, routeFor, onSelectEngineer, onSimTime, onSimPlaying, compare, routeData, baselineData]);
+    fleetRef.current = { visibleEngineers, visibleJobs, engineers, selectedEngineerId, planByEngineer, routeFor, routeSources, onSelectEngineer, onSimTime, onSimPlaying, compare, routeData, baselineData };
+  }, [simPlaying, simSpeed, simTime, simEnd, visibleEngineers, visibleJobs, engineers, selectedEngineerId, planByEngineer, routeFor, routeSources, onSelectEngineer, onSimTime, onSimPlaying, compare, routeData, baselineData]);
   useEffect(() => {
     const map = mapRef.current;
     const clearVehicles = () => {
@@ -536,7 +568,7 @@ export function MapCanvas(props: CanvasProps) {
         actionJobRef.current.dataset.job = "";
         actionJobRef.current.textContent = "";
       }
-      if (action.phase === "travel") actionMetaRef.current.textContent = `До прибытия ${remainingLabel(action.remaining)} · заявка ${action.index} из ${action.total}${fleetRef.current.routeFor(focus).length < 2 ? " · положение оценивается между точками" : ""}`;
+      if (action.phase === "travel") actionMetaRef.current.textContent = `До прибытия ${remainingLabel(action.remaining)} · заявка ${action.index} из ${action.total}${fleetRef.current.routeFor(focus).length < 2 ? " · дорога недоступна, показана последняя известная точка" : ""}`;
       else if (action.phase === "wait") actionMetaRef.current.textContent = `До начала окна ${remainingLabel(action.remaining)}`;
       else if (action.phase === "service") actionMetaRef.current.textContent = `Осталось ${remainingLabel(action.remaining)}`;
       else if (action.phase === "done") actionMetaRef.current.textContent = "Маршрут инженера закрыт";
@@ -557,11 +589,9 @@ export function MapCanvas(props: CanvasProps) {
       for (const engineer of movers) {
         const coords = coordsOf(engineer);
         const plan = plans.get(engineer.id) ?? null;
-        const hasRoad = coords.length >= 2;
-        const fallbackCoords = plan ? routeCoordinates(engineer, jobs, false, plan) : [engineer.start];
-        const animationCoords = hasRoad ? coords : fallbackCoords;
-        const pose = plan && animationCoords.length >= 2
-          ? positionAtSimTime(engineer, plan, jobs, animationCoords, time)
+        const hasRoad = coords.length >= 2 && fleetRef.current.routeSources[engineer.id] !== "walking-estimate";
+        const pose = plan && hasRoad
+          ? positionAtSimTime(engineer, plan, jobs, coords, time)
           : { line: [] as Coordinate[], point: positionAtKnownStop(engineer, plan!, jobs, time), done: time >= (plan?.stops.at(-1)?.end ?? engineer.shiftEnd) };
         const label = engineerMarkerLabel(engineer);
         let marker = vehiclesRef.current.get(engineer.id);
@@ -571,7 +601,7 @@ export function MapCanvas(props: CanvasProps) {
           el.className = `route-vehicle-marker${hasRoad ? "" : " estimated"}`;
           el.style.setProperty("--marker", engineer.color);
           el.textContent = label;
-          el.title = `${engineer.name} · ${hasRoad ? "положение на дорожном маршруте" : "оценочное положение между точками"}`;
+          el.title = `${engineer.name} · ${hasRoad ? "положение на дорожном маршруте" : "последняя известная точка; дорога недоступна"}`;
           el.setAttribute("aria-label", el.title);
           el.onclick = () => select(engineer.id);
           marker = new Marker({ element: el, anchor: "center" }).setLngLat(pose.point).addTo(host);
@@ -580,7 +610,7 @@ export function MapCanvas(props: CanvasProps) {
           marker.setLngLat(pose.point);
           marker.getElement().classList.toggle("estimated", !hasRoad);
           marker.getElement().textContent = label;
-          marker.getElement().title = `${engineer.name} · ${hasRoad ? "положение на дорожном маршруте" : "оценочное положение между точками"}`;
+          marker.getElement().title = `${engineer.name} · ${hasRoad ? "положение на дорожном маршруте" : "последняя известная точка; дорога недоступна"}`;
           marker.getElement().setAttribute("aria-label", marker.getElement().title);
         }
       }
@@ -622,7 +652,7 @@ export function MapCanvas(props: CanvasProps) {
   }, [simulating, mapReady]);
   return <div className="map-canvas real-map" aria-label="Интерактивная карта маршрутов инженеров">
     <div ref={containerRef} className="maplibre-host" />
-    {selectedRouteEngineer && <div className="selected-route-summary" style={{ ["--route-color" as string]: selectedRouteEngineer.color }}><span>Маршрут инженера</span><strong>{selectedRouteEngineer.name}</strong><small>{selectedRoutePlan?.stops.length ?? 0} заявок · {selectedRoutePlan ? `${selectedRoutePlan.distanceKm.toFixed(1).replace(".", ",")} км` : "маршрут не построен"}</small>{routeStatus === "fallback" && <small>Дорожная линия недоступна · пробег оценочный</small>}<button type="button" onClick={() => onSelectEngineer(selectedRouteEngineer.id)}>Показать все маршруты</button></div>}
+    {selectedRouteEngineer && <div className="selected-route-summary" style={{ ["--route-color" as string]: selectedLeg ? "#f43f5e" : selectedRouteEngineer.color }}><span>{selectedLeg ? "Участок к выбранной заявке" : "Маршрут инженера"}</span><strong>{selectedRouteEngineer.name}</strong>{selectedLeg ? <><small>{selectedLeg.originLabel} → {selectedLeg.destinationLabel}</small><small>Прибытие {minutesLabel(selectedLeg.stop.arrival)} · участок {selectedLeg.stop.distanceKm.toFixed(1).replace(".", ",")} км</small></> : <small>{selectedRoutePlan?.stops.length ?? 0} заявок · {selectedRoutePlan ? `${selectedRoutePlan.distanceKm.toFixed(1).replace(".", ",")} км` : "маршрут не построен"}</small>}<small>{selectedRouteEngineer.transport} · скорость {engineerSpeedKmh(selectedRouteEngineer.transport, selectedRouteEngineer.speedKmh, carSpeedKmh)} км/ч</small>{selectedRoadSource === "walking-estimate" ? <small>Нет точного маршрута ОТ: показан пеший путь как оценка, движение не интерполируется</small> : selectedRoadSource === "unavailable" ? <small>Дорожная линия недоступна · движение между точками скрыто</small> : selectedRoadSource && selectedRoadSource !== "none" ? <small>Геометрия по сети дорог · {selectedRoadSource}</small> : <small>Загружаем дорожную геометрию…</small>}<button type="button" onClick={() => onSelectEngineer(selectedRouteEngineer.id)}>Показать все маршруты</button></div>}
     <MapChrome caption={captionText(routeStatus)} status={routeStatus} clockRef={clockRef} onFit={() => { if (selectedEngineerId) onSelectEngineer(selectedEngineerId); else void fitVisible(); }} onZoomIn={() => mapRef.current?.zoomIn()} onZoomOut={() => mapRef.current?.zoomOut()} />
     <div ref={actionBoxRef} className="playback-action" hidden>
       <strong>Сейчас</strong>

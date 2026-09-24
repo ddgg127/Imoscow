@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
   const points = parsePoints(body?.points);
   if (!points) return NextResponse.json({ error: "Некорректные координаты" }, { status: 400 });
   const apiKey = String(process.env.YANDEX_ROUTING_API_KEY ?? "").trim();
-  if (body?.provider === "yandex" && apiKey) {
+  if (body?.provider === "yandex" && apiKey && (body.mode === "driving" || body.mode === "walking")) {
     try {
       return NextResponse.json(await yandexRoute(points, apiKey, body.mode));
     } catch {

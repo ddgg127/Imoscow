@@ -91,7 +91,9 @@ test("external route orders are validated before becoming application results", 
 
 test("an idle compatible engineer is reported as an optimization gap, not an impossibility", () => {
   const result = resultFromRouteOrder([engineer("e1")], [job("a", 1)], [], { travel });
-  assert.match(result.jobs[0].unassignedReason, /Свободный подходящий инженер/);
+  assert.match(result.jobs[0].unassignedReason, /Допустимое назначение существует/);
+  assert.equal(result.jobs[0].baselineEngineerId, "e1");
+  assert.equal(result.jobs[0].unassignedCategory, "alternative_plan");
   assert.equal(result.metrics.unassigned, 1);
 });
 
@@ -114,7 +116,8 @@ test("CSV optimization recovers feasible jobs and explains the remaining unassig
   assert.equal(routed.size, result.metrics.assigned);
   for (const item of result.jobs) {
     assert.equal(item.engineerId ?? null, routed.get(item.id) ?? null);
-    if (!item.engineerId) assert.match(item.unassignedReason ?? "", /навык|оборудован|окн|смен|возможност/);
+    if (!item.engineerId) assert.match(item.unassignedReason ?? "", /навык|оборудован|окн|смен|возможност|встроить|выполнима|набор работ/);
+    if (!item.engineerId) assert.ok(["no_executor", "cannot_insert", "alternative_plan"].includes(item.unassignedCategory));
   }
 });
 

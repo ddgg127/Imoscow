@@ -1,4 +1,5 @@
 import type { Coordinate } from "./map-providers";
+import { engineerSpeedKmh, transportTravelMinutes } from "./transport-speed.ts";
 
 export type Region = "Восток" | "Юго-восток" | "Югоцентр";
 export type Job = {
@@ -6,13 +7,15 @@ export type Job = {
   kind: string; tone: string; region: Region; engineerId: string | null; baselineEngineerId: string | null;
   coordinates: Coordinate; risk: boolean; equipment: string; requiredTransport: string; allowedTransports?: string[]; priority: number;
   serviceMinutes: number; source: string; status: string; workType?: string; cancelled?: boolean;
+  executionStatus?: "not_started" | "in_progress" | "completed";
   baselineUnassignedReason?: string; geocodeVerified?: boolean; geocodeQuality?: "house" | "street" | "fallback"; geocodeDisplayName?: string;
   unassignedReason?: string;
+  unassignedCategory?: "no_executor" | "cannot_insert" | "alternative_plan" | "not_applicable";
 };
 export type Engineer = {
   id: string; initials: string; name: string; route: string; jobs: number; distance: string; load: number;
   color: string; region: Region; start: Coordinate; skills: string[]; equipment: string[]; transport: string;
-  shiftStart: number; shiftEnd: number;
+  shiftStart: number; shiftEnd: number; speedKmh?: number;
 };
 export type RouteStop = { jobId: string; arrival: number; start: number; end: number; distanceKm: number; onTime: boolean };
 export type RoutePlan = { engineerId: string; stops: RouteStop[]; distanceKm: number; durationMinutes: number; load: number };
@@ -42,6 +45,7 @@ export type TravelMatrix = {
   distanceKm: (a: Coordinate, b: Coordinate) => number;
   durationMin: (a: Coordinate, b: Coordinate) => number;
   knows?: (a: Coordinate, b: Coordinate) => boolean;
+  forTransport?: (transport: string) => TravelMatrix;
 };
 export type SearchObjective = "fieldflow" | "distance";
 export type TracePhase = "insert" | "anneal" | "relocate" | "compact" | "done";
@@ -149,12 +153,15 @@ export function mergeTravel(parts: TravelMatrix[], speedKmh: number): TravelMatr
   };
 }
 
-function travelMinutes(a: Coordinate, b: Coordinate, speedKmh: number, travel?: TravelMatrix) {
-  return (travel ?? fallbackTravel(speedKmh)).durationMin(a, b);
+function travelMinutes(a: Coordinate, b: Coordinate, speedKmh: number, travel?: TravelMatrix, engineer?: Engineer) {
+  const matrix = (engineer && travel?.forTransport?.(engineer.transport)) ?? travel ?? fallbackTravel(speedKmh);
+  if (!engineer) return matrix.durationMin(a, b);
+  const actualSpeed = engineerSpeedKmh(engineer.transport, engineer.speedKmh, speedKmh);
+  return Math.ceil(transportTravelMinutes(engineer.transport, matrix.distanceKm(a, b), matrix.durationMin(a, b), actualSpeed, speedKmh));
 }
 
-function travelDistance(a: Coordinate, b: Coordinate, speedKmh: number, travel?: TravelMatrix) {
-  return (travel ?? fallbackTravel(speedKmh)).distanceKm(a, b);
+function travelDistance(a: Coordinate, b: Coordinate, speedKmh: number, travel?: TravelMatrix, engineer?: Engineer) {
+  return ((engineer && travel?.forTransport?.(engineer.transport)) ?? travel ?? fallbackTravel(speedKmh)).distanceKm(a, b);
 }
 
 /** Select a smaller team against the actual workload, retaining source order for the baseline. */
@@ -169,7 +176,7 @@ export function scaleEngineers(source: Engineer[], count: number, jobs: Job[] = 
     for (const job of relevant) {
       const local = source.filter(engineer => engineer.region === job.region);
       if (!local.length) continue;
-      const nearest = Math.min(...local.map(engineer => travel.durationMin(engineer.start, job.coordinates)));
+      const nearest = Math.min(...local.map(engineer => travelMinutes(engineer.start, job.coordinates, SPEED_KMH, travel, engineer)));
       demand.set(job.region, (demand.get(job.region) ?? 0) + job.serviceMinutes + Math.min(40, nearest * 0.5));
     }
     const quotas = new Map(regions.map(region => [region, 0]));
@@ -300,7 +307,7 @@ export function applyAverageWindows(jobs: Job[], averageMinutes: number): Job[] 
 }
 
 function compatible(engineer: Engineer, job: Job) {
-  return !job.cancelled && engineer.region === job.region && (job.allowedTransports?.includes(engineer.transport) ?? engineer.transport === job.requiredTransport) && engineer.equipment.includes(job.equipment) && engineer.skills.includes(job.kind);
+  return !job.cancelled && job.executionStatus !== "completed" && engineer.region === job.region && (job.allowedTransports?.includes(engineer.transport) ?? engineer.transport === job.requiredTransport) && engineer.equipment.includes(job.equipment) && engineer.skills.includes(job.kind);
 }
 
 function simulate(engineer: Engineer, route: Job[], hardWindows = true, speedKmh = SPEED_KMH, travel?: TravelMatrix): RoutePlan | null {
@@ -309,8 +316,8 @@ function simulate(engineer: Engineer, route: Job[], hardWindows = true, speedKmh
   let totalDistance = 0;
   const stops: RouteStop[] = [];
   for (const job of route) {
-    const leg = travelDistance(point, job.coordinates, speedKmh, travel);
-    const arrival = time + travelMinutes(point, job.coordinates, speedKmh, travel);
+    const leg = travelDistance(point, job.coordinates, speedKmh, travel, engineer);
+    const arrival = time + travelMinutes(point, job.coordinates, speedKmh, travel, engineer);
     const start = Math.max(arrival, job.windowStart);
     const end = start + job.serviceMinutes;
     if (hardWindows && (start > job.windowEnd || end > engineer.shiftEnd)) return null;
@@ -363,11 +370,12 @@ function emitTrace(phase: TracePhase, label: string, engineers: Engineer[], assi
 }
 
 function metricsFrom(engineers: Engineer[], jobs: Job[], routes: RoutePlan[]): PlanMetrics {
+  const total = jobs.filter(job => !job.cancelled && job.executionStatus !== "completed").length;
   const assigned = routes.reduce((sum, route) => sum + route.stops.length, 0);
   const late = routes.reduce((sum, route) => sum + route.stops.filter(stop => !stop.onTime).length, 0);
   const distance = routes.reduce((sum, route) => sum + route.distanceKm, 0);
   const utilization = routes.length ? routes.reduce((sum, route) => sum + route.load, 0) / routes.length : 0;
-  return { assigned, total: jobs.length, unassigned: jobs.length - assigned, activeEngineers: routes.length, distanceKm: distance, slaPercent: assigned ? Math.round((assigned - late) / assigned * 1000) / 10 : 0, late, utilization: Math.round(utilization) };
+  return { assigned, total, unassigned: total - assigned, activeEngineers: routes.length, distanceKm: distance, slaPercent: assigned ? Math.round((assigned - late) / assigned * 1000) / 10 : 0, late, utilization: Math.round(utilization) };
 }
 
 export function comparePlans(baselineRoutes: RoutePlan[], routes: RoutePlan[]): PlanComparison {
@@ -399,7 +407,7 @@ export function comparePlansStrict(engineers: Engineer[], jobs: Job[], baselineR
       if (!common.has(stop.jobId)) continue;
       const job = byJob.get(stop.jobId);
       if (!job) continue;
-      total += travelDistance(point, job.coordinates, speedKmh, travel);
+      total += travelDistance(point, job.coordinates, speedKmh, travel, engineer);
       point = job.coordinates;
     }
     return total;
@@ -430,6 +438,7 @@ export function baselinePlan(engineers: Engineer[], jobs: Job[], speedKmh = SPEE
   const assignmentById = new Map<string, string>();
   const unassignedReasons = new Map<string, string>();
   for (const job of jobs) {
+    if (job.cancelled || job.executionStatus === "completed") continue;
     const compatibleEngineers = engineers.filter(engineer => compatible(engineer, job));
     if (!compatibleEngineers.length) {
       unassignedReasons.set(job.id, "Нет инженера с нужными навыком, оборудованием и транспортом в регионе.");
@@ -529,7 +538,7 @@ export function explainAssignment(job: Job, engineer: Engineer, plan: RoutePlan,
   ];
 
   const alternatives = engineers.filter(item => item.id !== engineer.id).map(candidate => {
-    const prefix = { engineerId: candidate.id, engineerName: candidate.name || candidate.id, proximityKm: travelDistance(candidate.start, job.coordinates, speedKmh, travel) };
+    const prefix = { engineerId: candidate.id, engineerName: candidate.name || candidate.id, proximityKm: travelDistance(candidate.start, job.coordinates, speedKmh, travel, candidate) };
     if (candidate.region !== job.region) return { ...prefix, feasible: false, reason: `другой регион: ${candidate.region}` };
     if (!candidate.skills.includes(job.kind)) return { ...prefix, feasible: false, reason: `нет навыка «${job.kind}»` };
     if (!candidate.equipment.includes(job.equipment)) return { ...prefix, feasible: false, reason: `нет оборудования «${job.equipment}»` };
@@ -966,37 +975,58 @@ function finish(engineers: Engineer[], inputJobs: Job[], jobs: Job[], assignment
     const engineerId = assignmentById.get(job.id) ?? null;
     const eligible = engineers.filter(engineer => compatible(engineer, job));
     let unassignedReason: string | undefined;
+    let unassignedCategory: Job["unassignedCategory"];
     if (!engineerId) {
       if (job.cancelled) {
+        unassignedCategory = "not_applicable";
         unassignedReason = "Заявка отменена диспетчером и исключена из расчёта.";
+      } else if (job.executionStatus === "completed") {
+        unassignedCategory = "not_applicable";
+        unassignedReason = "Работа завершена; повторное назначение не требуется.";
       } else if (!eligible.length) {
+        unassignedCategory = "no_executor";
         unassignedReason = "В регионе нет инженера с нужным навыком, оборудованием и транспортом.";
       } else if (!eligible.some(engineer => simulate(engineer, [job], true, speedKmh, travel))) {
-        const earliest = Math.min(...eligible.map(engineer => engineer.shiftStart + travelMinutes(engineer.start, job.coordinates, speedKmh, travel)));
+        unassignedCategory = "no_executor";
+        const earliest = Math.min(...eligible.map(engineer => engineer.shiftStart + travelMinutes(engineer.start, job.coordinates, speedKmh, travel, engineer)));
         unassignedReason = earliest > job.windowEnd
           ? `Даже свободный подходящий инженер приедет не раньше ${minutesLabel(earliest)}, а окно заканчивается в ${minutesLabel(job.windowEnd)}.`
           : "Даже свободный подходящий инженер не успевает выполнить заявку до конца своей смены.";
+      } else if (baseline.assignmentById.has(job.id)) {
+        unassignedCategory = "alternative_plan";
+        const baselineId = baseline.assignmentById.get(job.id)!;
+        const baselineEngineer = engineers.find(engineer => engineer.id === baselineId);
+        unassignedReason = `Допустимое назначение существует: baseline назначает ${baselineEngineer?.name ?? baselineId}. VRPTW выбрал другой набор работ; точную потерю покрытия, приоритета и пробега показывает принудительный расчёт ниже.`;
       } else if (eligible.some(engineer => !(assignments.get(engineer.id)?.length) && simulate(engineer, [job], true, speedKmh, travel))) {
-        unassignedReason = "Свободный подходящий инженер мог бы выполнить заявку отдельно, но она не вошла в найденный план. Пересчитайте маршрут или увеличьте время поиска.";
+        unassignedCategory = "alternative_plan";
+        unassignedReason = "Допустимый исполнитель есть, в том числе свободный. Заявка не вошла в найденный план; это не отсутствие навыка или невозможность SLA. Проверьте принудительный расчёт.";
+      } else if (eligible.some(engineer => {
+        const assigned = assignments.get(engineer.id) ?? [];
+        return Array.from({ length: assigned.length + 1 }, (_, index) => index).some(index => simulate(engineer, [...assigned.slice(0, index), job, ...assigned.slice(index)], true, speedKmh, travel));
+      })) {
+        unassignedCategory = "alternative_plan";
+        unassignedReason = "Заявку можно вставить в один из текущих маршрутов без нарушения жёстких ограничений, но solver её не выбрал. Это возможный пробел поиска; повторите расчёт или проверьте принудительный сценарий.";
       } else if (eligible.length === 1) {
+        unassignedCategory = "cannot_insert";
         const only = eligible[0];
         const count = assignments.get(only.id)?.length ?? 0;
-        unassignedReason = `Единственный подходящий инженер — ${only.name}; у него уже ${count} заявки. В найденном плане не удалось добавить работу без нарушения окна или смены.`;
+        unassignedReason = `Единственный подходящий инженер — ${only.name}; у него уже ${count} заявки. Заявка выполнима отдельно, но её не удалось встроить в найденный маршрут без перестройки других назначений.`;
       } else {
-        unassignedReason = `${eligible.length} инженеров подходят по навыку и ресурсам, но их маршруты в найденном плане ограничены SLA и сменой.`;
+        unassignedCategory = "cannot_insert";
+        unassignedReason = `${eligible.length} инженеров подходят по навыку и ресурсам. Заявка выполнима отдельно, но не вошла в текущую комбинацию маршрутов; принудительный расчёт покажет цену её включения.`;
       }
     }
-    return { ...job, engineerId, baselineEngineerId: baseline.assignmentById.get(job.id) ?? null, baselineUnassignedReason: baseline.unassignedReasons.get(job.id), unassignedReason, risk: !engineerId };
+    return { ...job, engineerId, baselineEngineerId: baseline.assignmentById.get(job.id) ?? null, baselineUnassignedReason: baseline.unassignedReasons.get(job.id), unassignedReason, unassignedCategory, risk: !engineerId && !job.cancelled && job.executionStatus !== "completed" };
   });
   const metrics = metricsFrom(engineers, resultJobs, routes);
   const zones = regions.map(name => {
-    const zoneJobs = resultJobs.filter(job => job.region === name);
+    const zoneJobs = resultJobs.filter(job => job.region === name && !job.cancelled && job.executionStatus !== "completed");
     const ids = new Set(engineers.filter(engineer => engineer.region === name).map(engineer => engineer.id));
     const zoneRoutes = routes.filter(route => ids.has(route.engineerId));
     const baseRoutes = baseline.routes.filter(route => ids.has(route.engineerId));
     const assigned = zoneRoutes.reduce((sum, route) => sum + route.stops.length, 0);
     const onTime = zoneRoutes.reduce((sum, route) => sum + route.stops.filter(stop => stop.onTime).length, 0);
-    return { name, jobs: zoneJobs.length, assigned, baselineAssigned: baseRoutes.reduce((sum, route) => sum + route.stops.length, 0), sla: assigned ? Math.round(onTime / assigned * 100) : 0, distance: zoneRoutes.reduce((sum, route) => sum + route.distanceKm, 0), baselineDistance: baseRoutes.reduce((sum, route) => sum + route.distanceKm, 0), engineers: zoneRoutes.length, baselineEngineers: baseRoutes.length };
+    return { name, jobs: zoneJobs.length, assigned, baselineAssigned: baseRoutes.reduce((sum, route) => sum + route.stops.length, 0), sla: zoneJobs.length ? Math.round(onTime / zoneJobs.length * 100) : 0, distance: zoneRoutes.reduce((sum, route) => sum + route.distanceKm, 0), baselineDistance: baseRoutes.reduce((sum, route) => sum + route.distanceKm, 0), engineers: zoneRoutes.length, baselineEngineers: baseRoutes.length };
   });
   return { jobs: resultJobs, routes, baselineRoutes: baseline.routes, metrics, baseline: baseline.metrics, comparison: comparePlansStrict(engineers, inputJobs, baseline.routes, routes, speedKmh, travel), zones, runtimeMs: Math.round((performance.now() - started) * 10) / 10 };
 }

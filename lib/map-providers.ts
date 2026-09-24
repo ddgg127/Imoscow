@@ -1,6 +1,6 @@
 export type Coordinate = [longitude: number, latitude: number];
 
-export type TravelMode = "driving" | "walking";
+export type TravelMode = "driving" | "walking" | "cycling" | "transit";
 
 export interface RouteRequest {
   points: Coordinate[];
