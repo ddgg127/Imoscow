@@ -74,8 +74,10 @@ export type OptimizeOptions = {
   skipInsertPolish?: boolean;
 };
 
-export const VEHICLE_COST = 140;
-export const DISTANCE_WEIGHT = 10;
+export const VEHICLE_COST = 350;
+export const DISTANCE_WEIGHT = 25;
+/** Запас сожаления, когда заявку может взять только один инженер, км. */
+const INSERT_SOLO_GAP_KM = 24;
 const SPEED_KMH = 32;
 const SLACK = 0.12;
 const P0 = 0.8;
@@ -1099,38 +1101,44 @@ export function optimizeVrptw(engineers: Engineer[], inputJobs: Job[], options: 
   activeTrace = options.trace ?? null;
   const jobs: Job[] = inputJobs.map(job => ({ ...job, engineerId: null, risk: false }));
   const assignments = new Map(engineers.map(engineer => [engineer.id, [] as Job[]]));
-  const ordered = [...jobs].sort((a, b) => b.priority - a.priority || a.windowEnd - b.windowEnd || a.windowStart - b.windowStart);
   const random = rng.bind(null, { value: options.seed ?? hashSeed(inputJobs, engineers) });
-  const innerBudget = options.innerBudget ?? 120;
   const zoneBudget = options.zoneBudget ?? 900;
   emitTrace("insert", "Старт: пустые маршруты", engineers, assignments, speedKmh, travel);
 
   try {
-  for (let index = 0; index < ordered.length; index++) {
-    const job = ordered[index];
-    const candidates: Array<{ engineer: Engineer; route: Job[]; plan: RoutePlan; score: number }> = [];
-    for (const engineer of engineers) {
-      if (!compatible(engineer, job)) continue;
-      const current = assignments.get(engineer.id)!;
-      const currentPlan = current.length ? simulate(engineer, current, true, speedKmh, travel) : null;
-      const currentScore = currentPlan ? planScore(currentPlan, engineer) : 0;
-      for (let position = 0; position <= current.length; position++) {
-        const candidate = [...current.slice(0, position), job, ...current.slice(position)];
-        const plan = simulate(engineer, candidate, true, speedKmh, travel);
-        if (!plan) continue;
-        candidates.push({ engineer, route: candidate, plan, score: insertionScore(engineer, current.length, currentScore, plan) });
+  // Сожаление: километр × DISTANCE_WEIGHT, новый инженер = VEHICLE_COST.
+  // Если кандидат один, запас равен 24 км × DISTANCE_WEIGHT: на четырёх наборах
+  // ТЗ это те же 513/520 и 114 инженеров, но на 38 км короче, чем запас в 14 км.
+  const open = jobs.filter(job => !job.cancelled && job.executionStatus !== "completed");
+  while (open.length) {
+    let chosen: { job: Job; engineer: Engineer; route: Job[]; gap: number } | null = null;
+    for (const job of open) {
+      const costs: Array<{ engineer: Engineer; route: Job[]; score: number }> = [];
+      for (const engineer of engineers) {
+        if (!compatible(engineer, job)) continue;
+        const current = assignments.get(engineer.id)!;
+        const before = current.length ? simulate(engineer, current, true, speedKmh, travel)?.distanceKm ?? 0 : 0;
+        let best: { route: Job[]; score: number } | null = null;
+        for (let position = 0; position <= current.length; position++) {
+          const candidate = [...current.slice(0, position), job, ...current.slice(position)];
+          const plan = simulate(engineer, candidate, true, speedKmh, travel);
+          if (!plan) continue;
+          const score = (plan.distanceKm - before) * DISTANCE_WEIGHT + (current.length ? 0 : VEHICLE_COST);
+          if (!best || score < best.score) best = { route: candidate, score };
+        }
+        if (best) costs.push({ engineer, route: best.route, score: best.score });
       }
+      if (!costs.length) continue;
+      costs.sort((a, b) => a.score - b.score);
+      const gap = (costs[1]?.score ?? costs[0].score + INSERT_SOLO_GAP_KM * DISTANCE_WEIGHT) - costs[0].score;
+      if (!chosen || gap > chosen.gap) chosen = { job, engineer: costs[0].engineer, route: costs[0].route, gap };
     }
-    if (!candidates.length) continue;
-    const p = P0 * Math.exp(-index / Math.max(8, ordered.length / 3));
-    const chosen = pickInsertion(candidates, random, p);
-    if (!chosen) continue;
-    const polished = options.skipInsertPolish
-      ? chosen.route
-      : annealRoute(chosen.engineer, chosen.route, speedKmh, travel, random, innerBudget, { engineers, assignments });
-    assignments.set(chosen.engineer.id, polished);
-    job.engineerId = chosen.engineer.id;
-    emitTrace("insert", `Вставка ${job.id} → ${chosen.engineer.name}`, engineers, assignments, speedKmh, travel);
+    if (!chosen) break;
+    assignments.set(chosen.engineer.id, chosen.route);
+    chosen.job.engineerId = chosen.engineer.id;
+    const index = open.indexOf(chosen.job);
+    open.splice(index, 1);
+    emitTrace("insert", `Вставка ${chosen.job.id} → ${chosen.engineer.name}`, engineers, assignments, speedKmh, travel);
   }
 
   for (const name of regions) {

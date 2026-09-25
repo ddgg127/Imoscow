@@ -88,6 +88,7 @@ def key(point: tuple[float, float]) -> str:
     return f"{point[0]:.5f},{point[1]:.5f}"
 
 
+# Keep resource checks in sync with lib/assignment.ts.
 def compatible(engineer: Engineer, job: Job) -> bool:
     return (
         not job.cancelled

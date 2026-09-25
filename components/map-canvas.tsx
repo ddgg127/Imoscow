@@ -244,10 +244,10 @@ function useRoadRoutes(
 }
 
 function captionText(status: RoutingState) {
-  if (status === "idle") return "OpenStreetMap · точки по адресам зданий";
-  if (status === "loading") return "OpenStreetMap · загружаем линии по дорогам";
-  if (status === "ready") return "OpenStreetMap · маршруты по дорожному графу";
-  return "Часть линий оценочная или недоступна · прямые скрыты";
+  if (status === "idle") return "Карта адресов";
+  if (status === "loading") return "Построение дорожных маршрутов";
+  if (status === "ready") return "Дорожные маршруты построены";
+  return "Оценочные маршруты";
 }
 
 function MapChrome({ caption, status, clockRef, onFit, onZoomIn, onZoomOut }: { caption: string; status: RoutingState; clockRef?: Ref<HTMLSpanElement>; onFit: () => void; onZoomIn: () => void; onZoomOut: () => void }) {

@@ -1,7 +1,13 @@
 import { CATALOG } from "./catalog";
-import type { Dataset, Engineer, Job } from "../engine/types";
+import { TZ_SKILLS, type Dataset, type Engineer, type Job, type ReplanEvent } from "../engine/types";
 
 const SEP = ";";
+
+export const SKILL_EQUIPMENT: Record<string, string> = {
+  "Локальные работы": "Диагностический комплект",
+  "Работы на подключение и дозаказы": "ONT",
+  "Аварийные работы": "Рефлектометр",
+};
 
 function csvCell(value: string | number | undefined): string {
   const s = value === undefined ? "" : String(value);
@@ -59,8 +65,8 @@ export function jobsToCsv(jobs: Job[]): string {
       "Начало окна",
       "Конец окна",
       "Приоритет",
-      "Число навыков",
-      "Навыки",
+      "Требуемый навык",
+      "Требуемое оборудование",
       "Требуемый транспорт",
     ],
     jobs.map((j) => [
@@ -73,8 +79,8 @@ export function jobsToCsv(jobs: Job[]): string {
       j.windowStart,
       j.windowEnd,
       j.priority,
-      j.skillCount,
-      skillList(j.skills),
+      j.skills[0] ?? "",
+      j.equipment ?? (j.skills[0] ? SKILL_EQUIPMENT[j.skills[0]] ?? "" : ""),
       j.vehicle ?? "",
     ]),
   );
@@ -92,6 +98,7 @@ export function engineersToCsv(engineers: Engineer[]): string {
       "Конец смены",
       "Число навыков",
       "Навыки",
+      "Оборудование",
       "Транспорт",
       "Уровень",
     ],
@@ -105,16 +112,58 @@ export function engineersToCsv(engineers: Engineer[]): string {
       e.shiftEnd,
       e.skills.length,
       skillList(e.skills),
+      (e.equipment ?? e.skills.map((s) => SKILL_EQUIPMENT[s] ?? s)).join(", "),
       e.vehicle,
       e.level,
     ]),
   );
 }
 
+export function eventsToCsv(events: ReplanEvent[]): string {
+  return csvFile(
+    [
+      "Тип события",
+      "Время события",
+      "ID сущности",
+      "Название задачи",
+      "Адрес",
+      "Широта",
+      "Долгота",
+      "Длительность, мин",
+      "Начало окна",
+      "Конец окна",
+      "Приоритет",
+      "Требуемый навык",
+      "Требуемое оборудование",
+      "Требуемый транспорт",
+    ],
+    events.map((ev) => {
+      const j = ev.job;
+      const entityId = ev.jobId ?? ev.engineerId ?? j?.id ?? "";
+      return [
+        ev.type,
+        ev.time,
+        entityId,
+        j?.title ?? "",
+        j?.address ?? "",
+        j?.lat ?? "",
+        j?.lon ?? "",
+        j?.durationMin ?? "",
+        j?.windowStart ?? "",
+        j?.windowEnd ?? "",
+        j?.priority ?? "",
+        j?.skills[0] ?? "",
+        j?.equipment ?? (j?.skills[0] ? SKILL_EQUIPMENT[j.skills[0]] ?? "" : "") ?? "",
+        j?.vehicle ?? "",
+      ];
+    }),
+  );
+}
+
 export function catalogSkillsToCsv(): string {
   return csvFile(
-    ["ID навыка", "Навык", "Область"],
-    CATALOG.skills.map((s) => [s.id, s.name, s.domain]),
+    ["Код", "Требуемый навык"],
+    TZ_SKILLS.map((name, index) => [index + 1, name]),
   );
 }
 

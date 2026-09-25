@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Как OR-Tools собирает день</title>
+  <style>
+    body { margin: 0; background: #fff; color: #161616; font: 16px/1.45 "Segoe UI", sans-serif; }
+    main { max-width: 920px; margin: 0 auto; padding: 28px 20px 64px; }
+    h1 { font-size: 28px; font-weight: 650; margin: 0 0 8px; }
+    h2 { font-size: 20px; font-weight: 650; margin: 32px 0 8px; }
+    p { margin: 0 0 10px; }
+    table { width: 100%; border-collapse: collapse; margin: 8px 0 16px; }
+    th, td { border: 1px solid #c8c8c8; padding: 7px 8px; text-align: left; vertical-align: top; }
+    th { background: #f2f2f2; font-weight: 650; }
+    tr.taken td { background: #f4f7f2; }
+    .note { color: #333; }
+    .lab-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
+    .lab-tabs button { border: 1px solid #b5b5b5; background: #fff; padding: 6px 8px; cursor: pointer; font: inherit; }
+    .lab-tabs button.active { background: #161616; color: #fff; }
+    .lab-panel h3, .lab-panel h4 { margin: 18px 0 6px; font-size: 18px; }
+    #lab { scroll-margin-top: 12px; }
+    .compare { overflow-x: auto; margin: 0 0 16px; }
+    .compare table { width: max-content; min-width: 100%; }
+    .compare th, .compare td { min-width: 168px; font-size: 14px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Как собирается один день</h1>
+  <p>Пример расчёта маршрутов: отбор по ресурсам, последовательная вставка и локальная оптимизация перемещений.</p>
+  <p><a href="#lab">Сравнение 15 алгоритмов распределения</a></p>
+  <div id="lab"></div>
+
+  <h2>Исходные люди и заявки</h2>
+  <table>
+    <tr><th>Инженер</th><th>Регион</th><th>Навык</th><th>Транспорт</th></tr>
+    <tr><td>Анна</td><td>Восток</td><td>Монтаж</td><td>Автомобиль</td></tr>
+    <tr><td>Борис</td><td>Восток</td><td>Монтаж</td><td>Автомобиль</td></tr>
+    <tr><td>Вера</td><td>Югоцентр</td><td>Монтаж</td><td>Автомобиль</td></tr>
+  </table>
+  <table>
+    <tr><th>Заявка</th><th>Регион</th><th>Навык</th><th>Окно начала работы</th></tr>
+    <tr><td>A</td><td>Восток</td><td>Монтаж</td><td>10:00–12:00</td></tr>
+    <tr><td>B</td><td>Восток</td><td>Монтаж</td><td>09:00–10:00</td></tr>
+    <tr><td>C</td><td>Восток</td><td>Монтаж</td><td>09:00–09:50</td></tr>
+    <tr><td>D</td><td>Восток</td><td>Авария</td><td>11:00–13:00</td></tr>
+  </table>
+  <p>Километры. Дорога обратно на базу в нашем вызове стоит 0, поэтому в таблицах её нет.</p>
+  <table>
+    <tr><th>Откуда \ куда</th><th>A</th><th>B</th><th>C</th></tr>
+    <tr><td>База Анны</td><td>2</td><td>4</td><td>6</td></tr>
+    <tr><td>База Бориса</td><td>8</td><td>3</td><td>5</td></tr>
+    <tr><td>A</td><td></td><td>12</td><td>9</td></tr>
+    <tr><td>B</td><td>3</td><td></td><td>6</td></tr>
+    <tr><td>C</td><td>5</td><td>6</td><td></td></tr>
+  </table>
+
+  <h2>1. Кого вообще можно поставить</h2>
+  <p>Эти пары не получают цену. Их нет в переборе.</p>
+  <table>
+    <tr><th>Заявка</th><th>Анна</th><th>Борис</th><th>Вера</th></tr>
+    <tr><td>A</td><td>можно</td><td>можно</td><td>другой регион</td></tr>
+    <tr><td>B</td><td>можно только перед A</td><td>можно</td><td>другой регион</td></tr>
+    <tr><td>C</td><td>из её базы приезд позже окна</td><td>можно</td><td>другой регион</td></tr>
+    <tr><td>D</td><td>нет навыка «Авария»</td><td>нет навыка «Авария»</td><td>другой регион и нет навыка</td></tr>
+  </table>
+
+  <h2>2. Первая вставка: самое дешёвое место среди всех пар</h2>
+  <p>Маршруты пустые. Открыть человека стоит 37 плюс километры от его базы до заявки.</p>
+  <table>
+    <tr><th>Инженер</th><th>Заявка</th><th>Расчёт</th><th>Цена</th></tr>
+    <tr class="taken"><td>Анна</td><td>A</td><td>37 + 2</td><td>39, берём</td></tr>
+    <tr><td>Борис</td><td>B</td><td>37 + 3</td><td>40</td></tr>
+    <tr><td>Анна</td><td>B</td><td>37 + 4</td><td>41</td></tr>
+    <tr><td>Борис</td><td>C</td><td>37 + 5</td><td>42</td></tr>
+    <tr><td>Борис</td><td>A</td><td>37 + 8</td><td>45</td></tr>
+    <tr><td>Анна</td><td>C</td><td>окно</td><td>строки нет</td></tr>
+    <tr><td>любой</td><td>D</td><td>навык</td><td>строки нет</td></tr>
+  </table>
+  <p>День сейчас: Анна везёт A, 2 км. Борис ещё не выехал.</p>
+
+  <h2>3. Вторая вставка</h2>
+  <p>День Анны уже открыт, 37 второй раз не добавляются. Вставка B между базой и A заменяет плечо «база → A» (2 км) на «база → B» (4) и «B → A» (3).</p>
+  <table>
+    <tr><th>Куда</th><th>Заявка</th><th>Расчёт</th><th>Цена</th></tr>
+    <tr class="taken"><td>Анна, перед A</td><td>B</td><td>4 + 3 − 2</td><td>5, берём</td></tr>
+    <tr><td>Борис, новый день</td><td>B</td><td>37 + 3</td><td>40</td></tr>
+    <tr><td>Борис, новый день</td><td>C</td><td>37 + 5</td><td>42</td></tr>
+    <tr><td>Анна, после A</td><td>B</td><td>окно B уже прошло</td><td>строки нет</td></tr>
+  </table>
+  <p>День сейчас: Анна едет B → A, 4 + 3 = 7 км. Борис ещё не выехал.</p>
+
+  <h2>4. Третья вставка</h2>
+  <table>
+    <tr><th>Куда</th><th>Заявка</th><th>Расчёт</th><th>Цена</th></tr>
+    <tr class="taken"><td>Борис, новый день</td><td>C</td><td>37 + 5</td><td>42, берём</td></tr>
+    <tr><td>Анна, любая позиция</td><td>C</td><td>окно</td><td>строки нет</td></tr>
+  </table>
+  <p>День после жадной сборки: Анна B → A (7 км), Борис C (5 км). Вместе 12 км и два инженера. D по-прежнему никому не отдана.</p>
+
+  <h2>5. Перенос, который удешевляет весь день</h2>
+  <p>Оба дня уже открыты, поэтому 37 за Бориса больше не добавляются. Сравниваются только километры.</p>
+  <table>
+    <tr><th>План</th><th>Анна</th><th>Борис</th><th>Километры</th><th>Решение</th></tr>
+    <tr><td>как собрала вставка</td><td>B → A, 7</td><td>C, 5</td><td>12</td><td></td></tr>
+    <tr class="taken"><td>перенести B к Борису, перед C</td><td>A, 2</td><td>B → C, 3 + 6 = 9</td><td>11</td><td>оставляем: 11 меньше 12</td></tr>
+  </table>
+  <p>Расчёт переноса: у Анны исчезает крюк 4 + 3 − 2 = 5 км. У Бориса плечо «база → C» (5) заменяется на «база → B» (3) и «B → C» (6), это +4 км. Итог 5 − 4 = минус 1 км по всему дню.</p>
+
+  <h2>6. Поиск застрял и поднимает цену одного плеча</h2>
+  <p>Соседние переносы настоящую стоимость уже не снижают. Для каждого плеча считается польза = километры / (штраф + 1). Штраф пока 0.</p>
+  <table>
+    <tr><th>Плечо</th><th>Км</th><th>Штраф</th><th>Польза</th></tr>
+    <tr><td>База Анны → A</td><td>2</td><td>0</td><td>2</td></tr>
+    <tr><td>База Бориса → B</td><td>3</td><td>0</td><td>3</td></tr>
+    <tr class="taken"><td>B → C</td><td>6</td><td>0 → 1</td><td>6, самое большое, штраф становится 1</td></tr>
+  </table>
+  <p>Дальше плечо B → C в поиске дороже обычных 6 км: к нему добавляется штраф, умноженный на эти 6. Поиск пробует день, где этого плеча нет. Настоящие километры плана при этом не переписываются, пока не найден день с меньшей настоящей стоимостью.</p>
+
+  <h2>7. Где поиск останавливается</h2>
+  <table>
+    <tr><th></th><th>Что зафиксировано</th></tr>
+    <tr><td>Лучший найденный день</td><td>Анна: A. Борис: B → C. 11 км, два инженера. A, B и C выполнены.</td></tr>
+    <tr><td>D</td><td>Без инженера. Подходящей пары не было с самого фильтра.</td></tr>
+    <tr><td>Почему поиск кончился</td><td>Истёк лимит времени, в сервисе по умолчанию 12 секунд. Это не проверка, что дня дешевле 11 км не существует.</td></tr>
+  </table>
+
+  <h2>Тот же день по baseline</h2>
+  <p>Baseline идёт по входному порядку A, B, C, D. Заявку можно дописать только в конец первого подходящего инженера, в середину вставлять нельзя.</p>
+  <table>
+    <tr><th>Заявка</th><th>Куда</th><th>Почему</th></tr>
+    <tr><td>A</td><td>Анна</td><td>первый, кому можно, в конец пустого дня</td></tr>
+    <tr><td>B</td><td>Борис</td><td>в конец Анне окно не пускает, а перед A baseline поставить не может</td></tr>
+    <tr><td>C</td><td>Борис</td><td>Анна не подходит, Борису дописывается в конец: B → C</td></tr>
+    <tr><td>D</td><td>никто</td><td>нет подходящего инженера</td></tr>
+  </table>
+  <p class="note">Финал здесь совпал с планом после переноса: Анна везёт A, Борис везёт B → C, 11 км. Разница в пути. Baseline отправил B к Борису сразу. Жадная вставка сначала поставила B перед A у Анны, и только перенос вернул B к Борису.</p>
+</main>
+<script src="algorithm-datasets.js"></script>
+<script src="algorithm-lab.js"></script>
+<script>AlgorithmLab.render(document.getElementById("lab"));</script>
+</body>
+</html>

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { DEFAULT_GENERATE_PARAMS, type GenerateParams } from "./engine/types";
 import { datasetSummary, generateDataset } from "./data/generate";
 import { parseGenerateParams, UI_PARAMS_KEY } from "./data/params-store";
-import { catalogSkillsToCsv, catalogTasksToCsv, datasetToJson, encodeCsvForExcel, engineersToCsv, jobsToCsv } from "./data/serialize";
+import { catalogSkillsToCsv, catalogTasksToCsv, datasetToJson, encodeCsvForExcel, engineersToCsv, eventsToCsv, jobsToCsv } from "./data/serialize";
 
 function download(filename: string, data: BlobPart, type: string) {
   const blob = new Blob([data], { type });
@@ -80,9 +80,9 @@ export default function App() {
       >
         <Field label="Инженеров" value={params.engineerCount} onChange={set("engineerCount")} />
         <Field label="Заявок" value={params.jobCount} onChange={set("jobCount")} />
-        <Field label="Заявки с 1 навыком, доля" value={params.jobEasy} onChange={set("jobEasy")} />
-        <Field label="Заявки с 2 навыками, доля" value={params.jobMedium} onChange={set("jobMedium")} />
-        <Field label="Заявки с 3 навыками, доля" value={params.jobHard} onChange={set("jobHard")} />
+        <Field label="Локальные работы, доля" value={params.jobEasy} onChange={set("jobEasy")} />
+        <Field label="Подключение и дозаказы, доля" value={params.jobMedium} onChange={set("jobMedium")} />
+        <Field label="Аварийные работы, доля" value={params.jobHard} onChange={set("jobHard")} />
         <Field label="Новички" value={params.novice} onChange={set("novice")} />
         <Field label="Специалисты" value={params.specialist} onChange={set("specialist")} />
         <Field label="Профи" value={params.pro} onChange={set("pro")} />
@@ -102,6 +102,16 @@ export default function App() {
         </button>
         <button type="button" onClick={() => downloadCsv("engineers.csv", engineersToCsv(data.engineers))}>
           engineers.csv
+        </button>
+        <button type="button" onClick={() => downloadCsv("replan_events.csv", eventsToCsv(data.events))}>
+          replan_events.csv
+        </button>
+        <button type="button" onClick={() => {
+          downloadCsv("jobs.csv", jobsToCsv(data.jobs));
+          setTimeout(() => downloadCsv("engineers.csv", engineersToCsv(data.engineers)), 200);
+          setTimeout(() => downloadCsv("replan_events.csv", eventsToCsv(data.events)), 400);
+        }}>
+          все 3 CSV
         </button>
         <button type="button" onClick={() => downloadCsv("catalog-tasks.csv", catalogTasksToCsv())}>
           справочник задач

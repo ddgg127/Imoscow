@@ -6,7 +6,7 @@ import {
   type GenerateParams,
   type Job,
   type Priority,
-  type SkillCount,
+  TZ_SKILLS,
   VEHICLES,
   type Vehicle,
 } from "../engine/types";
@@ -40,12 +40,6 @@ const SHIFTS: Array<[string, string]> = [
   ["07:30", "16:30"],
   ["10:00", "19:00"],
 ];
-
-const TASKS_BY_COUNT: Record<SkillCount, CatalogTask[]> = {
-  1: CATALOG.tasks.filter((t) => t.skills.length === 1),
-  2: CATALOG.tasks.filter((t) => t.skills.length === 2),
-  3: CATALOG.tasks.filter((t) => t.skills.length === 3),
-};
 
 function pad(n: number): string {
   return String(n).padStart(2, "0");
@@ -112,23 +106,30 @@ function takePlace(rng: Rng, used: Set<string>, prefer: BuildingKind) {
   return { address: building.address, lat: building.lat, lon: building.lon };
 }
 
-function pickTask(rng: Rng, count: SkillCount): CatalogTask {
-  const pool = TASKS_BY_COUNT[count];
-  if (pool.length === 0) throw new Error(`В справочнике нет задач на ${count} навыка`);
-  return pick(rng, pool);
+const SKILL_EQUIPMENT: Record<string, string> = {
+  "Локальные работы": "Диагностический комплект",
+  "Работы на подключение и дозаказы": "ONT",
+  "Аварийные работы": "Рефлектометр",
+};
+
+const SPEC_PAIRS: Array<[string, string]> = [
+  [TZ_SKILLS[0], TZ_SKILLS[1]],
+  [TZ_SKILLS[0], TZ_SKILLS[2]],
+  [TZ_SKILLS[1], TZ_SKILLS[2]],
+];
+
+function skillsForEngineer(level: EngineerLevel, indexWithinLevel: number): string[] {
+  if (level === "новичок") {
+    return [TZ_SKILLS[indexWithinLevel % 3]];
+  }
+  if (level === "специалист") {
+    return [...SPEC_PAIRS[indexWithinLevel % 3]];
+  }
+  return [...TZ_SKILLS];
 }
 
-function skillsForEngineer(rng: Rng, level: EngineerLevel, jobs: Job[]): string[] {
-  const n: SkillCount = level === "новичок" ? 1 : level === "специалист" ? 2 : 3;
-  const fromJobs = jobs.filter((j) => j.skillCount === n);
-  if (fromJobs.length > 0) return [...pick(rng, fromJobs).skills];
-  return [...pickTask(rng, n).skills];
-}
-
-function vehicleForJob(rng: Rng, engineers: Engineer[], jobSkills: string[]): Vehicle {
-  const capable = engineers.filter((e) =>
-    jobSkills.every((s) => e.skills.includes(s)),
-  );
+function vehicleForJob(rng: Rng, engineers: Engineer[], skill: string): Vehicle {
+  const capable = engineers.filter((e) => e.skills.includes(skill));
   if (capable.length > 0 && rng() < 0.75) return pick(rng, capable).vehicle;
   return pick(rng, VEHICLES);
 }
@@ -139,19 +140,22 @@ export function generateDataset(raw: Partial<GenerateParams> = {}): Dataset {
   const usedPlaces = new Set<string>();
   const usedNames = new Set<string>();
 
-  const [easyN, midN, hardN] = splitByShare(params.jobCount, [
+  const [localN, connectN, emergencyN] = splitByShare(params.jobCount, [
     params.jobEasy,
     params.jobMedium,
     params.jobHard,
   ]);
-  const counts: SkillCount[] = [
-    ...Array.from({ length: easyN }, () => 1 as const),
-    ...Array.from({ length: midN }, () => 2 as const),
-    ...Array.from({ length: hardN }, () => 3 as const),
-  ];
+  const jobSkills: Array<(typeof TZ_SKILLS)[number]> = [];
+  let l = 0, c = 0, e = 0;
+  while (l < localN || c < connectN || e < emergencyN) {
+    if (l < localN) { jobSkills.push(TZ_SKILLS[0]); l++; }
+    if (c < connectN) { jobSkills.push(TZ_SKILLS[1]); c++; }
+    if (e < emergencyN) { jobSkills.push(TZ_SKILLS[2]); e++; }
+  }
 
-  const jobs: Job[] = counts.map((skillCount, i) => {
-    const template = pickTask(rng, skillCount);
+  const jobs: Job[] = jobSkills.map((skill, i) => {
+    const same = CATALOG.tasks.filter((task) => tzSkillOf(task) === skill);
+    const template = pick(rng, same.length ? same : CATALOG.tasks);
     const durationMin = intBetween(rng, template.durationMin[0], template.durationMin[1]);
     const window = windowForDuration(rng, durationMin);
     const place = takePlace(rng, usedPlaces, "workplace");
@@ -164,8 +168,9 @@ export function generateDataset(raw: Partial<GenerateParams> = {}): Dataset {
       windowStart: window.start,
       windowEnd: window.end,
       priority: (urgent ? "Срочная" : "Обычная") satisfies Priority,
-      skills: [...template.skills],
-      skillCount,
+      skills: [skill],
+      skillCount: 1,
+      equipment: SKILL_EQUIPMENT[skill],
     };
   });
 
@@ -174,61 +179,107 @@ export function generateDataset(raw: Partial<GenerateParams> = {}): Dataset {
     params.specialist,
     params.pro,
   ]);
-  const levels: EngineerLevel[] = [
-    ...Array.from({ length: noviceN }, () => "новичок" as const),
-    ...Array.from({ length: specN }, () => "специалист" as const),
-    ...Array.from({ length: proN }, () => "профи" as const),
+  const levels: Array<{ level: EngineerLevel; indexWithinLevel: number }> = [
+    ...Array.from({ length: noviceN }, (_, idx) => ({ level: "новичок" as const, indexWithinLevel: idx })),
+    ...Array.from({ length: specN }, (_, idx) => ({ level: "специалист" as const, indexWithinLevel: idx })),
+    ...Array.from({ length: proN }, (_, idx) => ({ level: "профи" as const, indexWithinLevel: idx })),
   ];
 
-  const engineers: Engineer[] = levels.map((level, i) => {
+  const engineers: Engineer[] = levels.map(({ level, indexWithinLevel }, i) => {
     const place = takePlace(rng, usedPlaces, "residential");
-    const shift = pick(rng, SHIFTS);
+    const shift = SHIFTS[i % SHIFTS.length];
+    const skills = skillsForEngineer(level, indexWithinLevel);
     return {
       id: `E${String(i + 1).padStart(3, "0")}`,
       name: uniqueName(rng, usedNames),
       ...place,
       shiftStart: shift[0],
       shiftEnd: shift[1],
-      skills: skillsForEngineer(rng, level, jobs),
-      vehicle: pick(rng, VEHICLES),
+      skills,
+      equipment: skills.map((s) => SKILL_EQUIPMENT[s]),
+      vehicle: VEHICLES[i % VEHICLES.length],
       level,
     };
   });
 
   for (const job of jobs) {
     if (rng() * 100 < params.vehicleConstraintShare) {
-      job.vehicle = vehicleForJob(rng, engineers, job.skills);
+      job.vehicle = vehicleForJob(rng, engineers, job.skills[0]);
     }
   }
+  coverSkills(engineers, rng);
 
   return {
     meta: {
       seed: params.seed,
       generatedAt: new Date().toISOString(),
       params,
-      catalog: { skills: CATALOG.skills.length, tasks: CATALOG.tasks.length },
+      catalog: { skills: TZ_SKILLS.length, tasks: CATALOG.tasks.length },
       notes: [
-        "Число навыков заявки: 1, 2 или 3. Навыки — общие компетенции; название задачи может быть узким случаем.",
-        "Инженер должен иметь все навыки заявки. Новичок/специалист/профи = 1/2/3 навыка, взятые с задач этого набора.",
-        "Адреса — реальные здания OSM (улица и номер дома), не вестибюли метро. Заявки — рабочие здания, старт инженера — жилой дом; при нехватке берётся любой свободный дом в другом районе.",
-        "CSV: разделитель точка с запятой.",
+        "У заявки ровно один навык из справочника ТЗ: локальные работы, подключение и дозаказы, аварийные работы.",
+        "У инженера 1, 2 или 3 навыка того же справочника: новичок, специалист, профи. Один тип транспорта.",
+        "Требуемый транспорт у заявки заполнен только если ограничение задано.",
+        "События перепланирования: отмена заявки, недоступность инженера, новая срочная заявка.",
+        "Адреса — реальные здания OSM. Маршрут начинается в точке старта, возврат туда не требуется.",
       ],
     },
     jobs,
     engineers,
-    events: [],
+    events: buildEvents(rng, jobs, engineers, usedPlaces),
   };
+}
+
+function tzSkillOf(task: CatalogTask): (typeof TZ_SKILLS)[number] {
+  const text = `${task.domain} ${task.title} ${task.skills.join(" ")}`.toLocaleLowerCase("ru");
+  if (/авар|обрыв|повреж|восстанов/.test(text)) return TZ_SKILLS[2];
+  if (/оптик|gpon|подключ|абонент|терминал|кросс|дозаказ/.test(text)) return TZ_SKILLS[1];
+  return TZ_SKILLS[0];
+}
+
+function coverSkills(engineers: Engineer[], rng: Rng): void {
+  for (const skill of TZ_SKILLS) {
+    if (engineers.some((item) => item.skills.includes(skill))) continue;
+    const host = engineers[intBetween(rng, 0, engineers.length - 1)];
+    if (host.skills.length < 3) host.skills.push(skill);
+    else host.skills[0] = skill;
+  }
+}
+
+function buildEvents(rng: Rng, jobs: Job[], engineers: Engineer[], usedPlaces: Set<string>) {
+  const ordinary = jobs.filter((item) => item.priority === "Обычная");
+  const cancelled = pick(rng, ordinary.length ? ordinary : jobs);
+  const missing = pick(rng, engineers);
+  const skill = pick(rng, TZ_SKILLS);
+  const place = takePlace(rng, usedPlaces, "workplace");
+  const durationMin = intBetween(rng, 30, 60);
+  const window = windowForDuration(rng, durationMin);
+  const urgent: Job = {
+    id: `U${String(jobs.length + 1).padStart(3, "0")}`,
+    title: "Срочный выезд",
+    ...place,
+    durationMin,
+    windowStart: window.start,
+    windowEnd: window.end,
+    priority: "Срочная",
+    skills: [skill],
+    skillCount: 1,
+    equipment: SKILL_EQUIPMENT[skill],
+    vehicle: rng() < 0.5 ? pick(rng, VEHICLES) : undefined,
+  };
+  return [
+    { type: "отмена заявки" as const, time: "08:30", jobId: cancelled.id },
+    { type: "недоступность инженера" as const, time: "08:40", engineerId: missing.id },
+    { type: "срочная заявка" as const, time: "08:45", job: urgent },
+  ];
 }
 
 export function datasetSummary(data: Dataset): string {
   const { jobs, engineers } = data;
-  const byCount = { 1: 0, 2: 0, 3: 0 };
-  for (const j of jobs) byCount[j.skillCount] += 1;
   const engC = countBy(engineers.map((e) => e.level));
   return [
-    `справочник: ${data.meta.catalog.tasks} задач, ${data.meta.catalog.skills} навыков`,
+    `справочник навыков ТЗ: ${TZ_SKILLS.join("; ")}`,
     `инженеры ${engineers.length}: новички ${engC.новичок ?? 0}, специалисты ${engC.специалист ?? 0}, профи ${engC.профи ?? 0}`,
-    `заявки ${jobs.length}: 1 навык ${byCount[1]}, 2 навыка ${byCount[2]}, 3 навыка ${byCount[3]}`,
+    `заявки ${jobs.length}: ${TZ_SKILLS.map((skill) => `${skill} ${jobs.filter((item) => item.skills[0] === skill).length}`).join(", ")}`,
     `срочных ${jobs.filter((j) => j.priority === "Срочная").length}, с требованием ТС ${jobs.filter((j) => j.vehicle).length}`,
     `адреса OSM: заявка «${jobs[0]?.address ?? "—"}», старт «${engineers[0]?.address ?? "—"}»`,
     `seed ${data.meta.seed}`,

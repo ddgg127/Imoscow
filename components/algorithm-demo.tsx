@@ -116,16 +116,16 @@ export function AlgorithmDemoView() {
   const shortened = finalKm + 1e-6 < greedyKm;
   return <section className="page-view demo-view">
     <div className="view-summary">
-      <article><span>Режим</span><strong>{mode === "distance" ? "Мин. путь" : "FieldFlow"}</strong><small>{mode === "distance" ? "только длина тура" : "штраф за машину"}</small></article>
-      <article><span>Длина сейчас</span><strong>{frame.distanceKm.toFixed(1).replace(".", ",")}</strong><small>шаг {frame.step + 1} из {run.frames.length}</small></article>
-      <article><span>Жадина → финиш</span><strong>{greedyKm.toFixed(1).replace(".", ",")} → {finalKm.toFixed(1).replace(".", ",")}</strong><small>{shortened ? "2-opt укоротил тур" : finalKm > greedyKm + 1e-6 ? "длина выросла из-за уплотнения" : "длина после жадины не изменилась"}</small></article>
+      <article><span>Режим</span><strong>{mode === "distance" ? "Мин. путь" : "Баланс машин"}</strong><small>{mode === "distance" ? "только длина тура" : "учёт выезда машин"}</small></article>
+      <article><span>Текущий пробег</span><strong>{frame.distanceKm.toFixed(1).replace(".", ",")}</strong><small>шаг {frame.step + 1} из {run.frames.length}</small></article>
+      <article><span>Результат</span><strong>{greedyKm.toFixed(1).replace(".", ",")} → {finalKm.toFixed(1).replace(".", ",")}</strong><small>{shortened ? "оптимизация сократила пробег" : "пробег зафиксирован"}</small></article>
     </div>
     <div className="demo-toolbar">
       <label>Точки<input type="number" min={4} max={18} value={points} onChange={event => setPoints(Math.min(18, Math.max(4, Number(event.target.value) || 4)))} /></label>
       <label>Курьеры<input type="number" min={1} max={6} value={vehicles} disabled={mode === "distance"} onChange={event => setVehicles(Math.min(6, Math.max(1, Number(event.target.value) || 1)))} /></label>
       <label>Seed<input type="number" min={1} max={999} value={seed} onChange={event => setSeed(Math.max(1, Number(event.target.value) || 1))} /></label>
       <button className={mode === "distance" ? "selected" : ""} onClick={() => { setMode("distance"); setVehicles(1); }}>Кратчайший путь</button>
-      <button className={mode === "fieldflow" ? "selected" : ""} onClick={() => { setMode("fieldflow"); setVehicles(current => Math.max(2, current)); }}>Как в FieldFlow</button>
+      <button className={mode === "fieldflow" ? "selected" : ""} onClick={() => { setMode("fieldflow"); setVehicles(current => Math.max(2, current)); }}>Баланс машин</button>
       <button className="plain-button" onClick={() => setSeed(value => value + 1)}><RotateCcw />Новые точки</button>
     </div>
     <div className="demo-stage">

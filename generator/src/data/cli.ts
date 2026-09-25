@@ -45,9 +45,9 @@ async function promptParams(base: GenerateParams): Promise<GenerateParams> {
   const params: GenerateParams = {
     engineerCount: await ask("Инженеров", base.engineerCount),
     jobCount: await ask("Заявок", base.jobCount),
-    jobEasy: await ask("Доля заявок с 1 навыком", base.jobEasy),
-    jobMedium: await ask("Доля заявок с 2 навыками", base.jobMedium),
-    jobHard: await ask("Доля заявок с 3 навыками", base.jobHard),
+    jobEasy: await ask("Доля локальных работ", base.jobEasy),
+    jobMedium: await ask("Доля подключений и дозаказов", base.jobMedium),
+    jobHard: await ask("Доля аварийных работ", base.jobHard),
     novice: await ask("Доля новичков", base.novice),
     specialist: await ask("Доля специалистов", base.specialist),
     pro: await ask("Доля профи", base.pro),

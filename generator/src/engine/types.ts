@@ -36,6 +36,7 @@ export type Job = Place & {
   priority: Priority;
   skills: string[];
   skillCount: SkillCount;
+  equipment?: string;
   vehicle?: Vehicle;
 };
 
@@ -45,6 +46,7 @@ export type Engineer = Place & {
   shiftStart: string;
   shiftEnd: string;
   skills: string[];
+  equipment?: string[];
   vehicle: Vehicle;
   level: EngineerLevel;
 };

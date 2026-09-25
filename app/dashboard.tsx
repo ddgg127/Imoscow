@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { AlertTriangle, BarChart3, Check, ChevronDown, Clock3, Contrast, Database, Download, FileJson, Layers3, MapPin, Menu, MoreHorizontal, Play, Plus, Route, Search, Sparkles, SunMoon, Table2, Upload, UsersRound, Waypoints, Wrench, X, Zap } from "lucide-react";
+import { AlertTriangle, BarChart3, Check, ChevronDown, Clock3, Compass, Contrast, Database, Download, FileJson, Layers3, MapPin, Menu, MoreHorizontal, Play, Plus, Route, Search, Sparkles, SunMoon, Table2, Upload, UsersRound, Waypoints, Wrench, X, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -13,6 +13,7 @@ import { MapCanvas, type RoutingState } from "@/components/map-canvas";
 import { AssignmentBoard } from "@/components/assignment-board";
 import { TimeDrum } from "@/components/time-drum";
 import { AlgorithmDemoView } from "@/components/algorithm-demo";
+import { AboutSolutionView } from "@/components/about-solution";
 import { DataEditor } from "@/components/data-editor";
 import { PlanAnalysisView } from "@/components/plan-analysis";
 import { BackendGeocodingProvider, type Coordinate } from "@/lib/map-providers";
@@ -20,7 +21,7 @@ import { loadRoadTravel } from "@/lib/road-travel";
 import { csvEngineers, csvJobs, csvMeta } from "@/lib/csv-data.generated";
 import demoScenario from "@/data/demo-scenario.json";
 import { downloadPlan } from "@/lib/export-plan";
-import { downloadGeneratedDataset, generateDataset, type GeneratedDataset } from "@/lib/generator-files";
+import { downloadAllTzCsvs, downloadBlob, downloadGeneratedDataset, downloadTzJson, engineersToTzCsv, eventsToTzCsv, generateDataset, generateTzDataset, jobsToTzCsv, type GeneratedDataset, type GeneratedTzDataset, type GenerateTzOptions } from "@/lib/generator-files";
 import { importPlanFile } from "@/lib/import-data";
 import { executionAtTime, executionLabels, parseTime, validateEditedData } from "@/lib/data-editor";
 import { solveCounterfactualServer, solveVrptwServer, type SolverEngine } from "@/lib/server-solver";
@@ -28,7 +29,7 @@ import { applyAverageWindows, compareReplannedPlans, explainAssignment, fallback
 import { cancelUnassignedJob, insertOrdinaryJob, mergeTemporalResult, prepareTemporalReplan, type DispatchEvent } from "@/lib/temporal-replan";
 
 type ThemeId = "light" | "dark" | "beeline" | "ocean" | "graphite" | "contrast";
-type ViewId = "plan" | "requests" | "team" | "analytics" | "generator" | "editor" | "demo";
+type ViewId = "plan" | "generator" | "requests" | "team" | "analytics" | "editor" | "demo" | "about";
 type PlanConfig = { engineers: number; jobs: number; speedKmh: number; windowMinutes: number };
 type CounterfactualAssessment = { status: "loading" | "success" | "error"; summary?: string; error?: string; runtimeMs?: number };
 const sourceJobs = csvJobs as Job[];
@@ -63,7 +64,7 @@ const themes: Array<{ id: ThemeId; name: string; colors: string[] }> = [
 ];
 function Logo() { return <div className="brand"><span className="brand-mark"><Route size={18} /></span><span>FieldFlow</span></div>; }
 function formatDistance(value: number) { return `${value.toFixed(1).replace(".", ",")} км`; }
-const solverLabels: Record<SolverEngine, string> = { ortools: "OR-Tools", "heuristic-server": "Серверный резерв", "heuristic-browser": "Локальный резерв" };
+const solverLabels: Record<SolverEngine, string> = { ortools: "OR-Tools", "heuristic-server": "Серверный алгоритм", "heuristic-browser": "Локальный алгоритм" };
 
 function ExportButtons({ result, engineers, solver, speedKmh }: { result: OptimizationResult; engineers: Engineer[]; solver: SolverEngine; speedKmh: number }) {
   return <div className="export-actions" aria-label="Экспорт результата">
@@ -90,7 +91,7 @@ function tickMarks(min: number, max: number, step: number) {
   return ticks;
 }
 
-function ConfigNumberField({ label, hint, value, onChange, sliderMin = 1, sliderMax = 500, inputMin = 1, inputMax = 10000, snapStep, suffix }: { label: string; hint?: string; value: number; onChange: (value: number) => void; sliderMin?: number; sliderMax?: number; inputMin?: number; inputMax?: number; snapStep: number; suffix?: string }) {
+function ConfigNumberField({ label, value, onChange, sliderMin = 1, sliderMax = 500, inputMin = 1, inputMax = 10000, snapStep, suffix }: { label: string; hint?: string; value: number; onChange: (value: number) => void; sliderMin?: number; sliderMax?: number; inputMin?: number; inputMax?: number; snapStep: number; suffix?: string }) {
   const [text, setText] = useState(String(value));
   const shiftHeld = useRef(false);
   const pointerActive = useRef(false);
@@ -124,7 +125,7 @@ function ConfigNumberField({ label, hint, value, onChange, sliderMin = 1, slider
     }
     onChange(nearestSnap(clamped, points));
   };
-  return <div className="config-field"><div className="config-field-head"><Label>{label}</Label><div className="config-input-wrap"><Input inputMode="numeric" value={text} aria-label={label} onChange={event => { const next = event.target.value.replace(/[^\d]/g, ""); setText(next); if (next === "") return; onChange(clamp(next)); }} onBlur={() => { const next = clamp(text); onChange(next); setText(String(next)); }} /><span>{suffix}</span></div></div><div className="config-slider-wrap"><Slider min={sliderMin} max={sliderMax} step={1} value={[sliderValue]} className="w-full" onPointerDown={event => { shiftHeld.current = event.shiftKey; pointerActive.current = true; }} onPointerMove={event => { shiftHeld.current = event.shiftKey; }} onPointerUp={() => { pointerActive.current = false; }} onPointerCancel={() => { pointerActive.current = false; }} onValueChange={values => { const next = values[0]; if (typeof next === "number") applySlider(next); }} /><div className="config-slider-ticks" aria-hidden>{ticks.map(tick => <i key={tick} style={{ left: `${(tick - sliderMin) / (sliderMax - sliderMin) * 100}%` }} title={String(tick)} />)}</div></div><div className="config-field-meta"><span>{sliderMin}</span><small>{value > sliderMax ? `Ползунок до ${sliderMax}. В расчёт идёт ${value}.` : hint}</small><span>{sliderMax}</span></div></div>;
+  return <div className="config-field"><div className="config-field-head"><Label>{label}</Label><div className="config-input-wrap"><Input inputMode="numeric" value={text} aria-label={label} onChange={event => { const next = event.target.value.replace(/[^\d]/g, ""); setText(next); if (next === "") return; onChange(clamp(next)); }} onBlur={() => { const next = clamp(text); onChange(next); setText(String(next)); }} /><span>{suffix}</span></div></div><div className="config-slider-wrap"><Slider min={sliderMin} max={sliderMax} step={1} value={[sliderValue]} className="w-full" onPointerDown={event => { shiftHeld.current = event.shiftKey; pointerActive.current = true; }} onPointerMove={event => { shiftHeld.current = event.shiftKey; }} onPointerUp={() => { pointerActive.current = false; }} onPointerCancel={() => { pointerActive.current = false; }} onValueChange={values => { const next = values[0]; if (typeof next === "number") applySlider(next); }} /><div className="config-slider-ticks" aria-hidden>{ticks.map(tick => <i key={tick} style={{ left: `${(tick - sliderMin) / (sliderMax - sliderMin) * 100}%` }} title={String(tick)} />)}</div></div><div className="config-field-meta"><span>{sliderMin}</span><small>{value > sliderMax ? `Диапазон до ${sliderMax}` : ""}</small><span>{sliderMax}</span></div></div>;
 }
 
 function JobTable({ jobs, engineers, onOpen, limit }: { jobs: Job[]; engineers: Engineer[]; onOpen: (id: string) => void; limit?: number }) { return <div className="job-table"><div className="job-row table-head"><span>Время</span><span>Заявка</span><span>Адрес</span><span>Инженер</span><span>Выполнение</span><span>Статус SLA</span><span /></div>{jobs.slice(0, limit ?? jobs.length).map(job => { const engineer = engineers.find(item => item.id === job.engineerId); const routeStatus = job.cancelled ? "Отменена" : job.executionStatus === "completed" && !engineer ? "Завершена" : engineer ? "В окне" : "Нет маршрута"; return <button className="job-row job-row-button" key={job.id} onClick={() => onOpen(job.id)}><span className="job-time">{job.time}</span><span><i className={`job-tone ${job.tone}`} /><b>№ {job.id}</b><small>{job.kind}</small></span><span><b>{job.area}</b><small>{job.address}</small></span><span className="assigned">{engineer ? <><i style={{ background: engineer.color }}>{engineer.initials}</i><b>{engineer.name}</b></> : <b>{routeStatus === "Завершена" ? "Работа закрыта" : "Не назначена"}</b>}</span><span className={`execution-pill ${job.executionStatus ?? "not_started"}`}>{executionLabels[job.executionStatus ?? "not_started"]}</span><span><Badge className={!engineer && routeStatus === "Нет маршрута" ? "sla risk" : "sla"}>{routeStatus === "Нет маршрута" ? <AlertTriangle /> : <Clock3 />}{routeStatus}</Badge></span><span className="row-location"><MapPin /></span></button>; })}</div>; }
@@ -153,7 +154,7 @@ function RequestsView({ jobs, engineers, onOpen, onAdd, onImport, importStatus }
   const searched = jobs.filter(job => !normalized || job.id.toLocaleLowerCase("ru").includes(normalized) || job.address.toLocaleLowerCase("ru").includes(normalized));
   const filtered = searched.filter(job => matchesFacets(selected, strict, { kind: [job.kind], equipment: [job.equipment], transport: [job.requiredTransport], status: [job.cancelled ? "Отменена" : job.executionStatus === "completed" && !job.engineerId ? "Завершена" : job.engineerId ? "В окне" : "Нет маршрута"], execution: [executionLabels[job.executionStatus ?? "not_started"]], priority: [String(job.priority)] }) && (fromMinutes == null || job.windowStart >= fromMinutes) && (toMinutes == null || job.windowEnd <= toMinutes) && (minNorm == null || job.serviceMinutes >= minNorm) && (maxNorm == null || job.serviceMinutes <= maxNorm));
   const resetRanges = () => { setFromTime(""); setToTime(""); setNormFrom(""); setNormTo(""); };
-  return <section className="page-view"><InstantSearch value={query} onChange={setQuery} placeholder="Номер заявки или адрес"><div className="instant-results">{searched.slice(0, 8).map(job => <button type="button" key={job.id} onClick={() => onOpen(job.id)}><span><b>№ {job.id}</b><small>{job.address}</small></span><em>{job.cancelled ? "Отменена" : job.time}</em></button>)}{!searched.length && <p>Совпадений не найдено</p>}</div></InstantSearch><div className="import-strip"><label className="plain-button import-button"><Upload />Загрузить CSV / JSON<input type="file" accept=".csv,.json,text/csv,application/json" onChange={event => { const file = event.target.files?.[0]; if (file) onImport(file); event.currentTarget.value = ""; }} /></label><span>{importStatus || "CSV заявок, CSV инженеров или JSON генератора (jobs + engineers). Наборы из generator/datasets подходят без перекодирования."}</span></div><div className="view-summary"><article><span>Из данных и формы</span><strong>{jobs.length}</strong><small>заявок в текущем плане</small></article><article><span>Назначено VRPTW</span><strong>{assigned}</strong><small>{jobs.length - cancelled ? (assigned / (jobs.length - cancelled) * 100).toFixed(1) : "0.0"}% неотменённых · завершено {completed} · отменено {cancelled}</small></article><article><span>Без назначения</span><strong>{unassigned}</strong><small>проверьте причину в карточке заявки</small></article></div><FacetFilters groups={groups} selected={selected} onSelected={setSelected} strict={strict} onStrict={setStrict} count={filtered.length} total={jobs.length} /><section className="range-filters" aria-label="Диапазоны заявки"><label><span>Окно с</span><input type="time" value={fromTime} onChange={event => setFromTime(event.target.value)} /></label><label><span>Окно до</span><input type="time" value={toTime} onChange={event => setToTime(event.target.value)} /></label><label><span>Норматив от, мин</span><input type="number" min="0" value={normFrom} onChange={event => setNormFrom(event.target.value)} placeholder="0" /></label><label><span>Норматив до, мин</span><input type="number" min="0" value={normTo} onChange={event => setNormTo(event.target.value)} placeholder="240" /></label>{(fromTime || toTime || normFrom || normTo) && <button type="button" onClick={resetRanges}>Сбросить диапазоны</button>}</section><section className="panel queue-panel full-table"><div className="panel-header"><div><h2>Заявки</h2><p>CSV / JSON · {filtered.length} по фильтру</p></div><button className="plain-button" onClick={onAdd}><Plus />Добавить заявку</button></div>{filtered.length ? <JobTable jobs={filtered} engineers={engineers} onOpen={onOpen} limit={showAll ? undefined : 250} /> : <p className="facet-empty">По поиску и выбранным условиям заявок нет.</p>}{!showAll && filtered.length > 250 && <button type="button" className="facet-show-all" onClick={() => setShowAll(true)}>Показать все {filtered.length} заявок</button>}</section></section>;
+  return <section className="page-view"><InstantSearch value={query} onChange={setQuery} placeholder="Номер заявки или адрес"><div className="instant-results">{searched.slice(0, 8).map(job => <button type="button" key={job.id} onClick={() => onOpen(job.id)}><span><b>№ {job.id}</b><small>{job.address}</small></span><em>{job.cancelled ? "Отменена" : job.time}</em></button>)}{!searched.length && <p>Совпадений не найдено</p>}</div></InstantSearch><div className="import-strip"><label className="plain-button import-button"><Upload />Загрузить CSV / JSON<input type="file" accept=".csv,.json,text/csv,application/json" onChange={event => { const file = event.target.files?.[0]; if (file) onImport(file); event.currentTarget.value = ""; }} /></label><span>{importStatus || "Файлы CSV заявок и инженеров или JSON набора."}</span></div><div className="view-summary"><article><span>Всего заявок</span><strong>{jobs.length}</strong><small>{jobs.filter(job => job.cancelled).length} отменено</small></article><article><span>Назначено</span><strong>{assigned}</strong><small>{jobs.length - cancelled ? (assigned / (jobs.length - cancelled) * 100).toFixed(1) : "0.0"}% от неотменённых</small></article><article><span>Без назначения</span><strong>{unassigned}</strong><small>требуют ручного распределения</small></article></div><FacetFilters groups={groups} selected={selected} onSelected={setSelected} strict={strict} onStrict={setStrict} count={filtered.length} total={jobs.length} /><section className="range-filters" aria-label="Диапазоны заявки"><label><span>Окно с</span><input type="time" value={fromTime} onChange={event => setFromTime(event.target.value)} /></label><label><span>Окно до</span><input type="time" value={toTime} onChange={event => setToTime(event.target.value)} /></label><label><span>Норматив от, мин</span><input type="number" min="0" value={normFrom} onChange={event => setNormFrom(event.target.value)} placeholder="0" /></label><label><span>Норматив до, мин</span><input type="number" min="0" value={normTo} onChange={event => setNormTo(event.target.value)} placeholder="240" /></label>{(fromTime || toTime || normFrom || normTo) && <button type="button" onClick={resetRanges}>Сбросить диапазоны</button>}</section><section className="panel queue-panel full-table"><div className="panel-header"><div><h2>Заявки</h2><p>{filtered.length} по фильтру</p></div><button className="plain-button" onClick={onAdd}><Plus />Добавить заявку</button></div>{filtered.length ? <JobTable jobs={filtered} engineers={engineers} onOpen={onOpen} limit={showAll ? undefined : 250} /> : <p className="facet-empty">По поиску и выбранным условиям заявок нет.</p>}{!showAll && filtered.length > 250 && <button type="button" className="facet-show-all" onClick={() => setShowAll(true)}>Показать все {filtered.length} заявок</button>}</section></section>;
 }
 function EngineersView({ engineers, jobs, result, unavailableIds, onOpenDetails, onOpenRoute }: { engineers: Engineer[]; jobs: Job[]; result: OptimizationResult; unavailableIds: string[]; onOpenDetails: (id: string) => void; onOpenRoute: (id: string) => void }) {
   const [showAll, setShowAll] = useSavedFilter("engineers-all", false);
@@ -214,51 +215,431 @@ function AnalyticsView({ result, engineers, distanceReady, distanceWarning, solv
   const baselineByEngineer = new Map(result.baselineRoutes.map(route => [route.engineerId, route]));
   const optimizedByEngineer = new Map(result.routes.map(route => [route.engineerId, route]));
   const activeEngineers = engineers.filter(engineer => baselineByEngineer.has(engineer.id) || optimizedByEngineer.has(engineer.id));
-  return <section className="page-view"><div className="analytics-actions"><span>Solver: <b>{solverLabels[solver]}</b></span><ExportButtons result={result} engineers={engineers} solver={solver} speedKmh={speedKmh} /></div>{metrics}
-    <p className={distanceReady ? "comparison-note ready" : "comparison-note"}>{`Строго сопоставимый пробег на ${result.comparison.commonAssigned} общих заявках: ${formatDistance(result.comparison.baselineComparableDistanceKm ?? 0)} → ${formatDistance(result.comparison.optimizedComparableDistanceKm ?? 0)}. Baseline-only: ${result.comparison.baselineOnly}; VRPTW-only: ${result.comparison.optimizedOnly}. ${distanceReady ? "Дорожная матрица едина, процент сравнения достоверен." : distanceWarning}`}</p>
+  return <section className="page-view"><div className="analytics-actions"><ExportButtons result={result} engineers={engineers} solver={solver} speedKmh={speedKmh} /></div>{metrics}
+    <p className={distanceReady ? "comparison-note ready" : "comparison-note"}>{`Сопоставимый пробег (${result.comparison.commonAssigned} общих заявок): ${formatDistance(result.comparison.baselineComparableDistanceKm ?? 0)} → ${formatDistance(result.comparison.optimizedComparableDistanceKm ?? 0)}. ${distanceReady ? "Расчёт выполнен по единой дорожной матрице." : distanceWarning}`}</p>
     <div className="analytics-grid">
-      <article className="panel analytics-panel"><div className="panel-header"><div><h2>Заявки по зонам</h2><p>Источник CSV и срочные заявки</p></div></div><div className="zone-chart">{result.zones.map(zone => <div key={zone.name}><span>{zone.name}</span><div><i style={{ width: `${zone.jobs / maxJobs * 100}%` }} /></div><strong>{zone.jobs}</strong></div>)}</div></article>
-      <article className="panel analytics-panel"><div className="panel-header"><div><h2>В срок от всех заявок</h2><p>Знаменатель включает и заявки без маршрута</p></div></div><div className="sla-chart">{result.zones.map(zone => <div key={zone.name}><div className="sla-ring" style={{ ["--value" as string]: `${zone.sla * 3.6}deg` }}><strong>{zone.sla}%</strong></div><span>{zone.name}<small>{zone.assigned} из {zone.jobs} назначено</small></span></div>)}</div></article>
-      <article className="panel analytics-panel wide"><div className="panel-header"><div><h2>Сравнение по зонам</h2><p>Покрытие, число бригад и полный пробег каждого плана показаны раздельно</p></div></div><div className="distance-bars">{result.zones.map(zone => <div key={zone.name}><span>{zone.name}</span><div className="distance-track"><i className="baseline" style={{ width: `${zone.baselineDistance / maxDistance * 100}%` }} /><i className="optimized" style={{ width: `${zone.distance / maxDistance * 100}%` }} /></div><strong>{zone.baselineAssigned} → {zone.assigned} заявок<br />{zone.baselineEngineers} → {zone.engineers} инженеров<br />{formatDistance(zone.baselineDistance)} → {formatDistance(zone.distance)}</strong></div>)}</div><div className="analytics-legend"><span><i className="baseline" />Baseline ТЗ</span><span><i className="optimized" />VRPTW-план</span></div></article>
-      <article className="panel analytics-panel wide"><div className="panel-header"><div><h2>Маршруты по инженерам</h2><p>Число заявок и пробег каждого плана; «—» означает отсутствие маршрута</p></div></div><div className="comparison-table-wrap"><table className="comparison-table"><thead><tr><th>Инженер</th><th>Baseline · заявок</th><th>VRPTW · заявок</th><th>Baseline · км</th><th>VRPTW · км</th></tr></thead><tbody>{activeEngineers.map(engineer => { const base = baselineByEngineer.get(engineer.id); const optimized = optimizedByEngineer.get(engineer.id); return <tr key={engineer.id}><th scope="row">{engineer.name}<small>{engineer.region}</small></th><td>{base?.stops.length ?? "—"}</td><td>{optimized?.stops.length ?? "—"}</td><td>{base ? formatDistance(base.distanceKm) : "—"}</td><td>{optimized ? formatDistance(optimized.distanceKm) : "—"}</td></tr>; })}</tbody></table></div></article>
+      <article className="panel analytics-panel"><div className="panel-header"><div><h2>Заявки по зонам</h2></div></div><div className="zone-chart">{result.zones.map(zone => <div key={zone.name}><span>{zone.name}</span><div><i style={{ width: `${zone.jobs / maxJobs * 100}%` }} /></div><strong>{zone.jobs}</strong></div>)}</div></article>
+      <article className="panel analytics-panel"><div className="panel-header"><div><h2>Выполнение в срок</h2></div></div><div className="sla-chart">{result.zones.map(zone => <div key={zone.name}><div className="sla-ring" style={{ ["--value" as string]: `${zone.sla * 3.6}deg` }}><strong>{zone.sla}%</strong></div><span>{zone.name}<small>{zone.assigned} из {zone.jobs} назначено</small></span></div>)}</div></article>
+      <article className="panel analytics-panel wide"><div className="panel-header"><div><h2>Сравнение планов по зонам</h2></div></div><div className="distance-bars">{result.zones.map(zone => <div key={zone.name}><span>{zone.name}</span><div className="distance-track"><i className="baseline" style={{ width: `${zone.baselineDistance / maxDistance * 100}%` }} /><i className="optimized" style={{ width: `${zone.distance / maxDistance * 100}%` }} /></div><strong>{zone.baselineAssigned} → {zone.assigned} заявок<br />{zone.baselineEngineers} → {zone.engineers} инженеров<br />{formatDistance(zone.baselineDistance)} → {formatDistance(zone.distance)}</strong></div>)}</div><div className="analytics-legend"><span><i className="baseline" />Базовый план</span><span><i className="optimized" />VRPTW-план</span></div></article>
+      <article className="panel analytics-panel wide"><div className="panel-header"><div><h2>Маршруты по инженерам</h2></div></div><div className="comparison-table-wrap"><table className="comparison-table"><thead><tr><th>Инженер</th><th>Базовый · заявок</th><th>VRPTW · заявок</th><th>Базовый · км</th><th>VRPTW · км</th></tr></thead><tbody>{activeEngineers.map(engineer => { const base = baselineByEngineer.get(engineer.id); const optimized = optimizedByEngineer.get(engineer.id); return <tr key={engineer.id}><th scope="row">{engineer.name}<small>{engineer.region}</small></th><td>{base?.stops.length ?? "—"}</td><td>{optimized?.stops.length ?? "—"}</td><td>{base ? formatDistance(base.distanceKm) : "—"}</td><td>{optimized ? formatDistance(optimized.distanceKm) : "—"}</td></tr>; })}</tbody></table></div></article>
     </div>
     <PlanAnalysisView result={result} engineers={engineers} travel={travel} />
   </section>;
 }
 
-function GeneratorView({ draft, setDraft, generated, generatedFrom, onGenerate, onPlan, onDemo }: { draft: PlanConfig; setDraft: React.Dispatch<React.SetStateAction<PlanConfig>>; generated: GeneratedDataset | null; generatedFrom: PlanConfig | null; onGenerate: () => void; onPlan: () => void; onDemo: () => void }) {
+function GeneratorView({
+  draft,
+  setDraft,
+  generated,
+  generatedFrom,
+  generatedTz,
+  onGenerate,
+  onPlan,
+}: {
+  draft: PlanConfig;
+  setDraft: React.Dispatch<React.SetStateAction<PlanConfig>>;
+  generated: GeneratedDataset | null;
+  generatedFrom: PlanConfig | null;
+  generatedTz: GeneratedTzDataset | null;
+  onGenerate: (opts?: Partial<GenerateTzOptions>) => void;
+  onPlan: () => void;
+}) {
+  const [jobEasy, setJobEasy] = useState(40);
+  const [jobMedium, setJobMedium] = useState(35);
+  const [jobHard, setJobHard] = useState(25);
+  const [novice, setNovice] = useState(30);
+  const [specialist, setSpecialist] = useState(45);
+  const [pro, setPro] = useState(25);
+  const [urgentShare, setUrgentShare] = useState(15);
+  const [vehicleConstraintShare, setVehicleConstraintShare] = useState(25);
+  const [seed, setSeed] = useState(42);
+  const [previewTab, setPreviewTab] = useState<"jobs" | "engineers" | "events">("jobs");
+  const [showAllRows, setShowAllRows] = useState(false);
+
   const fresh = generated && generatedFrom && Object.keys(draft).every(key => draft[key as keyof PlanConfig] === generatedFrom[key as keyof PlanConfig]);
   const heavyRun = draft.engineers * draft.jobs > 150000;
-  const widths = generated?.jobs.map(job => job.windowEnd - job.windowStart) ?? [];
+
+  const handleRunGenerate = () => {
+    onGenerate({
+      jobs: draft.jobs,
+      engineers: draft.engineers,
+      windowMinutes: draft.windowMinutes,
+      speedKmh: draft.speedKmh,
+      jobEasy,
+      jobMedium,
+      jobHard,
+      novice,
+      specialist,
+      pro,
+      urgentShare,
+      vehicleConstraintShare,
+      seed,
+    });
+    setPreviewTab("jobs");
+  };
+
+  const currentDataset = generatedTz;
+  const currentJobs = currentDataset ? currentDataset.jobs : (generated?.jobs ?? []);
+  const currentEngineers = currentDataset ? currentDataset.engineers : (generated?.engineers ?? []);
+  const currentEvents = currentDataset?.events ?? [];
+
+  const widths = currentJobs.map(job => job.windowEnd - job.windowStart);
   const minWindow = widths.length ? Math.min(...widths) : 0;
   const maxWindow = widths.length ? Math.max(...widths) : 0;
   const meanWindow = widths.length ? Math.round(widths.reduce((sum, width) => sum + width, 0) / widths.length) : 0;
-  return <section className="page-view generator-view">
-    <div className="generator-layout">
-      <article className="panel generator-config">
-        <div className="panel-header"><div><h2>Параметры набора</h2><p>Заявки и инженеры из исходного набора всех регионов</p></div></div>
-        <div className="config-body">
-          <ConfigNumberField label="Инженеры" hint={`В исходном наборе ${sourceEngineers.length}. При сокращении команда подбирается по регионам и ресурсам.`} value={draft.engineers} onChange={value => setDraft(current => ({ ...current, engineers: value }))} sliderMax={500} snapStep={50} suffix="чел." />
-          <ConfigNumberField label="Заявки" hint={`В исходном наборе ${sourceJobs.length}. Дополнительные работы распределяются по всем регионам.`} value={draft.jobs} onChange={value => setDraft(current => ({ ...current, jobs: value }))} sliderMax={500} snapStep={50} suffix="шт." />
-          <ConfigNumberField label="Среднее окно заявки" hint="Окна будут разной длины, но их среднее останется выбранным. Норматив работ не меняется." value={draft.windowMinutes} onChange={value => setDraft(current => ({ ...current, windowMinutes: value }))} sliderMin={60} sliderMax={480} inputMin={60} inputMax={840} snapStep={30} suffix="мин" />
-          <ConfigNumberField label="Средняя скорость" hint="Сохраняется в CSV/JSON и применяется при расчёте дорог после загрузки." value={draft.speedKmh} onChange={value => setDraft(current => ({ ...current, speedKmh: value }))} sliderMin={10} sliderMax={80} inputMin={5} inputMax={200} snapStep={10} suffix="км/ч" />
-          {heavyRun && <p className="config-warning">Большой набор: построение дорожной матрицы и расчёт могут занять заметное время.</p>}
-          <button className="optimize-button start-run-button" onClick={onGenerate}><Sparkles />Создать набор заявок</button>
-          <button className="plain-button" type="button" onClick={onDemo}>Загрузить эталонный набор: 12 инженеров / 51 заявка</button>
-        </div>
-      </article>
-      <article className="panel generator-output">
-        <div className="panel-header"><div><h2>Готовый набор</h2><p>Файлы подходят для загрузки во вкладке «Заявки»</p></div></div>
-        {generated ? <div className="generator-result">
-          <div className="generator-facts"><span><b>{generated.jobs.length}</b>заявок</span><span><b>{generated.engineers.length}</b>инженеров</span><span><b>{generated.speedKmh}</b>км/ч</span></div>
-          <p>Окна: {minWindow}–{maxWindow} мин, среднее {meanWindow} мин.</p>
-          <p>{fresh ? "Набор подключён к текущему плану. Скачайте файл или перейдите к построению маршрутов." : "Параметры изменены. Нажмите «Создать набор заявок», чтобы обновить данные и файлы."}</p>
-          <div className="generator-actions"><button type="button" disabled={!fresh} onClick={() => downloadGeneratedDataset(generated, "csv")}><Download /> Скачать CSV</button><button type="button" disabled={!fresh} onClick={() => downloadGeneratedDataset(generated, "json")}><FileJson /> Скачать JSON</button></div>
-          <button type="button" className="generator-plan-link" disabled={!fresh} onClick={onPlan}><Route /> Перейти к планированию</button>
-        </div> : <div className="generator-empty"><Database /><strong>Набор ещё не создан</strong><p>Выберите объём работ и нажмите «Создать набор заявок». Затем можно работать с ним здесь или скачать файл.</p></div>}
-      </article>
-    </div>
-  </section>;
+
+  return (
+    <section className="page-view generator-view">
+      <div className="generator-layout">
+        <article className="panel generator-config">
+          <div className="panel-header">
+            <div>
+              <h2>Параметры генерации</h2>
+            </div>
+            <button className="generator-primary-btn" onClick={handleRunGenerate}>
+              Сгенерировать
+            </button>
+          </div>
+          <div className="config-body">
+            <ConfigNumberField
+              label="Инженеры"
+              value={draft.engineers}
+              onChange={value => setDraft(current => ({ ...current, engineers: value }))}
+              sliderMin={4}
+              sliderMax={100}
+              snapStep={4}
+              suffix="чел."
+            />
+            <ConfigNumberField
+              label="Заявки"
+              value={draft.jobs}
+              onChange={value => setDraft(current => ({ ...current, jobs: value }))}
+              sliderMin={10}
+              sliderMax={300}
+              snapStep={10}
+              suffix="шт."
+            />
+            <ConfigNumberField
+              label="Среднее окно заявки"
+              value={draft.windowMinutes}
+              onChange={value => setDraft(current => ({ ...current, windowMinutes: value }))}
+              sliderMin={60}
+              sliderMax={360}
+              inputMin={60}
+              inputMax={600}
+              snapStep={30}
+              suffix="мин"
+            />
+            <ConfigNumberField
+              label="Скорость передвижения"
+              value={draft.speedKmh}
+              onChange={value => setDraft(current => ({ ...current, speedKmh: value }))}
+              sliderMin={10}
+              sliderMax={60}
+              inputMin={5}
+              inputMax={120}
+              snapStep={2}
+              suffix="км/ч"
+            />
+
+            <details className="generator-advanced">
+              <summary>Дополнительные параметры</summary>
+              <div className="generator-advanced-grid">
+                <label>
+                  <span>Доля «Локальные работы», %</span>
+                  <input type="number" min={5} max={80} value={jobEasy} onChange={e => setJobEasy(Number(e.target.value))} />
+                </label>
+                <label>
+                  <span>Доля «Подключение и дозаказы», %</span>
+                  <input type="number" min={5} max={80} value={jobMedium} onChange={e => setJobMedium(Number(e.target.value))} />
+                </label>
+                <label>
+                  <span>Доля «Аварийные работы», %</span>
+                  <input type="number" min={5} max={80} value={jobHard} onChange={e => setJobHard(Number(e.target.value))} />
+                </label>
+                <label>
+                  <span>Новички (1 навык), %</span>
+                  <input type="number" min={0} max={100} value={novice} onChange={e => setNovice(Number(e.target.value))} />
+                </label>
+                <label>
+                  <span>Специалисты (2 навыка), %</span>
+                  <input type="number" min={0} max={100} value={specialist} onChange={e => setSpecialist(Number(e.target.value))} />
+                </label>
+                <label>
+                  <span>Профи (3 навыка), %</span>
+                  <input type="number" min={0} max={100} value={pro} onChange={e => setPro(Number(e.target.value))} />
+                </label>
+                <label>
+                  <span>Срочные заявки, %</span>
+                  <input type="number" min={0} max={50} value={urgentShare} onChange={e => setUrgentShare(Number(e.target.value))} />
+                </label>
+                <label>
+                  <span>С ограничением по транспорту, %</span>
+                  <input type="number" min={0} max={80} value={vehicleConstraintShare} onChange={e => setVehicleConstraintShare(Number(e.target.value))} />
+                </label>
+                <label>
+                  <span>Seed</span>
+                  <input type="number" value={seed} onChange={e => setSeed(Number(e.target.value))} />
+                </label>
+              </div>
+            </details>
+
+            {heavyRun && <p className="config-warning">Большой объём данных: расчёт дорожной матрицы займёт дополнительное время.</p>}
+          </div>
+        </article>
+
+        <article className="panel generator-output">
+          <div className="panel-header">
+            <div>
+              <h2>Сформированные данные</h2>
+            </div>
+          </div>
+          {currentDataset || generated ? (
+            <div className="generator-result">
+              <div className="generator-facts">
+                <span><b>{currentJobs.length}</b>заявок</span>
+                <span><b>{currentEngineers.length}</b>инженеров</span>
+                <span><b>{currentEvents.length}</b>события</span>
+              </div>
+
+              {currentDataset && (
+                <div className="generator-stat-pills">
+                  <div className="generator-stat-pill">
+                    <span>Навыки заявок:</span>
+                    <b>
+                      Локальные: {currentDataset.stats.jobsBySkill["Локальные работы"] ?? 0} ·
+                      Подключение: {currentDataset.stats.jobsBySkill["Работы на подключение и дозаказы"] ?? 0} ·
+                      Аварийные: {currentDataset.stats.jobsBySkill["Аварийные работы"] ?? 0}
+                    </b>
+                  </div>
+                  <div className="generator-stat-pill">
+                    <span>Оборудование:</span>
+                    <b>
+                      Диагн. комплект: {currentDataset.stats.jobsByEquipment["Диагностический комплект"] ?? 0} ·
+                      ONT: {currentDataset.stats.jobsByEquipment["ONT"] ?? 0} ·
+                      Рефлектометр: {currentDataset.stats.jobsByEquipment["Рефлектометр"] ?? 0}
+                    </b>
+                  </div>
+                  <div className="generator-stat-pill">
+                    <span>Транспорт инженеров:</span>
+                    <b>
+                      Авто: {currentDataset.stats.engineersByVehicle["Автомобиль"] ?? 0} ·
+                      Пешеход: {currentDataset.stats.engineersByVehicle["Пешеход"] ?? 0} ·
+                      Вело: {currentDataset.stats.engineersByVehicle["Велосипед"] ?? 0} ·
+                      Обществ.: {currentDataset.stats.engineersByVehicle["Общественный транспорт"] ?? 0}
+                    </b>
+                  </div>
+                  <div className="generator-stat-pill">
+                    <span>Окна:</span>
+                    <b>{minWindow}–{maxWindow} мин (среднее {meanWindow} мин) · Срочных: {currentDataset.stats.urgentJobsCount}</b>
+                  </div>
+                </div>
+              )}
+
+              <div className="generator-actions">
+                <button type="button" disabled={!fresh} onClick={() => downloadBlob("jobs.csv", jobsToTzCsv(currentJobs))}>
+                  <Download /> Заявки (CSV)
+                </button>
+                <button type="button" disabled={!fresh} onClick={() => downloadBlob("engineers.csv", engineersToTzCsv(currentEngineers))}>
+                  <Download /> Инженеры (CSV)
+                </button>
+                <button type="button" disabled={!fresh || !currentEvents.length} onClick={() => downloadBlob("replan_events.csv", eventsToTzCsv(currentEvents))}>
+                  <Download /> События (CSV)
+                </button>
+                <button type="button" disabled={!fresh || !currentDataset} onClick={() => currentDataset && downloadAllTzCsvs(currentDataset)}>
+                  <Download /> Скачать все 3 CSV
+                </button>
+                <button type="button" disabled={!fresh || !currentDataset} onClick={() => currentDataset && downloadTzJson(currentDataset)}>
+                  <FileJson /> JSON
+                </button>
+              </div>
+
+              <button type="button" className="generator-plan-link" disabled={!fresh} onClick={onPlan}>
+                <Route /> Рассчитать маршруты ({currentJobs.length} заявок)
+              </button>
+            </div>
+          ) : (
+            <div className="generator-empty">
+              <Database />
+              <strong>Данные ещё не сформированы</strong>
+              <p>Нажмите «Сгенерировать», чтобы создать набор для расчёта.</p>
+            </div>
+          )}
+        </article>
+      </div>
+
+      {(currentDataset || generated) && (
+        <article className="panel generator-preview-panel">
+          <div className="panel-header">
+            <div>
+              <h2>Таблицы набора</h2>
+            </div>
+            <div className="generator-tabs">
+              <button
+                type="button"
+                className={previewTab === "jobs" ? "active" : ""}
+                onClick={() => setPreviewTab("jobs")}
+              >
+                1. Заявки ({currentJobs.length})
+              </button>
+              <button
+                type="button"
+                className={previewTab === "engineers" ? "active" : ""}
+                onClick={() => setPreviewTab("engineers")}
+              >
+                2. Инженеры ({currentEngineers.length})
+              </button>
+              <button
+                type="button"
+                className={previewTab === "events" ? "active" : ""}
+                onClick={() => setPreviewTab("events")}
+              >
+                3. События перепланирования ({currentEvents.length})
+              </button>
+            </div>
+          </div>
+
+          <div className="generator-table-wrap">
+            {previewTab === "jobs" && (
+              <table className="generator-preview-table">
+                <thead>
+                  <tr>
+                    <th>ID заявки</th>
+                    <th>Название задачи</th>
+                    <th>Адрес</th>
+                    <th>Координаты</th>
+                    <th>Длительность</th>
+                    <th>Окно начала</th>
+                    <th>Приоритет</th>
+                    <th>Требуемый навык</th>
+                    <th>Требуемое оборудование</th>
+                    <th>Требуемый транспорт</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(showAllRows ? currentJobs : currentJobs.slice(0, 30)).map(job => (
+                    <tr key={job.id}>
+                      <td><b>{job.id}</b></td>
+                      <td>{job.workType ?? job.kind}</td>
+                      <td>{job.address}</td>
+                      <td>{job.coordinates[1].toFixed(5)}, {job.coordinates[0].toFixed(5)}</td>
+                      <td>{job.serviceMinutes} мин</td>
+                      <td>{job.time}</td>
+                      <td>
+                        <span className={`generator-badge ${job.priority >= 10 ? "urgent" : "normal"}`}>
+                          {job.priority >= 10 ? "Срочная" : "Обычная"}
+                        </span>
+                      </td>
+                      <td><span className="generator-badge skill">{job.kind}</span></td>
+                      <td><span className="generator-badge equip">{job.equipment}</span></td>
+                      <td>{job.requiredTransport ? <span className="generator-badge vehicle">{job.requiredTransport}</span> : "Не ограничен"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+
+            {previewTab === "engineers" && (
+              <table className="generator-preview-table">
+                <thead>
+                  <tr>
+                    <th>ID инженера</th>
+                    <th>Имя</th>
+                    <th>Адрес старта</th>
+                    <th>Координаты старта</th>
+                    <th>Смена</th>
+                    <th>Транспорт</th>
+                    <th>Число навыков</th>
+                    <th>Навыки</th>
+                    <th>Оборудование</th>
+                    <th>Уровень</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {currentEngineers.map(engineer => (
+                    <tr key={engineer.id}>
+                      <td><b>{engineer.id}</b></td>
+                      <td>{engineer.name}</td>
+                      <td>{(engineer as any).address ?? "Москва"}</td>
+                      <td>{engineer.start[1].toFixed(5)}, {engineer.start[0].toFixed(5)}</td>
+                      <td>{minutesLabel(engineer.shiftStart)}–{minutesLabel(engineer.shiftEnd)}</td>
+                      <td><span className="generator-badge vehicle">{engineer.transport}</span></td>
+                      <td>{engineer.skills.length}</td>
+                      <td>
+                        {engineer.skills.map(s => (
+                          <span key={s} className="generator-badge skill">{s}</span>
+                        ))}
+                      </td>
+                      <td>
+                        {engineer.equipment.map(eq => (
+                          <span key={eq} className="generator-badge equip">{eq}</span>
+                        ))}
+                      </td>
+                      <td>{(engineer as any).level ?? (engineer.skills.length === 1 ? "новичок" : engineer.skills.length === 2 ? "специалист" : "профи")}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+
+            {previewTab === "events" && (
+              <table className="generator-preview-table">
+                <thead>
+                  <tr>
+                    <th>Тип события</th>
+                    <th>Время события</th>
+                    <th>ID сущности</th>
+                    <th>Название задачи</th>
+                    <th>Адрес</th>
+                    <th>Окно / Длительность</th>
+                    <th>Приоритет</th>
+                    <th>Требуемый навык</th>
+                    <th>Требуемое оборудование</th>
+                    <th>Требуемый транспорт</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {currentEvents.map((ev, index) => {
+                    const j = ev.job;
+                    return (
+                      <tr key={index}>
+                        <td>
+                          <span className={`generator-badge ${ev.type === "срочная заявка" ? "urgent" : "normal"}`}>
+                            {ev.type}
+                          </span>
+                        </td>
+                        <td><b>{ev.time}</b></td>
+                        <td><b>{ev.entityId}</b></td>
+                        <td>{j ? (j.workType ?? j.kind) : "—"}</td>
+                        <td>{j ? j.address : "—"}</td>
+                        <td>{j ? `${j.time} (${j.serviceMinutes} мин)` : "—"}</td>
+                        <td>{j ? <span className="generator-badge urgent">{j.priority >= 10 ? "Срочная" : "Обычная"}</span> : "—"}</td>
+                        <td>{j ? <span className="generator-badge skill">{j.kind}</span> : "—"}</td>
+                        <td>{j ? <span className="generator-badge equip">{j.equipment}</span> : "—"}</td>
+                        <td>{j?.requiredTransport ? <span className="generator-badge vehicle">{j.requiredTransport}</span> : j ? "Не ограничен" : "—"}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
+          </div>
+
+          {previewTab === "jobs" && currentJobs.length > 30 && (
+            <div style={{ marginTop: 10, textAlign: "center" }}>
+              <button
+                type="button"
+                className="plain-button"
+                onClick={() => setShowAllRows(prev => !prev)}
+              >
+                {showAllRows ? "Свернуть до 30 заявок" : `Показать все ${currentJobs.length} заявок`}
+              </button>
+            </div>
+          )}
+        </article>
+      )}
+    </section>
+  );
 }
 
 function ReplanImpactPanel({ changes }: { changes: ReplanChange[] }) {
@@ -364,7 +745,7 @@ function JobDetailsDialog({ job, executionStatus, engineer, plan, baselineEngine
           <label><span>Окно SLA</span><b>{job.time}</b></label>
           <label><span>Работа на точке</span><b>{job.serviceMinutes} мин</b></label>
           <label><span>Поездка</span><b>{job.engineerId ? `${job.estimatedTravelMinutes ?? 0} мин по маршруту` : job.travelReserveMinutes ? `${job.travelReserveMinutes} мин · предварительный резерв` : "После назначения"}</b></label>
-          <label><span>Норматив и источник</span><b>{job.normativeMinutes ? `${job.normativeMinutes} мин · ` : ""}{job.normSource ?? "демонстрационное допущение"}</b></label>
+          <label><span>Норматив времени</span><b>{job.normativeMinutes ? `${job.normativeMinutes} мин` : "30 мин"}</b></label>
           <label><span>Выполнение</span><b>{executionLabels[executionStatus ?? "not_started"]}</b></label>
           <label><span>Навык</span><b>{job.kind}</b></label>
           <label><span>Оборудование</span><b>{job.equipment}</b></label>
@@ -372,16 +753,16 @@ function JobDetailsDialog({ job, executionStatus, engineer, plan, baselineEngine
           <label><span>Источник</span><b>{job.source}</b></label>
           <label><span>Геокодирование</span><b>{job.geocodeQuality === "house" ? "Дом подтверждён" : job.geocodeQuality === "street" ? "Уровень улицы" : "Требует проверки"}</b></label>
         </div>
-        <div className="job-baseline"><b>Baseline по ТЗ · первый допустимый инженер</b><span>{baselineEngineer && baselinePlan ? `${baselineEngineer.name} · ${baselinePlan.stops.findIndex(stop => stop.jobId === job.id) + 1}-я остановка · ${formatDistance(baselinePlan.distanceKm)} за маршрут` : job.baselineUnassignedReason ?? "Без назначения"}</span></div>
+        <div className="job-baseline"><b>Базовое распределение · первый подходящий исполнитель</b><span>{baselineEngineer && baselinePlan ? `${baselineEngineer.name} · ${baselinePlan.stops.findIndex(stop => stop.jobId === job.id) + 1}-я остановка · ${formatDistance(baselinePlan.distanceKm)} за маршрут` : job.baselineUnassignedReason ?? "Без назначения"}</span></div>
         {engineer && plan ? <>
-          <div className="decision-score"><span><Sparkles /></span><div><b>{engineer.name}</b><p>Назначение VRPTW · {engineer.region}</p></div><strong>{plan.stops.findIndex(stop => stop.jobId === job.id) + 1}/{plan.stops.length}</strong></div>
+          <div className="decision-score"><span><Route /></span><div><b>{engineer.name}</b><p>Назначение VRPTW · {engineer.region}</p></div><strong>{plan.stops.findIndex(stop => stop.jobId === job.id) + 1}/{plan.stops.length}</strong></div>
           {explanation && <div className="assignment-explanation">
-            <div className="explanation-summary"><Sparkles /><p><b>Почему выбран этот инженер</b>{explanation.summary}</p></div>
+            <div className="explanation-summary"><p><b>Почему выбран этот инженер</b>{explanation.summary}</p></div>
             <div className="reason-list">{explanation.checks.map((reason, index) => <p key={reason}><i>{index + 1}</i><span>{reason}</span></p>)}</div>
-            <div className="alternative-list"><b>Строгая проверка альтернатив</b><em>Для допустимых кандидатов запускается отдельный OR-Tools с принудительным назначением этой заявки.</em>{explanation.alternatives.length ? explanation.alternatives.map(item => { const check = counterfactuals[item.engineerId]; return <p key={item.engineerId}><span>{item.engineerName}</span><small>Предварительная вставка: {item.reason}</small>{item.feasible && <small className={`counterfactual ${check?.status ?? "loading"}`}>{!check || check.status === "loading" ? "OR-Tools рассчитывает сценарий…" : check.status === "success" ? `${check.summary} Расчёт ${check.runtimeMs?.toFixed(0)} мс.` : `Принудительный сценарий недопустим: ${check.error}`}</small>}</p>; }) : <p><small>Других инженеров в выбранном пуле нет.</small></p>}</div>
+            <div className="alternative-list"><b>Проверка альтернатив</b>{explanation.alternatives.length ? explanation.alternatives.map(item => { const check = counterfactuals[item.engineerId]; return <p key={item.engineerId}><span>{item.engineerName}</span><small>Предварительная вставка: {item.reason}</small>{item.feasible && <small className={`counterfactual ${check?.status ?? "loading"}`}>{!check || check.status === "loading" ? "Расчёт сценария…" : check.status === "success" ? `${check.summary} (${check.runtimeMs?.toFixed(0)} мс)` : `Сценарий недопустим: ${check.error}`}</small>}</p>; }) : <p><small>Других инженеров в выбранном пуле нет.</small></p>}</div>
           </div>}
           <div className="pool-list">
-            <b>Пулл выполнения</b>
+            <b>Порядок выполнения в маршруте</b>
             {plan.stops.map((stop, index) => {
               const item = byId.get(stop.jobId);
               return <p key={stop.jobId} className={stop.jobId === job.id ? "current" : ""}>
@@ -393,7 +774,7 @@ function JobDetailsDialog({ job, executionStatus, engineer, plan, baselineEngine
               </p>;
             })}
           </div>
-        </> : <><div className="dialog-note"><AlertTriangle /><span><b>{job.cancelled ? "Заявка отменена" : executionStatus === "completed" ? "Заявка завершена" : job.unassignedCategory === "no_executor" ? "Нет подходящего исполнителя" : job.unassignedCategory === "cannot_insert" ? "Не удалось встроить в текущий план" : job.unassignedCategory === "alternative_plan" ? "Не вошла в выбранный план · вариант существует" : "План ещё не построен"}</b>{job.cancelled ? "Отменённая заявка исключена из расчёта." : executionStatus === "completed" ? "Завершённая заявка исключена из нового расчёта." : job.unassignedReason ?? "План ещё не построен."}</span></div>{!job.cancelled && executionStatus !== "completed" && forcedCandidate && <div className="alternative-list unassigned-counterfactual"><b>Принудительная проверка с {forcedCandidate.name}</b><em>Отдельный запуск OR-Tools показывает, какие назначения изменятся, если обязательно включить эту заявку.</em><p><small className={`counterfactual ${counterfactuals[forcedCandidate.id]?.status ?? "loading"}`}>{counterfactuals[forcedCandidate.id]?.status === "success" ? counterfactuals[forcedCandidate.id].summary : counterfactuals[forcedCandidate.id]?.status === "error" ? `Расчёт не завершён: ${counterfactuals[forcedCandidate.id].error}` : "OR-Tools рассчитывает сценарий…"}</small></p></div>}</>}
+        </> : <><div className="dialog-note"><AlertTriangle /><span><b>{job.cancelled ? "Заявка отменена" : executionStatus === "completed" ? "Заявка завершена" : job.unassignedCategory === "no_executor" ? "Нет подходящего исполнителя" : job.unassignedCategory === "cannot_insert" ? "Не удалось встроить в текущий план" : job.unassignedCategory === "alternative_plan" ? "Не вошла в выбранный план" : "План ещё не построен"}</b>{job.cancelled ? "Отменённая заявка исключена из расчёта." : executionStatus === "completed" ? "Завершённая заявка исключена из нового расчёта." : job.unassignedReason ?? "План ещё не построен."}</span></div>{!job.cancelled && executionStatus !== "completed" && forcedCandidate && <div className="alternative-list unassigned-counterfactual"><b>Проверка назначения с {forcedCandidate.name}</b><p><small className={`counterfactual ${counterfactuals[forcedCandidate.id]?.status ?? "loading"}`}>{counterfactuals[forcedCandidate.id]?.status === "success" ? counterfactuals[forcedCandidate.id].summary : counterfactuals[forcedCandidate.id]?.status === "error" ? `Расчёт не завершён: ${counterfactuals[forcedCandidate.id].error}` : "Расчёт сценария…"}</small></p></div>}</>}
       </div>}
       <DialogFooter><Button variant="outline" onClick={() => { if (job) onToggleCancelled(job.id); }}>{job?.cancelled ? "Восстановить заявку" : "Отменить заявку"}</Button><Button variant="outline" disabled={!job?.engineerId} onClick={() => { if (job) onShowOnMap(job.id); }}>Показать путь на карте</Button><Button onClick={onClose}>Закрыть</Button></DialogFooter>
     </DialogContent>
@@ -403,6 +784,7 @@ function JobDetailsDialog({ job, executionStatus, engineer, plan, baselineEngine
 export default function Dashboard() {
   const [view, setView] = useState<ViewId>("plan"); const [region, setRegion] = useState<"Все зоны" | Region>("Все зоны"); const [compare, setCompare] = useState(false); const [replanned, setReplanned] = useState(false); const [urgentOpen, setUrgentOpen] = useState(false); const [mobileNavOpen, setMobileNavOpen] = useState(false); const [selectedJobId, setSelectedJobId] = useState<string | null>(null); const [detailsJobId, setDetailsJobId] = useState<string | null>(null); const [selectedEngineerId, setSelectedEngineerId] = useState<string | null>(null); const [selectedEngineerDetailsId, setSelectedEngineerDetailsId] = useState<string | null>(null); const [simTime, setSimTime] = useState(480); const [simPlaying, setSimPlaying] = useState(false); const [playbackMinutesPerSecond, setPlaybackMinutesPerSecond] = useState(1); const [theme, setTheme] = useState<ThemeId>("light"); const [themeOpen, setThemeOpen] = useState(false); const [routingState, setRoutingState] = useState<RoutingState>("idle"); const [extraJobs, setExtraJobs] = useState<Job[]>([]); const [importedJobs, setImportedJobs] = useState<Job[] | null>(null); const [importedEngineers, setImportedEngineers] = useState<Engineer[] | null>(null); const [unavailableEngineerIds, setUnavailableEngineerIds] = useState<string[]>([]); const [cancelledJobIds, setCancelledJobIds] = useState<string[]>([]); const [importStatus, setImportStatus] = useState(""); const [optimizing, setOptimizing] = useState(false); const [formError, setFormError] = useState(""); const [solverError, setSolverError] = useState(""); const [planResult, setPlanResult] = useState<OptimizationResult | null>(null); const [travel, setTravel] = useState<TravelMatrix | undefined>(undefined); const [matrixFallback, setMatrixFallback] = useState(false);
   const [draft, setDraft] = useState<PlanConfig>(defaultConfig); const [applied, setApplied] = useState<PlanConfig | null>(null); const [generated, setGenerated] = useState<GeneratedDataset | null>(null); const [generatedFrom, setGeneratedFrom] = useState<PlanConfig | null>(null);
+  const [generatedTz, setGeneratedTz] = useState<GeneratedTzDataset | null>(null);
   const [editorJobs, setEditorJobs] = useState<Job[]>(sourceJobs); const [editorEngineers, setEditorEngineers] = useState<Engineer[]>(sourceEngineers); const [editorUnavailableIds, setEditorUnavailableIds] = useState<string[]>([]); const [editorDirty, setEditorDirty] = useState(false); const [editorError, setEditorError] = useState("");
   const [urgentForm, setUrgentForm] = useState({ address: "", region: "Юго-восток" as Region, start: "13:00", end: "14:30", kind: "Аварийно-восстановительные работы", equipment: "Рефлектометр", transport: "", urgency: "urgent" as "normal" | "urgent" });
   const [eventTimeText, setEventTimeText] = useState("13:10");
@@ -578,13 +960,44 @@ export default function Dashboard() {
     const engineers = scaleEngineers(baseEngineers, applied.engineers, jobs).filter(engineer => !unavailableEngineerIds.includes(engineer.id));
     void runOptimize(engineers, jobs, applied.speedKmh, undefined, "experiment");
   }, [applied, sourcePlanResult, experimentPlanResult, baseJobs, baseEngineers, extraJobs, cancelledJobIds, unavailableEngineerIds, runOptimize]);
-  const createGenerated = useCallback(() => {
-    const dataset = generateDataset(sourceJobs, sourceEngineers, draft);
-    setGenerated(dataset); setGeneratedFrom({ ...draft });
-    setImportedJobs(dataset.jobs); setImportedEngineers(dataset.engineers);
-    setEditorJobs(dataset.jobs); setEditorEngineers(dataset.engineers); setEditorUnavailableIds([]); setEditorDirty(false); setEditorError("");
-    setExtraJobs([]); setCancelledJobIds([]); setUnavailableEngineerIds([]); setApplied(null); setPlanResult(null); setSourcePlanResult(null); setExperimentPlanResult(null); setWindowExperiment(false); setTravel(undefined); setMatrixFallback(false); setReplanChanges([]); setSelectedJobId(null); setSelectedEngineerId(null); setSolverError("");
-    setImportStatus(`Создано ${dataset.jobs.length} заявок и ${dataset.engineers.length} инженеров. Данные готовы к расчёту.`);
+  const createGenerated = useCallback((opts?: Partial<GenerateTzOptions>) => {
+    const jobsCount = opts?.jobs ?? draft.jobs;
+    const engCount = opts?.engineers ?? draft.engineers;
+    const windowMin = opts?.windowMinutes ?? draft.windowMinutes;
+    const speed = opts?.speedKmh ?? draft.speedKmh;
+    const tzData = generateTzDataset({
+      jobs: jobsCount,
+      engineers: engCount,
+      windowMinutes: windowMin,
+      speedKmh: speed,
+      ...opts,
+    });
+    setGeneratedTz(tzData);
+    setGenerated({ jobs: tzData.jobs, engineers: tzData.engineers, speedKmh: tzData.speedKmh });
+    setDraft(current => ({ ...current, jobs: jobsCount, engineers: engCount, windowMinutes: windowMin, speedKmh: speed }));
+    setGeneratedFrom({ engineers: engCount, jobs: jobsCount, windowMinutes: windowMin, speedKmh: speed });
+    setImportedJobs(tzData.jobs);
+    setImportedEngineers(tzData.engineers);
+    setEditorJobs(tzData.jobs);
+    setEditorEngineers(tzData.engineers);
+    setEditorUnavailableIds([]);
+    setEditorDirty(false);
+    setEditorError("");
+    setExtraJobs([]);
+    setCancelledJobIds([]);
+    setUnavailableEngineerIds([]);
+    setApplied(null);
+    setPlanResult(null);
+    setSourcePlanResult(null);
+    setExperimentPlanResult(null);
+    setWindowExperiment(false);
+    setTravel(undefined);
+    setMatrixFallback(false);
+    setReplanChanges([]);
+    setSelectedJobId(null);
+    setSelectedEngineerId(null);
+    setSolverError("");
+    setImportStatus(`Сгенерирован набор данных: ${tzData.jobs.length} заявок, ${tzData.engineers.length} инженеров, 3 события перепланирования. Набор готов к расчёту.`);
   }, [draft]);
   const addUrgent = useCallback(async () => {
     setFormError("");
@@ -664,37 +1077,35 @@ export default function Dashboard() {
     setEditorJobs(current => current.map(job => job.id === id ? { ...job, cancelled: !job.cancelled } : job));
     setDetailsJobId(null);
   }, [cancelledJobIds, applied, planResult, baseJobs, extraJobs, unavailableEngineerIds, runTemporalEvent, eventTimeText]);
-const titles = { plan: ["План работ", started ? "VRPTW по трём регионам" : "Постройте маршруты для текущего набора заявок"], requests: ["Заявки", "CSV, JSON и срочные работы"], team: ["Инженеры", "Ресурсы, доступность и рассчитанная загрузка"], analytics: ["Аналитика", "Показатели текущего VRPTW-плана"], generator: ["Генератор заявок", "Создание набора для расчёта и экспорта"], editor: ["Редактор данных", "Изменение заявок и инженеров в таблице"], demo: ["Демонстрация алгоритма", "Как жадина и 2-opt ищут маршрут на плоскости"] } as const; const distanceDataReady = baseJobs.every(job => job.geocodeVerified === true) && (applied?.jobs ?? 0) <= baseJobs.length && (applied?.engineers ?? 0) <= baseEngineers.length && extraJobs.every(job => job.geocodeVerified === true) && !matrixFallback; const distanceReady = started && result.comparison.commonAssigned > 0 && result.comparison.distanceDeltaPercent != null && distanceDataReady; const distanceWarning = !started ? "Запустите построение маршрутов для сравнения." : !distanceDataReady ? ((applied?.jobs ?? 0) > baseJobs.length || (applied?.engineers ?? 0) > baseEngineers.length ? "Синтетически добавленные точки не геокодированы. Пробег показан как оценка." : baseJobs.some(job => job.geocodeVerified !== true) ? "Не все адреса импортированного набора геокодированы. Пробег показан как оценка." : extraJobs.some(job => job.geocodeVerified !== true) ? "У срочной заявки не подтверждены координаты. Пробег показан как оценка." : activeEngineers.some(engineer => engineer.transport === "Общественный транспорт") ? "Для общественного транспорта нет матрицы расписания: план использует оценочную скорость и дорожное расстояние. Строгий процент пробега скрыт." : "Часть дорожной матрицы заменена приближённым расстоянием. Пробег показан как оценка.") : result.comparison.reason ?? "Нет сопоставимых назначений для расчёта пробега.";
+  const titles = { plan: ["План работ", ""], generator: ["Генератор", ""], requests: ["Заявки", ""], team: ["Инженеры", ""], analytics: ["Аналитика", ""], editor: ["Редактор данных", ""], demo: ["Демонстрация алгоритма", ""] } as const; const distanceDataReady = baseJobs.every(job => job.geocodeVerified === true) && (applied?.jobs ?? 0) <= baseJobs.length && (applied?.engineers ?? 0) <= baseEngineers.length && extraJobs.every(job => job.geocodeVerified === true) && !matrixFallback; const distanceReady = started && result.comparison.commonAssigned > 0 && result.comparison.distanceDeltaPercent != null && distanceDataReady; const distanceWarning = !started ? "" : !distanceDataReady ? ((applied?.jobs ?? 0) > baseJobs.length || (applied?.engineers ?? 0) > baseEngineers.length ? "Синтетические точки не геокодированы." : baseJobs.some(job => job.geocodeVerified !== true) ? "Часть адресов не геокодирована." : extraJobs.some(job => job.geocodeVerified !== true) ? "Координаты новой заявки требуют подтверждения." : activeEngineers.some(engineer => engineer.transport === "Общественный транспорт") ? "Для общественного транспорта расписание рассчитывается оценочно." : "Использовано приближённое расстояние.") : "";
   const routingLabel = optimizing || routingState === "loading" ? "Строим маршруты" : matrixFallback ? "Матрица оценочная" : routingState === "ready" ? "Дорожный граф подключён" : routingState === "idle" ? "Ожидание запуска" : "Часть дорог недоступна";
-  const metricCards = <section className="metric-grid"><article><div className="metric-head"><span className="metric-icon purple"><Wrench /></span><small>Назначено заявок</small><Badge className="metric-badge">{started ? `${result.metrics.unassigned} без маршрута` : "не запущено"}</Badge></div><strong>{result.metrics.assigned}<em>/ {result.metrics.total}</em></strong><p>Покрытие {result.metrics.total ? (result.metrics.assigned / result.metrics.total * 100).toFixed(1).replace(".", ",") : "0"}% · baseline {result.baseline.assigned}</p></article><article><div className="metric-head"><span className="metric-icon teal"><Route /></span><small>Пробег VRPTW</small><Badge className="metric-badge good">{distanceReady && result.comparison.distanceDeltaPercent != null ? `${result.comparison.distanceDeltaPercent < 0 ? "−" : "+"}${Math.abs(result.comparison.distanceDeltaPercent).toFixed(1).replace(".", ",")}%` : "оценка"}</Badge></div><strong>{result.metrics.distanceKm.toFixed(1).replace(".", ",")}<em> км</em></strong><p>baseline: {formatDistance(result.baseline.distanceKm)}{distanceReady ? "" : " · без сравнения %"}</p></article><article><div className="metric-head"><span className="metric-icon orange"><UsersRound /></span><small>Активные инженеры</small><Badge className="metric-badge">{started ? "baseline → VRPTW" : "ожидание"}</Badge></div><strong>{result.baseline.activeEngineers}<em> → {result.metrics.activeEngineers}</em></strong><p>из {availableEngineers.length} доступных · {unavailableEngineerIds.length} вне смены</p></article><article><div className="metric-head"><span className="metric-icon blue"><Database /></span><small>Геокодирование</small><Badge className="metric-badge">{csvMeta.regions.length} зоны</Badge></div><strong>{baseJobs.filter(job => job.geocodeVerified).length}<em>/ {baseJobs.length}</em></strong><p>дом: {baseJobs.filter(job => job.geocodeQuality === "house").length} · улица: {baseJobs.filter(job => job.geocodeQuality === "street").length}</p></article></section>;
-  return <main className="app-shell">{mobileNavOpen && <button className="mobile-nav-backdrop" aria-label="Закрыть меню" onClick={() => setMobileNavOpen(false)} />}<aside className={`sidebar${mobileNavOpen ? " mobile-open" : ""}`}><div className="sidebar-brand-row"><Logo /><button className="mobile-nav-close" aria-label="Закрыть меню" onClick={() => setMobileNavOpen(false)}><X /></button></div><nav aria-label="Основная навигация"><button className={`nav-item${view === "plan" ? " active" : ""}`} onClick={() => navigate("plan")}><Route /><span>Планирование</span></button><button className={`nav-item${view === "requests" ? " active" : ""}`} onClick={() => navigate("requests")}><Wrench /><span>Заявки</span><b>{plannedJobs.length}</b></button><button className={`nav-item${view === "team" ? " active" : ""}`} onClick={() => navigate("team")}><UsersRound /><span>Инженеры</span></button><button className={`nav-item${view === "analytics" ? " active" : ""}`} onClick={() => navigate("analytics")}><BarChart3 /><span>Аналитика</span></button><button className={`nav-item${view === "generator" ? " active" : ""}`} onClick={() => navigate("generator")}><Sparkles /><span>Генератор заявок</span></button><button className={`nav-item${view === "editor" ? " active" : ""}`} onClick={() => navigate("editor")}><Table2 /><span>Редактор данных</span>{editorDirty && <b>●</b>}</button><button className={`nav-item${view === "demo" ? " active" : ""}`} onClick={() => navigate("demo")}><Waypoints /><span>Демонстрация</span></button></nav><div className="sidebar-bottom"><button className="nav-item theme-nav" onClick={() => setThemeOpen(open => !open)}><SunMoon /><span>Тема</span></button><div className="profile"><span>ДК</span><div><strong>Диспетчер</strong><small>В сети</small></div><MoreHorizontal size={17} /></div></div></aside><section className="workspace" id="plan"><header className="topbar"><button className="mobile-menu" aria-label="Открыть меню" aria-expanded={mobileNavOpen} onClick={() => setMobileNavOpen(true)}><Menu /></button><div><h1>{titles[view][0]}</h1><p>{titles[view][1]}</p></div><div className="top-actions"><button className="theme-button" onClick={() => setThemeOpen(open => !open)}><Contrast /><span>{themes.find(item => item.id === theme)?.name}</span><ChevronDown /></button><Button className="urgent-button" onClick={() => setUrgentOpen(true)}><Zap />Срочная заявка</Button></div></header>
+  const metricCards = <section className="metric-grid"><article><div className="metric-head"><span className="metric-icon purple"><Wrench /></span><small>Назначено заявок</small><Badge className="metric-badge">{started ? `${result.metrics.unassigned} без маршрута` : "ожидание"}</Badge></div><strong>{result.metrics.assigned}<em>/ {result.metrics.total}</em></strong><p>Покрытие {result.metrics.total ? (result.metrics.assigned / result.metrics.total * 100).toFixed(1).replace(".", ",") : "0"}% · базовый {result.baseline.assigned}</p></article><article><div className="metric-head"><span className="metric-icon teal"><Route /></span><small>Пробег</small><Badge className="metric-badge good">{distanceReady && result.comparison.distanceDeltaPercent != null ? `${result.comparison.distanceDeltaPercent < 0 ? "−" : "+"}${Math.abs(result.comparison.distanceDeltaPercent).toFixed(1).replace(".", ",")}%` : "расчёт"}</Badge></div><strong>{result.metrics.distanceKm.toFixed(1).replace(".", ",")}<em> км</em></strong><p>базовый: {formatDistance(result.baseline.distanceKm)}</p></article><article><div className="metric-head"><span className="metric-icon orange"><UsersRound /></span><small>Активные инженеры</small><Badge className="metric-badge">{started ? "активно" : "ожидание"}</Badge></div><strong>{result.baseline.activeEngineers}<em> → {result.metrics.activeEngineers}</em></strong><p>из {availableEngineers.length} доступных · {unavailableEngineerIds.length} вне смены</p></article><article><div className="metric-head"><span className="metric-icon blue"><Database /></span><small>Геокодирование</small><Badge className="metric-badge">{csvMeta.regions.length} зоны</Badge></div><strong>{baseJobs.filter(job => job.geocodeVerified).length}<em>/ {baseJobs.length}</em></strong><p>дом: {baseJobs.filter(job => job.geocodeQuality === "house").length} · улица: {baseJobs.filter(job => job.geocodeQuality === "street").length}</p></article></section>;
+  return <main className="app-shell">{mobileNavOpen && <button className="mobile-nav-backdrop" aria-label="Закрыть меню" onClick={() => setMobileNavOpen(false)} />}<aside className={`sidebar${mobileNavOpen ? " mobile-open" : ""}`}><div className="sidebar-brand-row"><Logo /><button className="mobile-nav-close" aria-label="Закрыть меню" onClick={() => setMobileNavOpen(false)}><X /></button></div><nav aria-label="Основная навигация"><button className={`nav-item${view === "plan" ? " active" : ""}`} onClick={() => navigate("plan")}><Route /><span>Планирование</span></button><button className={`nav-item${view === "generator" ? " active" : ""}`} onClick={() => navigate("generator")}><Sparkles /><span>Генератор</span></button><button className={`nav-item${view === "requests" ? " active" : ""}`} onClick={() => navigate("requests")}><Wrench /><span>Заявки</span><b>{plannedJobs.length}</b></button><button className={`nav-item${view === "team" ? " active" : ""}`} onClick={() => navigate("team")}><UsersRound /><span>Инженеры</span></button><button className={`nav-item${view === "analytics" ? " active" : ""}`} onClick={() => navigate("analytics")}><BarChart3 /><span>Аналитика</span></button><button className={`nav-item${view === "editor" ? " active" : ""}`} onClick={() => navigate("editor")}><Table2 /><span>Редактор данных</span>{editorDirty && <b>●</b>}</button><button className={`nav-item${view === "demo" ? " active" : ""}`} onClick={() => navigate("demo")}><Waypoints /><span>Демонстрация</span></button></nav><div className="sidebar-bottom"><button className="nav-item theme-nav" onClick={() => setThemeOpen(open => !open)}><SunMoon /><span>Тема</span></button><div className="profile"><span>ДК</span><div><strong>Диспетчер</strong><small>В сети</small></div><MoreHorizontal size={17} /></div></div></aside><section className="workspace" id="plan"><header className="topbar"><button className="mobile-menu" aria-label="Открыть меню" aria-expanded={mobileNavOpen} onClick={() => setMobileNavOpen(true)}><Menu /></button><div><h1>{titles[view][0]}</h1>{titles[view][1] ? <p>{titles[view][1]}</p> : null}</div><div className="top-actions"><button className="theme-button" onClick={() => setThemeOpen(open => !open)}><Contrast /><span>{themes.find(item => item.id === theme)?.name}</span><ChevronDown /></button></div></header>
     {themeOpen && <div className="theme-menu" role="menu">{themes.map(item => <button key={item.id} className={theme === item.id ? "active" : ""} onClick={() => { setTheme(item.id); setThemeOpen(false); }}><span className="theme-swatches">{item.colors.map(color => <i key={color} style={{ background: color }} />)}</span><b>{item.name}</b>{theme === item.id && <Check />}</button>)}</div>}
-    {view === "plan" && <><div className="filter-row"><div className="region-select">{(["Все зоны", "Восток", "Юго-восток", "Югоцентр"] as const).map(item => <button key={item} className={region === item ? "selected" : ""} onClick={() => { setRegion(item); setSelectedEngineerId(null); setSelectedJobId(null); }}>{item}</button>)}</div><div className="plan-state"><span className={routingState === "ready" ? "state-dot" : routingState === "loading" ? "state-dot changed" : routingState === "idle" ? "state-dot idle" : "state-dot risk-dot"} />{routingLabel}{started ? ` · ${solverLabels[solverEngine]}` : ""}</div><button className="plan-run-button" disabled={optimizing || routingState === "loading"} onClick={startPlanning}><Play />{optimizing ? "Считаем…" : routingState === "loading" ? "Строим дороги…" : started ? "Пересчитать маршруты" : "Построить маршруты"}</button>{started && <ExportButtons result={result} engineers={activeEngineers} solver={solverEngine} speedKmh={applied?.speedKmh ?? draft.speedKmh} />}</div>
-      <div className="window-scenario-control"><label><input type="checkbox" checked={windowExperiment} disabled={!sourcePlanResult || optimizing} onChange={event => toggleWindowExperiment(event.target.checked)} /><span>Эксперимент с окнами</span></label><small>{windowExperiment ? `Эксперимент: среднее окно ${applied?.windowMinutes ?? draft.windowMinutes} мин; исходные CSV не изменены.` : "Основной план: исходные окна CSV без расширения."}</small><label className="event-time-control"><span>Время события</span><input type="time" value={eventTimeText} onChange={event => setEventTimeText(event.target.value)} /><small>Для новой заявки, отмены и недоступности инженера. Прошедшие работы закрепляются.</small></label></div>
-      {windowExperiment && sourcePlanResult && experimentPlanResult && <div className="window-experiment-comparison"><b>Отдельное сравнение сценариев</b><span>Исходные окна: {sourcePlanResult.metrics.assigned}/{sourcePlanResult.metrics.total} назначено, {sourcePlanResult.metrics.activeEngineers} инженеров.</span><span>Эксперимент: {experimentPlanResult.metrics.assigned}/{experimentPlanResult.metrics.total} назначено, {experimentPlanResult.metrics.activeEngineers} инженеров.</span><small>Изменённые окна относятся только к эксперименту; это не улучшение основного плана.</small></div>}
+    {view === "plan" && <><div className="filter-row"><div className="region-select">{(["Все зоны", "Восток", "Юго-восток", "Югоцентр"] as const).map(item => <button key={item} className={region === item ? "selected" : ""} onClick={() => { setRegion(item); setSelectedEngineerId(null); setSelectedJobId(null); }}>{item}</button>)}</div><div className="plan-state"><span className={routingState === "ready" ? "state-dot" : routingState === "loading" ? "state-dot changed" : routingState === "idle" ? "state-dot idle" : "state-dot risk-dot"} />{routingLabel}{started ? ` · ${solverLabels[solverEngine]}` : ""}</div><button className="plan-run-button" disabled={optimizing || routingState === "loading"} onClick={startPlanning}><Play />{optimizing ? "Считаем…" : routingState === "loading" ? "Строим дороги…" : started ? "Пересчитать маршруты" : "Построить маршруты"}</button><button className="plain-button" style={{ border: "1px solid var(--border)", padding: "0 10px", borderRadius: "8px", height: "38px" }} onClick={() => setUrgentOpen(true)}><Zap size={14} /> Новая заявка</button>{started && <ExportButtons result={result} engineers={activeEngineers} solver={solverEngine} speedKmh={applied?.speedKmh ?? draft.speedKmh} />}</div>
       {solverError && <div className="impact-banner error-banner"><span><AlertTriangle /></span><div><strong>Расчёт OR-Tools не завершён</strong><p>{solverError}. Эвристический fallback намеренно не используется.</p></div><button onClick={() => setSolverError("")}>Скрыть</button></div>}
       {replanned && started && !solverError && <div className="impact-banner"><span><Sparkles /></span><div><strong>{lastCalculationMethod === "no_change" ? "Отмена без изменения маршрутов" : lastCalculationMethod === "insert" ? "Обычная заявка проверена для вставки в свободный интервал" : `OR-Tools VRPTW рассчитан за ${result.runtimeMs} мс`}</strong><p>{lastCalculationMethod === "no_change" ? "Отменённая заявка не была назначена; повторная оптимизация не потребовалась." : lastCalculationMethod === "insert" ? "Прошедшие и согласованные работы не перестраивались; серверный solver для этой вставки не запускался." : `Назначено ${result.metrics.assigned} из ${result.metrics.total}; движок подтверждён ответом сервера.`}</p></div><button onClick={() => setReplanned(false)}>Скрыть уведомление</button></div>}
       <ReplanImpactPanel changes={replanChanges} />
       <section className="content-grid assignment-layout">
-        <article className="panel map-panel"><div className="panel-header"><div><h2>Маршруты</h2><p>{visibleEngineers.length} инженеров · {visibleJobs.length} заявок · {region}{simulationOn ? ` · ${minutesLabel(simTime)}` : ""}</p></div><div className="legend"><span><i className="legend-solid" />VRPTW</span><span><i className="legend-dash" />Baseline</span><button className={compare ? "active" : ""} disabled={!started} onClick={() => setCompare(value => !value)}><Layers3 />{compare ? "Скрыть сравнение" : "Сравнить"}</button></div></div><div className="map-stage"><MapCanvas visibleJobs={visibleJobs} baselineJobs={baselineJobs} engineers={activeEngineers} selectedEngineerId={selectedEngineerId} selectedJobId={selectedJobId} simTime={simulationOn ? simTime : null} simPlaying={simPlaying} simSpeed={playbackMinutesPerSecond} carSpeedKmh={applied?.speedKmh ?? draft.speedKmh} simEnd={simRange.end} onSimTime={setSimTime} onSimPlaying={setSimPlaying} compare={compare} routingEnabled={started && Boolean(planResult)} routes={result.routes} baselineRoutes={visibleBaselineRoutes} onSelectEngineer={selectEngineer} onSelectJob={selectJob} onInspectJob={inspectJob} onRoutingState={updateRoutingState} />{simulationOn && <TimeDrum start={simRange.start} end={simRange.end} time={simTime} playing={simPlaying} speed={playbackMinutesPerSecond} onTime={setSimTime} onPlaying={setSimPlaying} onSpeed={setPlaybackMinutesPerSecond} disabled={optimizing} />}</div></article>
-        <article className="panel routes-panel"><div className="panel-header"><div><h2>Назначения по заявкам</h2><p>{started ? "Заявка и её инженер — нажмите для подробностей" : "Постройте маршруты для просмотра назначений"}</p></div></div>{!started && <div className="route-empty">Для другого объёма работ откройте «Генератор заявок».</div>}{started && <AssignmentBoard jobs={visibleJobs} engineers={activeEngineers} routes={result.routes} selectedJobId={selectedJobId} selectedEngineerId={selectedEngineerId} loading={optimizing} onSelectJob={selectJob} onSelectEngineer={focusEngineer} onShowAll={() => { setRegion("Все зоны"); setSelectedEngineerId(null); setSelectedJobId(null); }} />}</article>
+        <article className="panel map-panel"><div className="panel-header"><div><h2>Карта маршрутов</h2><p>{visibleEngineers.length} инж. · {visibleJobs.length} заявок · {region}{simulationOn ? ` · ${minutesLabel(simTime)}` : ""}</p></div><div className="legend"><span><i className="legend-solid" />Маршруты</span><span><i className="legend-dash" />Базовый</span><button className={compare ? "active" : ""} disabled={!started} onClick={() => setCompare(value => !value)}><Layers3 />{compare ? "Скрыть сравнение" : "Сравнить"}</button></div></div><div className="map-stage"><MapCanvas visibleJobs={visibleJobs} baselineJobs={baselineJobs} engineers={activeEngineers} selectedEngineerId={selectedEngineerId} selectedJobId={selectedJobId} simTime={simulationOn ? simTime : null} simPlaying={simPlaying} simSpeed={playbackMinutesPerSecond} carSpeedKmh={applied?.speedKmh ?? draft.speedKmh} simEnd={simRange.end} onSimTime={setSimTime} onSimPlaying={setSimPlaying} compare={compare} routingEnabled={started && Boolean(planResult)} routes={result.routes} baselineRoutes={visibleBaselineRoutes} onSelectEngineer={selectEngineer} onSelectJob={selectJob} onInspectJob={inspectJob} onRoutingState={updateRoutingState} />{simulationOn && <TimeDrum start={simRange.start} end={simRange.end} time={simTime} playing={simPlaying} speed={playbackMinutesPerSecond} onTime={setSimTime} onPlaying={setSimPlaying} onSpeed={setPlaybackMinutesPerSecond} disabled={optimizing} />}</div></article>
+        <article className="panel routes-panel"><div className="panel-header"><div><h2>Назначения</h2></div></div>{!started && <div className="route-empty">Маршруты пока не построены.</div>}{started && <AssignmentBoard jobs={visibleJobs} engineers={activeEngineers} routes={result.routes} selectedJobId={selectedJobId} selectedEngineerId={selectedEngineerId} loading={optimizing} onSelectJob={selectJob} onSelectEngineer={focusEngineer} onShowAll={() => { setRegion("Все зоны"); setSelectedEngineerId(null); setSelectedJobId(null); }} />}</article>
       </section>
-      <section className="panel queue-panel"><div className="panel-header"><div><h2>Ближайшие работы</h2><p>{visibleJobs.length} заявок из текущего плана</p></div><button className="plain-button" onClick={() => setUrgentOpen(true)}><Plus />Добавить заявку</button></div><JobTable jobs={plannedJobs.filter(job => !job.cancelled && (region === "Все зоны" || job.region === region))} engineers={activeEngineers} onOpen={selectJob} limit={12} /></section></>}
+      <section className="panel queue-panel"><div className="panel-header"><div><h2>Ближайшие заявки</h2></div></div><JobTable jobs={plannedJobs.filter(job => !job.cancelled && (region === "Все зоны" || job.region === region))} engineers={activeEngineers} onOpen={selectJob} limit={12} /></section></>}
     {view === "requests" && <RequestsView jobs={plannedJobs} engineers={activeEngineers} onOpen={selectJob} onAdd={() => setUrgentOpen(true)} onImport={file => void handleImport(file)} importStatus={importStatus} />}
     {view === "team" && <EngineersView engineers={activeEngineers} jobs={plannedJobs} result={result} unavailableIds={unavailableEngineerIds} onOpenDetails={setSelectedEngineerDetailsId} onOpenRoute={openEngineerOnMap} />}
     {view === "analytics" && <AnalyticsView result={result} engineers={activeEngineers} distanceReady={distanceReady} distanceWarning={distanceWarning} solver={solverEngine} speedKmh={applied?.speedKmh ?? draft.speedKmh} metrics={metricCards} travel={travel} />}
-    {view === "generator" && <GeneratorView draft={draft} setDraft={setDraft} generated={generated} generatedFrom={generatedFrom} onGenerate={createGenerated} onPlan={() => navigate("plan")} onDemo={() => { void handleImport(new File([JSON.stringify(demoScenario)], "demo-scenario.json", { type: "application/json" })).then(() => navigate("plan")); }} />}
+    {view === "generator" && <GeneratorView draft={draft} setDraft={setDraft} generated={generated} generatedFrom={generatedFrom} generatedTz={generatedTz} onGenerate={createGenerated} onPlan={() => navigate("plan")} />}
     {view === "editor" && <DataEditor jobs={editorJobs} engineers={editorEngineers} carSpeedKmh={applied?.speedKmh ?? draft.speedKmh} simTime={simulationOn ? simTime : null} stopsByJob={stopByJob} unavailableIds={editorUnavailableIds} dirty={editorDirty} optimizing={optimizing} error={editorError || solverError} onJobs={jobs => { setEditorJobs(jobs); setEditorDirty(true); setEditorError(""); }} onEngineers={engineers => { setEditorEngineers(engineers); setEditorDirty(true); setEditorError(""); }} onUnavailable={ids => { setEditorUnavailableIds(ids); setEditorDirty(true); }} onApply={applyEditedData} onReset={() => { setEditorJobs(activeJobs); setEditorEngineers(activeEngineers); setEditorUnavailableIds(unavailableEngineerIds); setEditorDirty(false); setEditorError(""); }} />}
     {view === "demo" && <AlgorithmDemoView />}</section>
-  <Dialog open={urgentOpen} onOpenChange={setUrgentOpen}><DialogContent className="urgent-dialog"><DialogHeader><DialogTitle>Новая заявка</DialogTitle><DialogDescription>Событие в {eventTimeText}: выполненные и начатые работы останутся на своих местах.</DialogDescription></DialogHeader><div className="urgent-form">
+  <Dialog open={urgentOpen} onOpenChange={setUrgentOpen}><DialogContent className="urgent-dialog"><DialogHeader><DialogTitle>Новая заявка</DialogTitle></DialogHeader><div className="urgent-form">
     <label className="wide"><span>Адрес</span><Input value={urgentForm.address} onChange={event => setUrgentForm(value => ({ ...value, address: event.target.value }))} placeholder="Москва, ул. Люблинская, 72" /></label>
     <label><span>Регион</span><select value={urgentForm.region} onChange={event => setUrgentForm(value => ({ ...value, region: event.target.value as Region }))}><option>Восток</option><option>Юго-восток</option><option>Югоцентр</option></select></label>
-    <label><span>Навык из справочника</span><select value={urgentForm.kind} onChange={event => setUrgentForm(value => ({ ...value, kind: event.target.value }))}><option>Локальные работы</option><option>Подключение и модернизация</option><option>Аварийно-восстановительные работы</option></select></label>
+    <label><span>Навык</span><select value={urgentForm.kind} onChange={event => setUrgentForm(value => ({ ...value, kind: event.target.value }))}><option>Локальные работы</option><option>Подключение и модернизация</option><option>Аварийно-восстановительные работы</option></select></label>
     <label><span>Начало окна</span><Input type="time" value={urgentForm.start} onChange={event => setUrgentForm(value => ({ ...value, start: event.target.value }))} /></label><label><span>Окончание окна</span><Input type="time" value={urgentForm.end} onChange={event => setUrgentForm(value => ({ ...value, end: event.target.value }))} /></label>
     <label><span>Оборудование</span><select value={urgentForm.equipment} onChange={event => setUrgentForm(value => ({ ...value, equipment: event.target.value }))}><option>Рефлектометр</option><option>Комплект GPON</option><option>ONT</option><option>Диагностический комплект</option></select></label>
     <label><span>Требуемый транспорт</span><select value={urgentForm.transport} onChange={event => setUrgentForm(value => ({ ...value, transport: event.target.value }))}><option value="">Не ограничен</option><option>Автомобиль</option><option>Общественный транспорт</option><option>Велосипед</option><option>Пешком</option></select></label>
     <label><span>Срочность</span><select value={urgentForm.urgency} onChange={event => setUrgentForm(value => ({ ...value, urgency: event.target.value as "normal" | "urgent" }))}><option value="urgent">Срочная</option><option value="normal">Обычная</option></select></label>
-  </div>{formError && <p className="form-error">{formError}</p>}<div className="dialog-note"><Sparkles /><span><b>Что учтёт оптимизатор</b>Навыки, оборудование, транспорт, смену, приоритет и временное окно.</span></div><DialogFooter><Button variant="outline" onClick={() => setUrgentOpen(false)}>Отмена</Button><Button onClick={() => void addUrgent()}><Zap />{started ? "Добавить и пересчитать" : "Добавить заявку"}</Button></DialogFooter></DialogContent></Dialog>
+  </div>{formError && <p className="form-error">{formError}</p>}<DialogFooter><Button variant="outline" onClick={() => setUrgentOpen(false)}>Отмена</Button><Button onClick={() => void addUrgent()}><Zap />{started ? "Добавить и пересчитать" : "Добавить заявку"}</Button></DialogFooter></DialogContent></Dialog>
 <EngineerDetailsDialog engineer={detailsEngineer} route={detailsEngineer ? routeByEngineer.get(detailsEngineer.id) : undefined} unavailable={Boolean(detailsEngineer && unavailableEngineerIds.includes(detailsEngineer.id))} onClose={() => setSelectedEngineerDetailsId(null)} onOpenRoute={openEngineerOnMap} onToggleAvailability={toggleEngineerAvailability} />
     <JobDetailsDialog job={detailsJobRaw} executionStatus={detailsJob?.executionStatus} engineer={selectedEngineer} plan={detailsJob?.engineerId ? routeByEngineer.get(detailsJob.engineerId) : undefined} baselineEngineer={activeEngineers.find(item => item.id === detailsJob?.baselineEngineerId)} baselinePlan={result.baselineRoutes.find(route => route.engineerId === detailsJob?.baselineEngineerId)} jobs={result.jobs} engineers={availableEngineers} routes={result.routes} result={result} travel={travel} speedKmh={applied?.speedKmh ?? draft.speedKmh} onClose={() => setDetailsJobId(null)} onShowOnMap={id => { const job = result.jobs.find(item => item.id === id); if (job) setRegion(job.region); setSelectedJobId(id); setSelectedEngineerId(job?.engineerId ?? null); setDetailsJobId(null); setView("plan"); }} onToggleCancelled={toggleJobCancelled} /></main>;
 }

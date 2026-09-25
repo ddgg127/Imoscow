@@ -11,6 +11,21 @@ export type TemporalPreparation = {
   pendingOrders: Array<{ engineerId: string; jobIds: string[] }>;
 };
 
+/**
+ * Событие, которого не было во входном плане. Время берётся из уже
+ * согласованных остановок, а не из заранее известного списка.
+ */
+export function unforeseenEvent(plan: OptimizationResult, engineers: Engineer[], jobs: Job[]): DispatchEvent {
+  const starts = plan.routes.flatMap(route => route.stops.map(stop => stop.start)).sort((a, b) => a - b);
+  const time = starts.length ? starts[Math.min(starts.length - 1, Math.floor(starts.length / 3))] : 8 * 60 + 30;
+  const future = plan.routes.flatMap(route => route.stops.filter(stop => stop.start >= time).map(stop => ({ engineerId: route.engineerId, stop })));
+  const ordinary = future.find(item => jobs.find(job => job.id === item.stop.jobId && job.priority < 10 && !job.cancelled));
+  if (ordinary) return { type: "cancel_job", time, id: ordinary.stop.jobId };
+  const busy = future.find(item => engineers.some(engineer => engineer.id === item.engineerId));
+  if (busy) return { type: "engineer_unavailable", time, id: busy.engineerId };
+  return { type: "recalculate", time, id: "replan" };
+}
+
 /** Cancelling work absent from both calculated plans must not reshuffle any route. */
 export function cancelUnassignedJob(previous: OptimizationResult, jobId: string): OptimizationResult {
   const old = previous.jobs.find(job => job.id === jobId);
