@@ -19,7 +19,7 @@ function validPayload(value: unknown): value is SolverPayload {
 
 function solverBase() {
   const configured = String(process.env.SOLVER_URL ?? "").trim();
-  return (configured || (process.env.NODE_ENV === "development" ? "http://127.0.0.1:8000" : "")).replace(/\/$/, "");
+  return (configured || (process.env.NODE_ENV === "development" ? "http://127.0.0.1:8008" : "")).replace(/\/$/, "");
 }
 
 async function callOrTools(payload: SolverPayload): Promise<SolverResponse> {

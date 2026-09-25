@@ -25,7 +25,9 @@ function value(row: Record<string, unknown>, aliases: string[]) {
 }
 
 function numberValue(row: Record<string, unknown>, aliases: string[]) {
-  const parsed = Number(value(row, aliases).replace(",", "."));
+  const raw = value(row, aliases);
+  if (!raw) return null;
+  const parsed = Number(raw.replace(",", "."));
   return Number.isFinite(parsed) ? parsed : null;
 }
 
@@ -42,12 +44,13 @@ export function canonicalSkill(raw: string) {
   return skills[0];
 }
 
-function canonicalTransport(raw: string) {
+function canonicalTransport(raw: string, fallback = "") {
+  if (!raw.trim()) return fallback;
   if (/пеш/i.test(raw)) return "Пешком";
   if (/вело/i.test(raw)) return "Велосипед";
   if (/обществен|метро|автобус/i.test(raw)) return "Общественный транспорт";
   if (/авто/i.test(raw)) return "Автомобиль";
-  return transports.includes(raw) ? raw : "Автомобиль";
+  return transports.includes(raw) ? raw : raw.trim();
 }
 
 function plannerSkills(raw: string, level = "") {
@@ -68,7 +71,7 @@ function equipmentFor(raw: string, skill: string) {
 function serviceFor(raw: string, skill: string) {
   const explicit = Number(raw);
   if (Number.isFinite(explicit) && explicit >= 5 && explicit <= 480) return Math.round(explicit);
-  if (skill === skills[2]) return 60;
+  if (skill === skills[2]) return 80;
   if (skill === skills[1]) return 45;
   return 30;
 }
@@ -154,16 +157,25 @@ function rowsToJobs(rows: Record<string, unknown>[], centers: Record<Region, Coo
     const resolvedRegion = value(row, ["region", "регион", "зона"]) ? region : verified ? regionFromPoint(point, centers) : region;
     const transport = canonicalTransport(value(row, ["transport", "транспорт", "requiredtransport", "vehicle", "требуемый транспорт"]));
     const allowedRaw = row.allowedTransports;
-    const allowed = Array.isArray(allowedRaw) ? allowedRaw.map(String) : value(row, ["allowedTransports", "allowed_transports"]).split("|").filter(Boolean);
+    const allowed = (Array.isArray(allowedRaw) ? allowedRaw.map(String) : value(row, ["allowedTransports", "allowed_transports"]).split(/[|,]/)).map(item => canonicalTransport(item)).filter(Boolean);
     const equipment = equipmentFor(value(row, ["equipment", "оборудование"]), kind);
     const priority = priorityFor(value(row, ["priority", "приоритет"]), kind);
+    const explicitService = value(row, ["serviceminutes", "service_minutes", "время работы", "длительность", "durationmin"]);
+    const explicitNorm = numberValue(row, ["normativeMinutes", "normative_minutes", "норматив"]);
+    const reserve = numberValue(row, ["travelReserveMinutes", "travel_reserve_minutes"]) ?? (kind === skills[2] ? 20 : 0);
+    const serviceMinutes = explicitService ? serviceFor(explicitService, kind) : explicitNorm != null ? Math.max(5, Math.round(explicitNorm - reserve)) : serviceFor("", kind);
+    const workClass = value(row, ["workClass", "work_class"]) || (kind === skills[2] ? "emergency" : kind === skills[1] ? "connection" : "repair");
+    const urgency = /^(urgent|срочн)/i.test(value(row, ["urgency", "срочность", "приоритет срочности"])) ? "urgent" : "normal";
     return {
       id, time: `${String(Math.floor(start / 60)).padStart(2, "0")}:${String(start % 60).padStart(2, "0")}–${String(Math.floor(end / 60)).padStart(2, "0")}:${String(end % 60).padStart(2, "0")}`,
       windowStart: start, windowEnd: end, area: value(row, ["area", "район"]) || resolvedRegion, address,
       kind, workType: rawWork, tone: ["violet", "blue", "amber", "green"][index % 4], region: resolvedRegion,
       engineerId: null, baselineEngineerId: null, coordinates: point, geocodeVerified: verified,
-      geocodeQuality: verified ? (value(row, ["geocodeQuality"]) === "street" ? "street" : "house") : "fallback", risk: false, equipment, requiredTransport: transport, allowedTransports: allowed.length ? allowed : kind === skills[2] ? [...new Set([transport, "Автомобиль"])] : transports, priority,
-      serviceMinutes: serviceFor(value(row, ["serviceminutes", "service_minutes", "норматив", "длительность", "durationmin"]), kind),
+      geocodeQuality: verified ? (value(row, ["geocodeQuality"]) === "street" ? "street" : "house") : "fallback", risk: false, equipment, requiredTransport: transport, allowedTransports: allowed.length ? allowed : undefined, priority,
+      serviceMinutes, normativeMinutes: explicitNorm ?? (kind === skills[2] ? 100 : undefined), travelReserveMinutes: reserve,
+      estimatedTravelMinutes: numberValue(row, ["estimatedTravelMinutes", "estimated_travel_minutes"]) ?? reserve,
+      normSource: explicitService || explicitNorm != null ? "введено пользователем" : kind === skills[2] ? "экспертный норматив" : "демонстрационное допущение",
+      urgency, workClass: ["emergency", "connection", "repair"].includes(workClass) ? workClass as Job["workClass"] : "repair",
       source, status: value(row, ["status", "статус"]) || "Новая", executionStatus: (["not_started", "in_progress", "completed"].includes(value(row, ["executionStatus", "execution_status", "выполнение"])) ? value(row, ["executionStatus", "execution_status", "выполнение"]) : "not_started") as Job["executionStatus"], cancelled: /^(true|1|да)$/i.test(value(row, ["cancelled", "отменена"])),
     };
   });
@@ -191,7 +203,7 @@ function rowsToEngineers(rows: Record<string, unknown>[], centers: Record<Region
     if (lon == null || lat == null || lon < 30 || lon > 50 || lat < 50 || lat > 60 || !skillsValue.some(Boolean) || shiftStart < 0 || shiftEnd <= shiftStart) {
       throw new Error(`Инженер ${index + 1}: проверьте имя, регион, координаты, навыки и смену`);
     }
-    return { id, name, initials: value(row, ["initials"]) || initialsOf(name, id), route: value(row, ["route"]) || `Маршрут ${index + 1}`, jobs: 0, distance: "0 км", load: 0, color: value(row, ["color"]) || engineerColors[index % engineerColors.length], region, start: [lon, lat], skills: skillsValue.filter(Boolean), equipment: equipmentValue.filter(Boolean), transport: canonicalTransport(value(row, ["transport", "транспорт", "vehicle"])), shiftStart, shiftEnd, speedKmh: numberValue(row, ["speedKmh", "speed_kmh", "скорость"]) ?? undefined };
+    return { id, name, initials: value(row, ["initials"]) || initialsOf(name, id), route: value(row, ["route"]) || `Маршрут ${index + 1}`, jobs: 0, distance: "0 км", load: 0, color: value(row, ["color"]) || engineerColors[index % engineerColors.length], region, start: [lon, lat], skills: skillsValue.filter(Boolean), equipment: equipmentValue.filter(Boolean), transport: canonicalTransport(value(row, ["transport", "транспорт", "vehicle"]), "Автомобиль"), shiftStart, shiftEnd, speedKmh: numberValue(row, ["speedKmh", "speed_kmh", "скорость"]) ?? undefined };
   });
   if (new Set(engineers.map(item => item.id)).size !== engineers.length) throw new Error("Повторяются номера инженеров");
   return engineers;

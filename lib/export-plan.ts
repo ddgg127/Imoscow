@@ -11,7 +11,8 @@ const csvColumns = [
   "Заявка", "Статус", "Регион", "Адрес", "Тип работы", "Окно SLA", "Инженер",
   "Порядок", "Прибытие", "Начало работ", "Окончание", "Пробег участка, км",
   "Навык", "Оборудование", "Транспорт", "Источник", "Причина отсутствия маршрута",
-  "Baseline инженер", "Выполнение",
+  "Baseline инженер", "Выполнение", "Срочность", "Класс работ",
+  "Работа, мин", "Норматив, мин", "Резерв дороги, мин", "Расчётная дорога, мин", "Источник норматива",
 ] as const;
 
 function safeCell(value: unknown) {
@@ -48,6 +49,13 @@ export function buildPlanRows(result: OptimizationResult, engineers: Engineer[])
       job.unassignedReason ?? "",
       baseline?.name ?? "",
       job.executionStatus ?? "not_started",
+      job.urgency ?? "normal",
+      job.workClass ?? "repair",
+      job.serviceMinutes,
+      job.normativeMinutes ?? "",
+      job.travelReserveMinutes ?? "",
+      assignment?.stop.travelMinutes ?? job.estimatedTravelMinutes ?? "",
+      job.normSource ?? "",
     ];
   });
 }

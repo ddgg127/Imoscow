@@ -1,5 +1,5 @@
 import { BackendRoutingProvider, type TravelMode } from "./map-providers";
-import { fallbackTravel, mergeTravel, regions, travelFromTable, uniquePoints, type Engineer, type Job, type Region, type TravelMatrix } from "./vrptw";
+import { fallbackTravel, mergeTravel, regions, transportAllowed, travelFromTable, uniquePoints, type Engineer, type Job, type Region, type TravelMatrix } from "./vrptw";
 
 export async function loadRoadTravel(
   engineers: Engineer[],
@@ -19,7 +19,7 @@ export async function loadRoadTravel(
   for (const mode of modes) {
     for (const name of names) {
       const modeEngineers = mode === "driving" ? engineers.filter(item => item.region === name) : engineers.filter(item => item.region === name && (mode === "walking" ? ["Пешком", "Пешеход"].includes(item.transport) : item.transport === "Велосипед"));
-      const modeJobs = mode === "driving" ? jobs.filter(job => job.region === name) : jobs.filter(job => job.region === name && modeEngineers.some(engineer => (job.allowedTransports ?? [job.requiredTransport]).includes(engineer.transport)));
+      const modeJobs = jobs.filter(job => job.region === name && modeEngineers.some(engineer => transportAllowed(job, engineer.transport)));
       const points = uniquePoints(modeEngineers, modeJobs);
       if (points.length < 2) continue;
       try {

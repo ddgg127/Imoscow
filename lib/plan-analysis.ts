@@ -11,7 +11,7 @@ export type AssignmentRow = {
 };
 
 export type LegRow = {
-  source: "VRPTW" | "исходный";
+  source: "VRPTW" | "baseline";
   engineer: string;
   sequence: number;
   fromId: string;
@@ -89,7 +89,7 @@ export function buildPlanAnalysis(result: OptimizationResult, engineers: Enginee
   });
   const baselineLegs = result.baselineRoutes.flatMap(route => {
     const engineer = byId.get(route.engineerId);
-    return engineer ? legsFrom("исходный", engineer, route, jobs) : [];
+    return engineer ? legsFrom("baseline", engineer, route, jobs) : [];
   });
   const points = uniquePoints(engineers, result.jobs).slice(0, 28);
   const labels = points.map((point, index) => {
@@ -110,8 +110,8 @@ export function buildPlanAnalysis(result: OptimizationResult, engineers: Enginee
   const packNote = extraKm > 0.05
     ? `VRPTW держит ${vehiclesVrptw} машин вместо ${vehiclesBaseline}. Штраф за новую машину равен ${VEHICLE_COST} ≈ ${breakEven.toFixed(0)} км, поэтому уплотнение принимается, даже если суммарный пробег растёт.`
     : extraKm < -0.05
-      ? "Текущий план короче контрольного распределения по километрам."
-      : "Пробег почти совпадает с контрольным распределением.";
+      ? "Текущий план короче рассчитанного baseline по километрам."
+      : "Пробег почти совпадает с рассчитанным baseline.";
   return {
     assigned: result.metrics.assigned,
     vehiclesVrptw,

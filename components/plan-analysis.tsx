@@ -14,8 +14,8 @@ export function PlanAnalysisView({ result, engineers, travel }: { result: Optimi
   }
   return <section className="page-view">
     <div className="view-summary">
-      <article><span>Машины</span><strong>{analysis.vehiclesVrptw}<em> / {analysis.vehiclesBaseline}</em></strong><small>VRPTW / исходный пул</small></article>
-      <article><span>Пробег</span><strong>{formatKm(analysis.distanceVrptw)}</strong><small>исходный {formatKm(analysis.distanceBaseline)}</small></article>
+      <article><span>Инженеры</span><strong>{analysis.vehiclesVrptw}<em> / {analysis.vehiclesBaseline}</em></strong><small>VRPTW / рассчитанный baseline</small></article>
+      <article><span>Пробег</span><strong>{formatKm(analysis.distanceVrptw)}</strong><small>baseline {formatKm(analysis.distanceBaseline)}</small></article>
       <article><span>Разница</span><strong>{analysis.extraKm >= 0 ? "+" : ""}{formatKm(analysis.extraKm)}</strong><small>{analysis.assigned} назначений</small></article>
     </div>
     <article className="panel analytics-panel wide analysis-note">

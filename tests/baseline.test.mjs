@@ -110,9 +110,10 @@ test("CSV optimization recovers feasible jobs and explains the remaining unassig
   const input = applyAverageWindows(csvJobs, 240);
   const result = optimizeVrptw(csvEngineers, input, { speedKmh: 24, innerBudget: 160, zoneBudget: 320 });
   const routed = new Map(result.routes.flatMap(route => route.stops.map(stop => [stop.jobId, route.engineerId])));
-  // Four south-east jobs are individually unreachable from the office before
-  // their early windows once verified coordinates replace regional centroids.
-  assert.ok(result.metrics.assigned >= 200);
+  // Demonstration engineers are no longer reverse-engineered from control
+  // assignments, so coverage must be measured, not inherited from history.
+  assert.ok(result.metrics.assigned >= result.baseline.assigned);
+  assert.ok(result.metrics.assigned >= 185);
   assert.equal(routed.size, result.metrics.assigned);
   for (const item of result.jobs) {
     assert.equal(item.engineerId ?? null, routed.get(item.id) ?? null);

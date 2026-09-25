@@ -33,18 +33,8 @@ function hash(value) {
 }
 
 function minutes(value) {
-  const match = value.match(/(\d{2}):(\d{2})$/);
+  const match = value.match(/(\d{1,2}):(\d{2})$/);
   return match ? Number(match[1]) * 60 + Number(match[2]) : 540;
-}
-
-function engineerName(raw) {
-  if (!raw) return "";
-  const clean = raw.replace(/^Бригада\s+/i, "").trim();
-  return clean.includes(" ") ? clean : `Инженер ${clean}`;
-}
-
-function initials(name) {
-  return name.split(/\s+/).filter(Boolean).slice(0, 2).map(part => part[0]).join("").toUpperCase();
 }
 
 const skillCatalog = ["Локальные работы", "Подключение и модернизация", "Аварийно-восстановительные работы"];
@@ -56,7 +46,9 @@ function canonicalSkill(workType) {
 }
 
 function serviceMinutes(workType, skill) {
-  if (skill === skillCatalog[2]) return /кабел|обрыв|повреж/i.test(workType) ? 90 : 60;
+  // Expert rule: 100 minutes for an incident include a provisional 20-minute trip.
+  // The route replaces that reserve with its own road-travel estimate.
+  if (skill === skillCatalog[2]) return 80;
   if (skill === skillCatalog[1]) return /gpon|гигабит|гбит|кабел|монтаж/i.test(workType) ? 60 : 45;
   return /информ|консультац|монитор|настрой|диагност/i.test(workType) ? 30 : 45;
 }
@@ -74,18 +66,14 @@ function equipmentFor(workType, skill) {
   return "Диагностический комплект";
 }
 
-function transportForEngineer(engineerId) {
-  const bucket = hash(engineerId) % 10;
-  if (bucket < 5) return "Автомобиль";
-  if (bucket < 8) return "Общественный транспорт";
-  if (bucket === 8) return "Велосипед";
-  return "Пешком";
-}
-
-function transportForUnassigned(jobId, skill) {
-  if (skill === skillCatalog[2]) return "Автомобиль";
-  return ["Автомобиль", "Общественный транспорт", "Велосипед", "Пешком"][hash(jobId) % 4];
-}
+const transportCycle = ["Автомобиль", "Общественный транспорт", "Велосипед", "Пешком"];
+const skillPatterns = [
+  [skillCatalog[0], skillCatalog[1], skillCatalog[2]],
+  [skillCatalog[0], skillCatalog[1]],
+  [skillCatalog[0], skillCatalog[2]],
+  [skillCatalog[1], skillCatalog[2]],
+  [skillCatalog[0]], [skillCatalog[1]], [skillCatalog[2]],
+];
 
 const tables = specs.map(spec => ({
   ...spec,
@@ -128,25 +116,15 @@ for (const table of tables) {
 }
 
 const jobs = [];
-const engineerSeed = new Map();
 for (const table of tables) {
   const officeCoords = offices[table.region].coordinates;
-  table.synthetic.forEach((row, index) => {
-    const assignment = table.control[index] ?? {};
-    const name = engineerName(assignment["Бригада"] ?? "");
-    const engineerId = name ? `${table.key}-${hash(name).toString(36)}` : null;
+  table.synthetic.forEach(row => {
     const workType = row["Тип заявки HD"] || row["Тип заявки BK"] || "Выездные работы";
     const kind = canonicalSkill(workType);
     const equipment = equipmentFor(`${workType} ${row["Гигабитное подключение"]}`, kind);
     const start = minutes(row["Начало"]);
     const end = minutes(row["Окончание"]);
     const id = String(row["Заявка"]);
-    const requiredTransport = engineerId ? transportForEngineer(engineerId) : transportForUnassigned(id, kind);
-    const allowedTransports = kind === skillCatalog[2]
-      ? [...new Set([requiredTransport, "Автомобиль"])]
-      : equipment === "Комплект GPON"
-        ? [...new Set([requiredTransport, "Автомобиль", "Общественный транспорт"])]
-        : ["Автомобиль", "Общественный транспорт", "Велосипед", "Пешком"];
     const job = {
       id,
       time: `${String(Math.floor(start / 60)).padStart(2, "0")}:${String(start % 60).padStart(2, "0")}–${String(Math.floor(end / 60)).padStart(2, "0")}:${String(end % 60).padStart(2, "0")}`,
@@ -158,47 +136,55 @@ for (const table of tables) {
       workType,
       tone: ["violet", "blue", "amber", "green"][hash(id) % 4],
       region: table.region,
-      engineerId,
-      baselineEngineerId: engineerId,
+      engineerId: null,
+      baselineEngineerId: null,
       coordinates: geocoded.get(row["Адрес"]) ?? officeCoords,
       geocodeVerified: geocodeCache[row["Адрес"]]?.verified === true,
       geocodeQuality: geocodeCache[row["Адрес"]]?.quality ?? "fallback",
       geocodeDisplayName: geocodeCache[row["Адрес"]]?.displayName ?? "",
       risk: false,
       equipment,
-      requiredTransport,
-      allowedTransports,
+      requiredTransport: "",
+      allowedTransports: undefined,
       priority: jobPriority(workType, kind),
       serviceMinutes: serviceMinutes(`${workType} ${row["Гигабитное подключение"] ?? ""}`, kind),
+      normativeMinutes: kind === skillCatalog[2] ? 100 : undefined,
+      travelReserveMinutes: kind === skillCatalog[2] ? 20 : 0,
+      estimatedTravelMinutes: kind === skillCatalog[2] ? 20 : 0,
+      normSource: kind === skillCatalog[2] ? "экспертный норматив" : "демонстрационное допущение",
+      urgency: "normal",
+      workClass: kind === skillCatalog[2] ? "emergency" : kind === skillCatalog[1] ? "connection" : "repair",
       source: "CSV",
-      status: assignment["Статус BK"] || "Не назначена",
+      status: "Новая",
     };
     jobs.push(job);
-    if (engineerId) {
-      const seed = engineerSeed.get(engineerId) ?? { id: engineerId, name, region: table.region, jobs: [] };
-      seed.jobs.push(job);
-      engineerSeed.set(engineerId, seed);
-    }
   });
 }
 
-const engineers = [...engineerSeed.values()].map((seed, index) => ({
-  id: seed.id,
-  initials: initials(seed.name),
-  name: seed.name,
-  route: `Маршрут ${String(index + 1).padStart(2, "0")}`,
-  jobs: seed.jobs.length,
+// Control is an independent distribution. Only its number of distinct brigades
+// per region sizes this synthetic pool; no row, name or historical assignment
+// is joined to a synthetic request.
+const engineers = tables.flatMap(table => {
+  const count = new Set(table.control.map(row => row["Бригада"]).filter(Boolean)).size;
+  return Array.from({ length: count }, (_, slot) => ({
+  id: `${table.key}-demo-${String(slot + 1).padStart(2, "0")}`,
+  initials: `${table.region[0]}${slot + 1}`,
+  name: `Инженер ${table.region} ${String(slot + 1).padStart(2, "0")}`,
+  route: `Маршрут ${String(slot + 1).padStart(2, "0")}`,
+  jobs: 0,
   distance: "0 км",
-  load: Math.min(100, Math.round(seed.jobs.reduce((sum, job) => sum + job.serviceMinutes, 0) / 840 * 100)),
-  color: colors[index % colors.length],
-  region: seed.region,
-  start: offices[seed.region].coordinates,
-  skills: [...new Set(seed.jobs.map(job => job.kind))],
-  equipment: [...new Set(seed.jobs.map(job => job.equipment))],
-  transport: transportForEngineer(seed.id),
+  load: 0,
+  color: colors[slot % colors.length],
+  region: table.region,
+  start: offices[table.region].coordinates,
+  skills: skillPatterns[slot % skillPatterns.length],
+  equipment: skillPatterns[slot % skillPatterns.length].flatMap(skill => skill === skillCatalog[2] ? ["Рефлектометр"] : skill === skillCatalog[1] ? ["ONT", "Комплект GPON"] : ["Диагностический комплект"]),
+  transport: transportCycle[slot % transportCycle.length],
   shiftStart: 480,
   shiftEnd: 1320,
-}));
+  }));
+});
+engineers.forEach((engineer, index) => { engineer.route = `Маршрут ${String(index + 1).padStart(2, "0")}`; });
 
 const output = `/* Generated from data/csv by scripts/import-csv.mjs. Coordinates are cached geocodes or explicitly counted fallbacks. */\nexport const csvJobs = ${JSON.stringify(jobs, null, 2)};\nexport const csvEngineers = ${JSON.stringify(engineers, null, 2)};\nexport const csvMeta = ${JSON.stringify({ rows: jobs.length, regions: specs.map(item => item.region), generatedAt: new Date().toISOString().slice(0, 10), geocoding, offices }, null, 2)};\n`;
 fs.writeFileSync(path.join(root, "lib", "csv-data.generated.ts"), output, "utf8");

@@ -9,7 +9,7 @@ export function generateDataset(sourceJobs: Job[], sourceEngineers: Engineer[], 
   return { jobs, engineers: scaleEngineers(sourceEngineers, options.engineers, jobs), speedKmh: options.speedKmh };
 }
 
-const columns = ["recordType", "id", "region", "area", "address", "kind", "workType", "lon", "lat", "geocodeQuality", "windowStart", "windowEnd", "serviceMinutes", "equipment", "requiredTransport", "allowedTransports", "priority", "status", "executionStatus", "cancelled", "name", "initials", "skills", "transport", "shiftStart", "shiftEnd", "color", "speedKmh"] as const;
+const columns = ["recordType", "id", "region", "area", "address", "kind", "workType", "lon", "lat", "geocodeQuality", "windowStart", "windowEnd", "serviceMinutes", "normativeMinutes", "travelReserveMinutes", "estimatedTravelMinutes", "normSource", "equipment", "requiredTransport", "allowedTransports", "priority", "urgency", "workClass", "status", "executionStatus", "cancelled", "name", "initials", "skills", "transport", "shiftStart", "shiftEnd", "color", "speedKmh"] as const;
 
 function csvCell(value: unknown) {
   const text = value == null ? "" : String(value);
@@ -18,7 +18,7 @@ function csvCell(value: unknown) {
 }
 
 export function generatedCsv(dataset: GeneratedDataset) {
-  const jobs = dataset.jobs.map(job => ({ recordType: "job", id: job.id, region: job.region, area: job.area, address: job.address, kind: job.kind, workType: job.workType ?? job.kind, lon: job.coordinates[0], lat: job.coordinates[1], geocodeQuality: job.geocodeQuality, windowStart: job.windowStart, windowEnd: job.windowEnd, serviceMinutes: job.serviceMinutes, equipment: job.equipment, requiredTransport: job.requiredTransport, allowedTransports: job.allowedTransports?.join("|"), priority: job.priority, status: job.status, executionStatus: job.executionStatus ?? "not_started", cancelled: Boolean(job.cancelled), speedKmh: dataset.speedKmh }));
+  const jobs = dataset.jobs.map(job => ({ recordType: "job", id: job.id, region: job.region, area: job.area, address: job.address, kind: job.kind, workType: job.workType ?? job.kind, lon: job.coordinates[0], lat: job.coordinates[1], geocodeQuality: job.geocodeQuality, windowStart: job.windowStart, windowEnd: job.windowEnd, serviceMinutes: job.serviceMinutes, normativeMinutes: job.normativeMinutes, travelReserveMinutes: job.travelReserveMinutes, estimatedTravelMinutes: job.estimatedTravelMinutes, normSource: job.normSource, equipment: job.equipment, requiredTransport: job.requiredTransport, allowedTransports: job.allowedTransports?.join("|"), priority: job.priority, urgency: job.urgency, workClass: job.workClass, status: job.status, executionStatus: job.executionStatus ?? "not_started", cancelled: Boolean(job.cancelled), speedKmh: dataset.speedKmh }));
   const engineers = dataset.engineers.map(engineer => ({ recordType: "engineer", id: engineer.id, region: engineer.region, lon: engineer.start[0], lat: engineer.start[1], equipment: engineer.equipment.join("|"), name: engineer.name, initials: engineer.initials, skills: engineer.skills.join("|"), transport: engineer.transport, shiftStart: engineer.shiftStart, shiftEnd: engineer.shiftEnd, color: engineer.color, speedKmh: engineer.speedKmh ?? "" }));
   return "\uFEFF" + columns.join(",") + "\r\n" + [...jobs, ...engineers].map(row => columns.map(column => csvCell((row as Record<string, unknown>)[column])).join(",")).join("\r\n") + "\r\n";
 }

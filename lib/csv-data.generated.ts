@@ -22,17 +22,16 @@ export const csvJobs = [
     "geocodeDisplayName": "128 к5, Волгоградский проспект (дублёр), район Кузьминки, Москва, Центральный федеральный округ, 109439, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Не отправлена"
+    "status": "Новая"
   },
   {
     "id": "86160",
@@ -45,8 +44,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "violet",
     "region": "Восток",
-    "engineerId": "east-1vxx77r",
-    "baselineEngineerId": "east-1vxx77r",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6599082,
       55.7397743
@@ -56,17 +55,16 @@ export const csvJobs = [
     "geocodeDisplayName": "2, переулок Маяковского, Таганский район, Москва, Центральный федеральный округ, 109147, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Отправлена"
+    "status": "Новая"
   },
   {
     "id": "50104",
@@ -79,8 +77,8 @@ export const csvJobs = [
     "workType": "Заявка на подключение",
     "tone": "green",
     "region": "Восток",
-    "engineerId": "east-13lpigy",
-    "baselineEngineerId": "east-13lpigy",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7319259,
       55.7183547
@@ -90,17 +88,16 @@ export const csvJobs = [
     "geocodeDisplayName": "10 к2, Грайвороновская улица, район Текстильщики, Москва, Центральный федеральный округ, 109518, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Общественный транспорт",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 3,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Отправлена"
+    "status": "Новая"
   },
   {
     "id": "46393",
@@ -113,8 +110,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "violet",
     "region": "Восток",
-    "engineerId": "east-d6ty7z",
-    "baselineEngineerId": "east-d6ty7z",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7659603,
       55.7270299
@@ -124,17 +121,16 @@ export const csvJobs = [
     "geocodeDisplayName": "14, улица Михайлова, Рязанский район, Москва, Центральный федеральный округ, 109428, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Пешком",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Отправлена"
+    "status": "Новая"
   },
   {
     "id": "10135",
@@ -147,8 +143,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "green",
     "region": "Восток",
-    "engineerId": "east-d6ty7z",
-    "baselineEngineerId": "east-d6ty7z",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7821899,
       55.7219922
@@ -158,17 +154,16 @@ export const csvJobs = [
     "geocodeDisplayName": "3-я Институтская улица, 5 к2, Москва, Москва",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Пешком",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Отправлена"
+    "status": "Новая"
   },
   {
     "id": "18754",
@@ -181,8 +176,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "violet",
     "region": "Восток",
-    "engineerId": "east-d6ty7z",
-    "baselineEngineerId": "east-d6ty7z",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7895195,
       55.7150634
@@ -192,17 +187,16 @@ export const csvJobs = [
     "geocodeDisplayName": "Москва 109377, 1-я Новокузьминская улица, Рязанский район, Москва, Центральный федеральный округ, 109377, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Пешком",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Отправлена"
+    "status": "Новая"
   },
   {
     "id": "84627",
@@ -215,8 +209,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "amber",
     "region": "Восток",
-    "engineerId": "east-1x8p0t9",
-    "baselineEngineerId": "east-1x8p0t9",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7695221,
       55.7144711
@@ -226,17 +220,16 @@ export const csvJobs = [
     "geocodeDisplayName": "32, Окская улица, район Кузьминки, Москва, Центральный федеральный округ, 109457, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Пешком",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Отправлена"
+    "status": "Новая"
   },
   {
     "id": "61540",
@@ -249,8 +242,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "green",
     "region": "Восток",
-    "engineerId": "east-1tnupka",
-    "baselineEngineerId": "east-1tnupka",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7786035,
       55.6981178
@@ -260,17 +253,16 @@ export const csvJobs = [
     "geocodeDisplayName": "84, улица Юных Ленинцев, район Кузьминки, Москва, Центральный федеральный округ, 109439, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "В пути"
+    "status": "Новая"
   },
   {
     "id": "74949",
@@ -283,8 +275,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "amber",
     "region": "Восток",
-    "engineerId": "east-1vxx77r",
-    "baselineEngineerId": "east-1vxx77r",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6878434,
       55.7431752
@@ -294,17 +286,16 @@ export const csvJobs = [
     "geocodeDisplayName": "28 с1, Международная улица, Таганский район, Москва, Центральный федеральный округ, 109544, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Отменена"
+    "status": "Новая"
   },
   {
     "id": "41077",
@@ -317,8 +308,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "violet",
     "region": "Восток",
-    "engineerId": "east-1vxx77r",
-    "baselineEngineerId": "east-1vxx77r",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6845796,
       55.740895
@@ -328,17 +319,16 @@ export const csvJobs = [
     "geocodeDisplayName": "8, Новорогожская улица, Таганский район, Москва, Центральный федеральный округ, 109544, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Отменена"
+    "status": "Новая"
   },
   {
     "id": "87693",
@@ -351,8 +341,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "amber",
     "region": "Восток",
-    "engineerId": "east-13lpigy",
-    "baselineEngineerId": "east-13lpigy",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.741942,
       55.696506
@@ -362,17 +352,16 @@ export const csvJobs = [
     "geocodeDisplayName": "12, улица Чистова, район Текстильщики, Москва, Центральный федеральный округ, 109263, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Общественный транспорт",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Отменена"
+    "status": "Новая"
   },
   {
     "id": "93086",
@@ -385,8 +374,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "blue",
     "region": "Восток",
-    "engineerId": "east-wugar1",
-    "baselineEngineerId": "east-wugar1",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7907198,
       55.7217574
@@ -396,17 +385,16 @@ export const csvJobs = [
     "geocodeDisplayName": "19, улица Паперника, Рязанский район, Москва, Центральный федеральный округ, 109456, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Отменена"
+    "status": "Новая"
   },
   {
     "id": "57866",
@@ -419,8 +407,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "green",
     "region": "Восток",
-    "engineerId": "east-1x8p0t9",
-    "baselineEngineerId": "east-1x8p0t9",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7794008,
       55.7176399
@@ -430,17 +418,16 @@ export const csvJobs = [
     "geocodeDisplayName": "48/2, Окская улица, Рязанский район, Москва, Центральный федеральный округ, 109457, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Пешком",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Отменена"
+    "status": "Новая"
   },
   {
     "id": "35675",
@@ -453,8 +440,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "blue",
     "region": "Восток",
-    "engineerId": "east-1329nj3",
-    "baselineEngineerId": "east-1329nj3",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6768493,
       55.7020048
@@ -464,17 +451,16 @@ export const csvJobs = [
     "geocodeDisplayName": "24 к2, улица Трофимова, Кожухово, Южнопортовый район, Москва, Центральный федеральный округ, 115432, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Отменена"
+    "status": "Новая"
   },
   {
     "id": "82388",
@@ -487,8 +473,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "violet",
     "region": "Восток",
-    "engineerId": "east-1329nj3",
-    "baselineEngineerId": "east-1329nj3",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6695609,
       55.7267393
@@ -498,17 +484,16 @@ export const csvJobs = [
     "geocodeDisplayName": "1-я Дубровская улица, 6, Москва, Москва",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "В работе"
+    "status": "Новая"
   },
   {
     "id": "23380",
@@ -521,8 +506,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "green",
     "region": "Восток",
-    "engineerId": "east-1vxx77r",
-    "baselineEngineerId": "east-1vxx77r",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6777676,
       55.7456189
@@ -532,17 +517,16 @@ export const csvJobs = [
     "geocodeDisplayName": "2/50, улица Рогожский Вал, Таганский район, Москва, Центральный федеральный округ, 105120, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "37272",
@@ -555,8 +539,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "amber",
     "region": "Восток",
-    "engineerId": "east-xit4gm",
-    "baselineEngineerId": "east-xit4gm",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6733454,
       55.7369925
@@ -566,17 +550,16 @@ export const csvJobs = [
     "geocodeDisplayName": "2/1 к4, улица Талалихина, Таганский район, Москва, Центральный федеральный округ, 109316, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "71388",
@@ -589,8 +572,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "amber",
     "region": "Восток",
-    "engineerId": "east-xit4gm",
-    "baselineEngineerId": "east-xit4gm",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7365767,
       55.6972845
@@ -600,17 +583,16 @@ export const csvJobs = [
     "geocodeDisplayName": "20А, улица Артюхиной, район Текстильщики, Москва, Центральный федеральный округ, 109390, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "34366",
@@ -623,8 +605,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "green",
     "region": "Восток",
-    "engineerId": "east-13lpigy",
-    "baselineEngineerId": "east-13lpigy",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7438382,
       55.6980379
@@ -634,17 +616,16 @@ export const csvJobs = [
     "geocodeDisplayName": "13, улица Малышева, район Текстильщики, Москва, Центральный федеральный округ, 109263, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Общественный транспорт",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "67554",
@@ -657,8 +638,8 @@ export const csvJobs = [
     "workType": "Заявка на подключение",
     "tone": "violet",
     "region": "Восток",
-    "engineerId": "east-d6ty7z",
-    "baselineEngineerId": "east-d6ty7z",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.759554,
       55.7314152
@@ -668,17 +649,16 @@ export const csvJobs = [
     "geocodeDisplayName": "12, Бронницкая улица, Карачарово, Нижегородский район, Москва, Центральный федеральный округ, 109202, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Пешком",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 3,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "94409",
@@ -691,8 +671,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "green",
     "region": "Восток",
-    "engineerId": "east-1y8w39f",
-    "baselineEngineerId": "east-1y8w39f",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7153975,
       55.7523201
@@ -702,17 +682,16 @@ export const csvJobs = [
     "geocodeDisplayName": "14, Авиамоторная улица, Дангауэровка, район Лефортово, Москва, Центральный федеральный округ, 101024, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "10245",
@@ -725,8 +704,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "blue",
     "region": "Восток",
-    "engineerId": "east-1tnupka",
-    "baselineEngineerId": "east-1tnupka",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7719481,
       55.7136559
@@ -736,17 +715,16 @@ export const csvJobs = [
     "geocodeDisplayName": "2 к6, улица Фёдора Полетаева, район Кузьминки, Москва, Центральный федеральный округ, 109457, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "52405",
@@ -759,8 +737,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "blue",
     "region": "Восток",
-    "engineerId": "east-wugar1",
-    "baselineEngineerId": "east-wugar1",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7772242,
       55.7279678
@@ -770,17 +748,16 @@ export const csvJobs = [
     "geocodeDisplayName": "51 к2, Зарайская улица, Рязанский район, Москва, Центральный федеральный округ, 109428, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "30769",
@@ -793,8 +770,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "amber",
     "region": "Восток",
-    "engineerId": "east-wugar1",
-    "baselineEngineerId": "east-wugar1",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7378743,
       55.7145577
@@ -804,17 +781,16 @@ export const csvJobs = [
     "geocodeDisplayName": "14/1, Саратовская улица, район Текстильщики, Москва, Центральный федеральный округ, 109125, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "98182",
@@ -827,8 +803,8 @@ export const csvJobs = [
     "workType": "Заявка на подключение",
     "tone": "blue",
     "region": "Восток",
-    "engineerId": "east-1x8p0t9",
-    "baselineEngineerId": "east-1x8p0t9",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7186987,
       55.7324552
@@ -838,17 +814,16 @@ export const csvJobs = [
     "geocodeDisplayName": "63, Нижегородская улица, Нижегородский район, Москва, Центральный федеральный округ, 109052, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Пешком",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 3,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "76082",
@@ -861,8 +836,8 @@ export const csvJobs = [
     "workType": "Заказ подключения/Дозаказ оборудования",
     "tone": "amber",
     "region": "Восток",
-    "engineerId": "east-1x8p0t9",
-    "baselineEngineerId": "east-1x8p0t9",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7085631,
       55.7367411
@@ -872,17 +847,16 @@ export const csvJobs = [
     "geocodeDisplayName": "6, Смирновская улица, Нижегородский район, Москва, Центральный федеральный округ, 109052, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Пешком",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 3,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "29890",
@@ -895,8 +869,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "blue",
     "region": "Восток",
-    "engineerId": "east-1x8p0t9",
-    "baselineEngineerId": "east-1x8p0t9",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7178025,
       55.732503
@@ -906,17 +880,16 @@ export const csvJobs = [
     "geocodeDisplayName": "61, Нижегородская улица, Нижегородский район, Москва, Центральный федеральный округ, 109052, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Пешком",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "77563",
@@ -929,8 +902,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "blue",
     "region": "Восток",
-    "engineerId": "east-1329nj3",
-    "baselineEngineerId": "east-1329nj3",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7708367,
       55.7118436
@@ -940,17 +913,16 @@ export const csvJobs = [
     "geocodeDisplayName": "Зеленодольская улица, 28Б, Москва, Москва",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "53587",
@@ -963,8 +935,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "blue",
     "region": "Восток",
-    "engineerId": "east-13lpigy",
-    "baselineEngineerId": "east-13lpigy",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7377998,
       55.6984967
@@ -974,17 +946,16 @@ export const csvJobs = [
     "geocodeDisplayName": "16, улица Артюхиной, район Текстильщики, Москва, Центральный федеральный округ, 109390, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Общественный транспорт",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Просрочена"
+    "status": "Новая"
   },
   {
     "id": "82808",
@@ -997,8 +968,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "blue",
     "region": "Восток",
-    "engineerId": "east-d6ty7z",
-    "baselineEngineerId": "east-d6ty7z",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7445677,
       55.7337571
@@ -1008,17 +979,16 @@ export const csvJobs = [
     "geocodeDisplayName": "3-я Карачаровская улица, 4 к1, Москва, Москва",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Пешком",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Просрочена"
+    "status": "Новая"
   },
   {
     "id": "7939",
@@ -1031,8 +1001,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "blue",
     "region": "Восток",
-    "engineerId": "east-1329nj3",
-    "baselineEngineerId": "east-1329nj3",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7902547,
       55.7184554
@@ -1042,17 +1012,16 @@ export const csvJobs = [
     "geocodeDisplayName": "73, Рязанский проспект, Рязанский район, Москва, Центральный федеральный округ, 109456, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Просрочена"
+    "status": "Новая"
   },
   {
     "id": "92031",
@@ -1076,17 +1045,16 @@ export const csvJobs = [
     "geocodeDisplayName": "28/7, Ферганская улица, район Выхино-Жулебино, Москва, Центральный федеральный округ, 109507, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 3,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Не отправлена"
+    "status": "Новая"
   },
   {
     "id": "31260",
@@ -1099,8 +1067,8 @@ export const csvJobs = [
     "workType": "Дозаказ оборудования",
     "tone": "green",
     "region": "Восток",
-    "engineerId": "east-1cl8l6t",
-    "baselineEngineerId": "east-1cl8l6t",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.8193568,
       55.7000662
@@ -1110,17 +1078,16 @@ export const csvJobs = [
     "geocodeDisplayName": "к5, квартал Самаркандский Бульвар 137А, квартал 137А, район Выхино-Жулебино, Москва, Центральный федеральный округ, 109507, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 3,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Отправлена"
+    "status": "Новая"
   },
   {
     "id": "69967",
@@ -1133,8 +1100,8 @@ export const csvJobs = [
     "workType": "Заказ подключения/Дозаказ оборудования",
     "tone": "violet",
     "region": "Восток",
-    "engineerId": "east-1y8w39f",
-    "baselineEngineerId": "east-1y8w39f",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7156999,
       55.7693914
@@ -1144,17 +1111,16 @@ export const csvJobs = [
     "geocodeDisplayName": "14, Боровая улица, район Лефортово, Москва, Центральный федеральный округ, 111020, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 3,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "22634",
@@ -1167,8 +1133,8 @@ export const csvJobs = [
     "workType": "Дозаказ оборудования",
     "tone": "amber",
     "region": "Восток",
-    "engineerId": "east-1yvomc",
-    "baselineEngineerId": "east-1yvomc",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6737801,
       55.7347571
@@ -1178,17 +1144,16 @@ export const csvJobs = [
     "geocodeDisplayName": "8, Стройковская улица, Таганский район, Москва, Центральный федеральный округ, 109316, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 3,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "98815",
@@ -1201,8 +1166,8 @@ export const csvJobs = [
     "workType": "Дозаказ оборудования",
     "tone": "amber",
     "region": "Восток",
-    "engineerId": "east-1yvomc",
-    "baselineEngineerId": "east-1yvomc",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.712879,
       55.7624783
@@ -1212,17 +1177,16 @@ export const csvJobs = [
     "geocodeDisplayName": "2-я улица Синичкина, Москва, Москва",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 3,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "33527",
@@ -1235,8 +1199,8 @@ export const csvJobs = [
     "workType": "Дозаказ оборудования",
     "tone": "blue",
     "region": "Восток",
-    "engineerId": "east-1yvomc",
-    "baselineEngineerId": "east-1yvomc",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7534715,
       55.7311522
@@ -1246,17 +1210,16 @@ export const csvJobs = [
     "geocodeDisplayName": "18/8, Орехово-Зуевский проезд, Карачарово, Нижегородский район, Москва, Центральный федеральный округ, 130203, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 3,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Просрочена"
+    "status": "Новая"
   },
   {
     "id": "21571",
@@ -1269,8 +1232,8 @@ export const csvJobs = [
     "workType": "Нет линка",
     "tone": "green",
     "region": "Восток",
-    "engineerId": "east-1vxx77r",
-    "baselineEngineerId": "east-1vxx77r",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6676447,
       55.7420001
@@ -1280,14 +1243,17 @@ export const csvJobs = [
     "geocodeDisplayName": "10 к2, Большой Рогожский переулок, Таганский район, Москва, Центральный федеральный округ, 109147, Россия",
     "risk": false,
     "equipment": "Рефлектометр",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль"
-    ],
+    "requiredTransport": "",
     "priority": 5,
-    "serviceMinutes": 60,
+    "serviceMinutes": 80,
+    "normativeMinutes": 100,
+    "travelReserveMinutes": 20,
+    "estimatedTravelMinutes": 20,
+    "normSource": "экспертный норматив",
+    "urgency": "normal",
+    "workClass": "emergency",
     "source": "CSV",
-    "status": "Отправлена"
+    "status": "Новая"
   },
   {
     "id": "47670",
@@ -1300,8 +1266,8 @@ export const csvJobs = [
     "workType": "Нет линка",
     "tone": "blue",
     "region": "Восток",
-    "engineerId": "east-8duits",
-    "baselineEngineerId": "east-8duits",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6518889,
       55.764253
@@ -1311,14 +1277,17 @@ export const csvJobs = [
     "geocodeDisplayName": "апарт-комплекс «Современник», 13 с1, улица Машкова, Бауманка, Басманный район, Москва, Центральный федеральный округ, 105062, Россия",
     "risk": false,
     "equipment": "Рефлектометр",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль"
-    ],
+    "requiredTransport": "",
     "priority": 5,
-    "serviceMinutes": 60,
+    "serviceMinutes": 80,
+    "normativeMinutes": 100,
+    "travelReserveMinutes": 20,
+    "estimatedTravelMinutes": 20,
+    "normSource": "экспертный норматив",
+    "urgency": "normal",
+    "workClass": "emergency",
     "source": "CSV",
-    "status": "Отправлена"
+    "status": "Новая"
   },
   {
     "id": "17892",
@@ -1331,8 +1300,8 @@ export const csvJobs = [
     "workType": "Переключение на Гбит/с",
     "tone": "violet",
     "region": "Восток",
-    "engineerId": "east-wugar1",
-    "baselineEngineerId": "east-wugar1",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7431987,
       55.706885
@@ -1342,17 +1311,16 @@ export const csvJobs = [
     "geocodeDisplayName": "11-я улица Текстильщиков, 10, Москва, Москва",
     "risk": false,
     "equipment": "Диагностический комплект",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "repair",
     "source": "CSV",
-    "status": "Отправлена"
+    "status": "Новая"
   },
   {
     "id": "51115",
@@ -1365,8 +1333,8 @@ export const csvJobs = [
     "workType": "Нет линка",
     "tone": "violet",
     "region": "Восток",
-    "engineerId": "east-d6ty7z",
-    "baselineEngineerId": "east-d6ty7z",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7935117,
       55.7213231
@@ -1376,15 +1344,17 @@ export const csvJobs = [
     "geocodeDisplayName": "18, улица Паперника, Рязанский район, Москва, Центральный федеральный округ, 109456, Россия",
     "risk": false,
     "equipment": "Рефлектометр",
-    "requiredTransport": "Пешком",
-    "allowedTransports": [
-      "Пешком",
-      "Автомобиль"
-    ],
+    "requiredTransport": "",
     "priority": 5,
-    "serviceMinutes": 60,
+    "serviceMinutes": 80,
+    "normativeMinutes": 100,
+    "travelReserveMinutes": 20,
+    "estimatedTravelMinutes": 20,
+    "normSource": "экспертный норматив",
+    "urgency": "normal",
+    "workClass": "emergency",
     "source": "CSV",
-    "status": "В пути"
+    "status": "Новая"
   },
   {
     "id": "76643",
@@ -1397,8 +1367,8 @@ export const csvJobs = [
     "workType": "Нет линка",
     "tone": "green",
     "region": "Восток",
-    "engineerId": "east-1vxx77r",
-    "baselineEngineerId": "east-1vxx77r",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6862063,
       55.7361675
@@ -1408,14 +1378,17 @@ export const csvJobs = [
     "geocodeDisplayName": "38, Большая Калитниковская улица, Таганский район, Москва, Центральный федеральный округ, 109029, Россия",
     "risk": false,
     "equipment": "Рефлектометр",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль"
-    ],
+    "requiredTransport": "",
     "priority": 5,
-    "serviceMinutes": 60,
+    "serviceMinutes": 80,
+    "normativeMinutes": 100,
+    "travelReserveMinutes": 20,
+    "estimatedTravelMinutes": 20,
+    "normSource": "экспертный норматив",
+    "urgency": "normal",
+    "workClass": "emergency",
     "source": "CSV",
-    "status": "В работе"
+    "status": "Новая"
   },
   {
     "id": "43506",
@@ -1428,8 +1401,8 @@ export const csvJobs = [
     "workType": "Переключение на Гбит/с",
     "tone": "blue",
     "region": "Восток",
-    "engineerId": "east-1cl8l6t",
-    "baselineEngineerId": "east-1cl8l6t",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.8193568,
       55.7000662
@@ -1439,17 +1412,16 @@ export const csvJobs = [
     "geocodeDisplayName": "к5, квартал Самаркандский Бульвар 137А, квартал 137А, район Выхино-Жулебино, Москва, Центральный федеральный округ, 109507, Россия",
     "risk": false,
     "equipment": "Диагностический комплект",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "repair",
     "source": "CSV",
-    "status": "В работе"
+    "status": "Новая"
   },
   {
     "id": "48174",
@@ -1462,8 +1434,8 @@ export const csvJobs = [
     "workType": "Мониторинг",
     "tone": "green",
     "region": "Восток",
-    "engineerId": "east-1x8p0t9",
-    "baselineEngineerId": "east-1x8p0t9",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7620114,
       55.6971444
@@ -1473,17 +1445,16 @@ export const csvJobs = [
     "geocodeDisplayName": "9 к2, улица Маршала Чуйкова, район Кузьминки, Москва, Центральный федеральный округ, 109462, Россия",
     "risk": false,
     "equipment": "Диагностический комплект",
-    "requiredTransport": "Пешком",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 30,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "repair",
     "source": "CSV",
-    "status": "В работе"
+    "status": "Новая"
   },
   {
     "id": "48227",
@@ -1496,8 +1467,8 @@ export const csvJobs = [
     "workType": "Нет линка",
     "tone": "amber",
     "region": "Восток",
-    "engineerId": "east-xit4gm",
-    "baselineEngineerId": "east-xit4gm",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.676817,
       55.7355002
@@ -1507,14 +1478,17 @@ export const csvJobs = [
     "geocodeDisplayName": "16, улица Талалихина, Таганский район, Москва, Центральный федеральный округ, 109316, Россия",
     "risk": false,
     "equipment": "Рефлектометр",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль"
-    ],
+    "requiredTransport": "",
     "priority": 5,
-    "serviceMinutes": 60,
+    "serviceMinutes": 80,
+    "normativeMinutes": 100,
+    "travelReserveMinutes": 20,
+    "estimatedTravelMinutes": 20,
+    "normSource": "экспертный норматив",
+    "urgency": "normal",
+    "workClass": "emergency",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "60720",
@@ -1527,8 +1501,8 @@ export const csvJobs = [
     "workType": "Нет линка",
     "tone": "amber",
     "region": "Восток",
-    "engineerId": "east-13lpigy",
-    "baselineEngineerId": "east-13lpigy",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7522297,
       55.6965373
@@ -1538,15 +1512,17 @@ export const csvJobs = [
     "geocodeDisplayName": "50 к2, Волжский бульвар, район Текстильщики, Москва, Центральный федеральный округ, 109462, Россия",
     "risk": false,
     "equipment": "Рефлектометр",
-    "requiredTransport": "Общественный транспорт",
-    "allowedTransports": [
-      "Общественный транспорт",
-      "Автомобиль"
-    ],
+    "requiredTransport": "",
     "priority": 5,
-    "serviceMinutes": 60,
+    "serviceMinutes": 80,
+    "normativeMinutes": 100,
+    "travelReserveMinutes": 20,
+    "estimatedTravelMinutes": 20,
+    "normSource": "экспертный норматив",
+    "urgency": "normal",
+    "workClass": "emergency",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "48238",
@@ -1559,8 +1535,8 @@ export const csvJobs = [
     "workType": "Разрывы",
     "tone": "amber",
     "region": "Восток",
-    "engineerId": "east-13lpigy",
-    "baselineEngineerId": "east-13lpigy",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7378149,
       55.7029289
@@ -1570,17 +1546,16 @@ export const csvJobs = [
     "geocodeDisplayName": "3, улица Артюхиной, район Текстильщики, Москва, Центральный федеральный округ, 109390, Россия",
     "risk": false,
     "equipment": "Диагностический комплект",
-    "requiredTransport": "Общественный транспорт",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "repair",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "41912",
@@ -1593,8 +1568,8 @@ export const csvJobs = [
     "workType": "Нет линка",
     "tone": "amber",
     "region": "Восток",
-    "engineerId": "east-1cl8l6t",
-    "baselineEngineerId": "east-1cl8l6t",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.8248567,
       55.6940635
@@ -1604,14 +1579,17 @@ export const csvJobs = [
     "geocodeDisplayName": "7 к5, Ферганский проезд, район Выхино-Жулебино, Москва, Центральный федеральный округ, 109507, Россия",
     "risk": false,
     "equipment": "Рефлектометр",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль"
-    ],
+    "requiredTransport": "",
     "priority": 5,
-    "serviceMinutes": 60,
+    "serviceMinutes": 80,
+    "normativeMinutes": 100,
+    "travelReserveMinutes": 20,
+    "estimatedTravelMinutes": 20,
+    "normSource": "экспертный норматив",
+    "urgency": "normal",
+    "workClass": "emergency",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "4893",
@@ -1624,8 +1602,8 @@ export const csvJobs = [
     "workType": "Нет линка",
     "tone": "blue",
     "region": "Восток",
-    "engineerId": "east-8duits",
-    "baselineEngineerId": "east-8duits",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6571501,
       55.7586892
@@ -1635,14 +1613,17 @@ export const csvJobs = [
     "geocodeDisplayName": "24/30 с1, улица Земляной Вал, Бауманка, Басманный район, Москва, Центральный федеральный округ, 105064, Россия",
     "risk": false,
     "equipment": "Рефлектометр",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль"
-    ],
+    "requiredTransport": "",
     "priority": 5,
-    "serviceMinutes": 60,
+    "serviceMinutes": 80,
+    "normativeMinutes": 100,
+    "travelReserveMinutes": 20,
+    "estimatedTravelMinutes": 20,
+    "normSource": "экспертный норматив",
+    "urgency": "normal",
+    "workClass": "emergency",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "68476",
@@ -1655,8 +1636,8 @@ export const csvJobs = [
     "workType": "Разрывы",
     "tone": "violet",
     "region": "Восток",
-    "engineerId": "east-d6ty7z",
-    "baselineEngineerId": "east-d6ty7z",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7471726,
       55.7333702
@@ -1666,17 +1647,16 @@ export const csvJobs = [
     "geocodeDisplayName": "3-я Карачаровская улица, 8 к2, Москва, Москва",
     "risk": false,
     "equipment": "Диагностический комплект",
-    "requiredTransport": "Пешком",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "repair",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "50219",
@@ -1689,8 +1669,8 @@ export const csvJobs = [
     "workType": "Нет линка",
     "tone": "violet",
     "region": "Восток",
-    "engineerId": "east-d6ty7z",
-    "baselineEngineerId": "east-d6ty7z",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.758355,
       55.7306095
@@ -1700,15 +1680,17 @@ export const csvJobs = [
     "geocodeDisplayName": "2 к2, Чистопольская улица, Нижегородский район, Москва, Центральный федеральный округ, 109202, Россия",
     "risk": false,
     "equipment": "Рефлектометр",
-    "requiredTransport": "Пешком",
-    "allowedTransports": [
-      "Пешком",
-      "Автомобиль"
-    ],
+    "requiredTransport": "",
     "priority": 5,
-    "serviceMinutes": 60,
+    "serviceMinutes": 80,
+    "normativeMinutes": 100,
+    "travelReserveMinutes": 20,
+    "estimatedTravelMinutes": 20,
+    "normSource": "экспертный норматив",
+    "urgency": "normal",
+    "workClass": "emergency",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "76678",
@@ -1721,8 +1703,8 @@ export const csvJobs = [
     "workType": "Работа с кабелем",
     "tone": "blue",
     "region": "Восток",
-    "engineerId": "east-1y8w39f",
-    "baselineEngineerId": "east-1y8w39f",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7147651,
       55.770292
@@ -1732,17 +1714,16 @@ export const csvJobs = [
     "geocodeDisplayName": "12, Боровая улица, район Лефортово, Москва, Центральный федеральный округ, 111020, Россия",
     "risk": false,
     "equipment": "Диагностический комплект",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "repair",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "47330",
@@ -1755,8 +1736,8 @@ export const csvJobs = [
     "workType": "Роутер. Замена техническим специалистом",
     "tone": "amber",
     "region": "Восток",
-    "engineerId": "east-1y8w39f",
-    "baselineEngineerId": "east-1y8w39f",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7089671,
       55.7540521
@@ -1766,17 +1747,16 @@ export const csvJobs = [
     "geocodeDisplayName": "Красноказарменная улица, район Лефортово, Москва, Центральный федеральный округ, 111024, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "26645",
@@ -1789,8 +1769,8 @@ export const csvJobs = [
     "workType": "TVE/ENT. Другие ошибки",
     "tone": "amber",
     "region": "Восток",
-    "engineerId": "east-1yvomc",
-    "baselineEngineerId": "east-1yvomc",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7168314,
       55.7647986
@@ -1800,17 +1780,16 @@ export const csvJobs = [
     "geocodeDisplayName": "31, Сторожевая улица, район Лефортово, Москва, Центральный федеральный округ, 111020, Россия",
     "risk": false,
     "equipment": "Диагностический комплект",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "repair",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "24076",
@@ -1823,8 +1802,8 @@ export const csvJobs = [
     "workType": "Роутер. Замена техническим специалистом",
     "tone": "violet",
     "region": "Восток",
-    "engineerId": "east-1yvomc",
-    "baselineEngineerId": "east-1yvomc",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6832489,
       55.740048
@@ -1834,17 +1813,16 @@ export const csvJobs = [
     "geocodeDisplayName": "10, Новорогожская улица, Таганский район, Москва, Центральный федеральный округ, 109544, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "30243",
@@ -1857,8 +1835,8 @@ export const csvJobs = [
     "workType": "TVE/ENT. Замена приставки техником",
     "tone": "blue",
     "region": "Восток",
-    "engineerId": "east-1yvomc",
-    "baselineEngineerId": "east-1yvomc",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6944616,
       55.7374783
@@ -1868,17 +1846,16 @@ export const csvJobs = [
     "geocodeDisplayName": "25, Нижегородская улица, Таганский район, Москва, Центральный федеральный округ, 109029, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "32807",
@@ -1891,8 +1868,8 @@ export const csvJobs = [
     "workType": "Работа с кабелем",
     "tone": "blue",
     "region": "Восток",
-    "engineerId": "east-1tnupka",
-    "baselineEngineerId": "east-1tnupka",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7514109,
       55.710308
@@ -1902,17 +1879,16 @@ export const csvJobs = [
     "geocodeDisplayName": "6 к1, Окская улица, район Кузьминки, Москва, Центральный федеральный округ, 109117, Россия",
     "risk": false,
     "equipment": "Диагностический комплект",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "repair",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "73572",
@@ -1925,8 +1901,8 @@ export const csvJobs = [
     "workType": "Нет линка",
     "tone": "green",
     "region": "Восток",
-    "engineerId": "east-1tnupka",
-    "baselineEngineerId": "east-1tnupka",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7518635,
       55.7078213
@@ -1936,14 +1912,17 @@ export const csvJobs = [
     "geocodeDisplayName": "97 к1, Волгоградский проспект (дублёр), район Кузьминки, Москва, Центральный федеральный округ, 109117, Россия",
     "risk": false,
     "equipment": "Рефлектометр",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль"
-    ],
+    "requiredTransport": "",
     "priority": 5,
-    "serviceMinutes": 60,
+    "serviceMinutes": 80,
+    "normativeMinutes": 100,
+    "travelReserveMinutes": 20,
+    "estimatedTravelMinutes": 20,
+    "normSource": "экспертный норматив",
+    "urgency": "normal",
+    "workClass": "emergency",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "41962",
@@ -1956,8 +1935,8 @@ export const csvJobs = [
     "workType": "Информация",
     "tone": "blue",
     "region": "Восток",
-    "engineerId": "east-1cl8l6t",
-    "baselineEngineerId": "east-1cl8l6t",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.8126854,
       55.6977027
@@ -1967,17 +1946,16 @@ export const csvJobs = [
     "geocodeDisplayName": "32 к1, Самаркандский бульвар, район Выхино-Жулебино, Москва, Центральный федеральный округ, 109507, Россия",
     "risk": false,
     "equipment": "Диагностический комплект",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 30,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "repair",
     "source": "CSV",
-    "status": "Отправлена"
+    "status": "Новая"
   },
   {
     "id": "97886",
@@ -1990,8 +1968,8 @@ export const csvJobs = [
     "workType": "Информация",
     "tone": "blue",
     "region": "Восток",
-    "engineerId": "east-1cl8l6t",
-    "baselineEngineerId": "east-1cl8l6t",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.8263129,
       55.7064866
@@ -2001,17 +1979,16 @@ export const csvJobs = [
     "geocodeDisplayName": "10 к2, Самаркандский бульвар, район Выхино-Жулебино, Москва, Центральный федеральный округ, 109507, Россия",
     "risk": false,
     "equipment": "Диагностический комплект",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 30,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "repair",
     "source": "CSV",
-    "status": "Отправлена"
+    "status": "Новая"
   },
   {
     "id": "17349",
@@ -2024,8 +2001,8 @@ export const csvJobs = [
     "workType": "Информация",
     "tone": "blue",
     "region": "Восток",
-    "engineerId": "east-1vxx77r",
-    "baselineEngineerId": "east-1vxx77r",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6880379,
       55.73903
@@ -2035,17 +2012,16 @@ export const csvJobs = [
     "geocodeDisplayName": "20, Новорогожская улица, Таганский район, Москва, Центральный федеральный округ, 109544, Россия",
     "risk": false,
     "equipment": "Диагностический комплект",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 30,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "repair",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "54964",
@@ -2058,8 +2034,8 @@ export const csvJobs = [
     "workType": "Информация",
     "tone": "blue",
     "region": "Восток",
-    "engineerId": "east-1cl8l6t",
-    "baselineEngineerId": "east-1cl8l6t",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.8130634,
       55.703974
@@ -2069,17 +2045,16 @@ export const csvJobs = [
     "geocodeDisplayName": "16 к2, Ташкентская улица, Выхино, район Выхино-Жулебино, Москва, Центральный федеральный округ, 109444, Россия",
     "risk": false,
     "equipment": "Диагностический комплект",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 30,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "repair",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "21367",
@@ -2092,8 +2067,8 @@ export const csvJobs = [
     "workType": "Авария",
     "tone": "amber",
     "region": "Восток",
-    "engineerId": "east-8duits",
-    "baselineEngineerId": "east-8duits",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7401969,
       55.7150007
@@ -2103,14 +2078,17 @@ export const csvJobs = [
     "geocodeDisplayName": "16, Саратовская улица, район Текстильщики, Москва, Центральный федеральный округ, 109125, Россия",
     "risk": false,
     "equipment": "Рефлектометр",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль"
-    ],
+    "requiredTransport": "",
     "priority": 5,
-    "serviceMinutes": 60,
+    "serviceMinutes": 80,
+    "normativeMinutes": 100,
+    "travelReserveMinutes": 20,
+    "estimatedTravelMinutes": 20,
+    "normSource": "экспертный норматив",
+    "urgency": "normal",
+    "workClass": "emergency",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "24980",
@@ -2123,8 +2101,8 @@ export const csvJobs = [
     "workType": "Авария",
     "tone": "amber",
     "region": "Восток",
-    "engineerId": "east-8duits",
-    "baselineEngineerId": "east-8duits",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7082611,
       55.7785658
@@ -2134,14 +2112,17 @@ export const csvJobs = [
     "geocodeDisplayName": "3/1 к2, Семёновская набережная, Бауманка, Басманный район, Москва, Центральный федеральный округ, 105094, Россия",
     "risk": false,
     "equipment": "Рефлектометр",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль"
-    ],
+    "requiredTransport": "",
     "priority": 5,
-    "serviceMinutes": 60,
+    "serviceMinutes": 80,
+    "normativeMinutes": 100,
+    "travelReserveMinutes": 20,
+    "estimatedTravelMinutes": 20,
+    "normSource": "экспертный норматив",
+    "urgency": "normal",
+    "workClass": "emergency",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "15648",
@@ -2154,8 +2135,8 @@ export const csvJobs = [
     "workType": "Информация",
     "tone": "green",
     "region": "Восток",
-    "engineerId": "east-8duits",
-    "baselineEngineerId": "east-8duits",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7046831,
       55.7768615
@@ -2165,17 +2146,16 @@ export const csvJobs = [
     "geocodeDisplayName": "2/1, Семёновская набережная, Бауманка, Басманный район, Москва, Центральный федеральный округ, 105094, Россия",
     "risk": false,
     "equipment": "Диагностический комплект",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 30,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "repair",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "57299",
@@ -2188,8 +2168,8 @@ export const csvJobs = [
     "workType": "Авария",
     "tone": "green",
     "region": "Восток",
-    "engineerId": "east-1329nj3",
-    "baselineEngineerId": "east-1329nj3",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7828754,
       55.7023381
@@ -2199,14 +2179,17 @@ export const csvJobs = [
     "geocodeDisplayName": "128 к1, Волгоградский проспект (дублёр), район Кузьминки, Москва, Центральный федеральный округ, 109439, Россия",
     "risk": false,
     "equipment": "Рефлектометр",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль"
-    ],
+    "requiredTransport": "",
     "priority": 5,
-    "serviceMinutes": 60,
+    "serviceMinutes": 80,
+    "normativeMinutes": 100,
+    "travelReserveMinutes": 20,
+    "estimatedTravelMinutes": 20,
+    "normSource": "экспертный норматив",
+    "urgency": "normal",
+    "workClass": "emergency",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "67472",
@@ -2219,8 +2202,8 @@ export const csvJobs = [
     "workType": "Заказ подключения/Дозаказ оборудования",
     "tone": "green",
     "region": "Юго-восток",
-    "engineerId": "southeast-1av5hst",
-    "baselineEngineerId": "southeast-1av5hst",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7700883,
       55.4407054
@@ -2230,17 +2213,16 @@ export const csvJobs = [
     "geocodeDisplayName": "1-й Советский проезд, 1А, Домодедово, Московская область",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 3,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Отправлена"
+    "status": "Новая"
   },
   {
     "id": "84466",
@@ -2253,8 +2235,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "green",
     "region": "Юго-восток",
-    "engineerId": "southeast-bjucyq",
-    "baselineEngineerId": "southeast-bjucyq",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7536622,
       55.6074243
@@ -2264,17 +2246,16 @@ export const csvJobs = [
     "geocodeDisplayName": "23 к1, Гурьевский проезд, район Орехово-Борисово Южное, Москва, Центральный федеральный округ, 115597, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Отправлена"
+    "status": "Новая"
   },
   {
     "id": "14416",
@@ -2287,8 +2268,8 @@ export const csvJobs = [
     "workType": "Заказ подключения/Дозаказ оборудования",
     "tone": "green",
     "region": "Юго-восток",
-    "engineerId": "southeast-cohmg5",
-    "baselineEngineerId": "southeast-cohmg5",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7516036,
       55.6188601
@@ -2298,17 +2279,16 @@ export const csvJobs = [
     "geocodeDisplayName": "8 к1, Кустанайская улица, район Зябликово, Москва, Центральный федеральный округ, 115682, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Общественный транспорт",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 3,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Отправлена"
+    "status": "Новая"
   },
   {
     "id": "68359",
@@ -2321,8 +2301,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "amber",
     "region": "Юго-восток",
-    "engineerId": "southeast-lhcpec",
-    "baselineEngineerId": "southeast-lhcpec",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7219087,
       55.5996618
@@ -2332,17 +2312,16 @@ export const csvJobs = [
     "geocodeDisplayName": "136, Каширское шоссе, район Орехово-Борисово Южное, Москва, Центральный федеральный округ, 115191, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Общественный транспорт",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "В пути"
+    "status": "Новая"
   },
   {
     "id": "66944",
@@ -2355,8 +2334,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "violet",
     "region": "Юго-восток",
-    "engineerId": "southeast-1av5hst",
-    "baselineEngineerId": "southeast-1av5hst",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7700594,
       55.425109
@@ -2366,17 +2345,16 @@ export const csvJobs = [
     "geocodeDisplayName": "85, Зелёная улица, Домодедово, городской округ Домодедово, Московская область, Центральный федеральный округ, 142000, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Отменена"
+    "status": "Новая"
   },
   {
     "id": "52041",
@@ -2389,8 +2367,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "blue",
     "region": "Юго-восток",
-    "engineerId": "southeast-1j21qyz",
-    "baselineEngineerId": "southeast-1j21qyz",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6548482,
       55.643317
@@ -2400,17 +2378,16 @@ export const csvJobs = [
     "geocodeDisplayName": "4 к6, улица Москворечье, район Москворечье-Сабурово, Москва, Центральный федеральный округ, 115447, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Отменена"
+    "status": "Новая"
   },
   {
     "id": "23807",
@@ -2423,8 +2400,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "green",
     "region": "Юго-восток",
-    "engineerId": "southeast-udu43b",
-    "baselineEngineerId": "southeast-udu43b",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6775523,
       55.5780853
@@ -2434,17 +2411,16 @@ export const csvJobs = [
     "geocodeDisplayName": "9, Загорьевский проезд, район Бирюлёво Восточное, Москва, Центральный федеральный округ, 115598, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Отменена"
+    "status": "Новая"
   },
   {
     "id": "60484",
@@ -2457,8 +2433,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "blue",
     "region": "Юго-восток",
-    "engineerId": "southeast-udu43b",
-    "baselineEngineerId": "southeast-udu43b",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6610798,
       55.6047823
@@ -2468,17 +2444,16 @@ export const csvJobs = [
     "geocodeDisplayName": "500 мелочей, 6-я Радиальная улица, 5 к3, Москва, Москва",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Отменена"
+    "status": "Новая"
   },
   {
     "id": "63591",
@@ -2491,8 +2466,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "green",
     "region": "Юго-восток",
-    "engineerId": "southeast-udu43b",
-    "baselineEngineerId": "southeast-udu43b",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6658771,
       55.5881256
@@ -2502,17 +2477,16 @@ export const csvJobs = [
     "geocodeDisplayName": "39, Бирюлёвская улица, Бирюлёво, район Бирюлёво Восточное, Москва, Центральный федеральный округ, 115372, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Отменена"
+    "status": "Новая"
   },
   {
     "id": "53552",
@@ -2525,8 +2499,8 @@ export const csvJobs = [
     "workType": "Заказ подключения/Дозаказ оборудования",
     "tone": "green",
     "region": "Юго-восток",
-    "engineerId": "southeast-lhx82j",
-    "baselineEngineerId": "southeast-lhx82j",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       38.1934317,
       54.8386455
@@ -2536,17 +2510,16 @@ export const csvJobs = [
     "geocodeDisplayName": "9, улица Победы, Кашира-3, Кашира, городской округ Кашира, Московская область, Центральный федеральный округ, 142903, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 3,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Отменена"
+    "status": "Новая"
   },
   {
     "id": "58066",
@@ -2559,8 +2532,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "violet",
     "region": "Юго-восток",
-    "engineerId": "southeast-bjucyq",
-    "baselineEngineerId": "southeast-bjucyq",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7692583,
       55.6362442
@@ -2570,17 +2543,16 @@ export const csvJobs = [
     "geocodeDisplayName": "18 к1, Братеевская улица, район Братеево, Москва, Центральный федеральный округ, 115408, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Отменена"
+    "status": "Новая"
   },
   {
     "id": "2915",
@@ -2593,8 +2565,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "amber",
     "region": "Юго-восток",
-    "engineerId": "southeast-cohmg5",
-    "baselineEngineerId": "southeast-cohmg5",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7354256,
       55.6149375
@@ -2604,17 +2576,16 @@ export const csvJobs = [
     "geocodeDisplayName": "35 к1, Ореховый бульвар, район Зябликово, Москва, Центральный федеральный округ, 115583, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Общественный транспорт",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Отменена"
+    "status": "Новая"
   },
   {
     "id": "3566",
@@ -2627,8 +2598,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "blue",
     "region": "Юго-восток",
-    "engineerId": "southeast-cohmg5",
-    "baselineEngineerId": "southeast-cohmg5",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7354256,
       55.6149375
@@ -2638,17 +2609,16 @@ export const csvJobs = [
     "geocodeDisplayName": "35 к1, Ореховый бульвар, район Зябликово, Москва, Центральный федеральный округ, 115583, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Общественный транспорт",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "В работе"
+    "status": "Новая"
   },
   {
     "id": "68946",
@@ -2661,8 +2631,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "violet",
     "region": "Юго-восток",
-    "engineerId": "southeast-d29ohr",
-    "baselineEngineerId": "southeast-d29ohr",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6533634,
       55.6360111
@@ -2672,17 +2642,16 @@ export const csvJobs = [
     "geocodeDisplayName": "14А, Пролетарский проспект, район Царицыно, Москва, Центральный федеральный округ, 115447, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "55454",
@@ -2695,8 +2664,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "violet",
     "region": "Юго-восток",
-    "engineerId": "southeast-1av5hst",
-    "baselineEngineerId": "southeast-1av5hst",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7779539,
       55.4226672
@@ -2706,17 +2675,16 @@ export const csvJobs = [
     "geocodeDisplayName": "50, улица Корнеева, Домодедово, городской округ Домодедово, Московская область, Центральный федеральный округ, 142000, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "35057",
@@ -2729,8 +2697,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "green",
     "region": "Юго-восток",
-    "engineerId": "southeast-1av5hst",
-    "baselineEngineerId": "southeast-1av5hst",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7783486,
       55.4255128
@@ -2740,17 +2708,16 @@ export const csvJobs = [
     "geocodeDisplayName": "40, улица Корнеева, Домодедово, городской округ Домодедово, Московская область, Центральный федеральный округ, 142000, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "75745",
@@ -2763,8 +2730,8 @@ export const csvJobs = [
     "workType": "Заказ подключения/Дозаказ оборудования",
     "tone": "blue",
     "region": "Юго-восток",
-    "engineerId": "southeast-1av5hst",
-    "baselineEngineerId": "southeast-1av5hst",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7700594,
       55.425109
@@ -2774,17 +2741,16 @@ export const csvJobs = [
     "geocodeDisplayName": "85, Зелёная улица, Домодедово, городской округ Домодедово, Московская область, Центральный федеральный округ, 142000, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 3,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "65717",
@@ -2797,8 +2763,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "blue",
     "region": "Юго-восток",
-    "engineerId": "southeast-1j21qyz",
-    "baselineEngineerId": "southeast-1j21qyz",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6790583,
       55.629584
@@ -2808,17 +2774,16 @@ export const csvJobs = [
     "geocodeDisplayName": "29, Ереванская улица, район Царицыно, Москва, Центральный федеральный округ, 115304, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "44117",
@@ -2831,8 +2796,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "violet",
     "region": "Юго-восток",
-    "engineerId": "southeast-1j21qyz",
-    "baselineEngineerId": "southeast-1j21qyz",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6538926,
       55.6234951
@@ -2842,17 +2807,16 @@ export const csvJobs = [
     "geocodeDisplayName": "15 к1, Севанская улица, район Царицыно, Москва, Центральный федеральный округ, 115516, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "76173",
@@ -2865,8 +2829,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "blue",
     "region": "Юго-восток",
-    "engineerId": "southeast-udu43b",
-    "baselineEngineerId": "southeast-udu43b",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6510228,
       55.6037747
@@ -2876,17 +2840,16 @@ export const csvJobs = [
     "geocodeDisplayName": "6-я Радиальная улица, 7/1 к2, Москва, Москва",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "876",
@@ -2899,8 +2862,8 @@ export const csvJobs = [
     "workType": "Заказ подключения/Дозаказ оборудования",
     "tone": "amber",
     "region": "Юго-восток",
-    "engineerId": "southeast-udu43b",
-    "baselineEngineerId": "southeast-udu43b",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6775523,
       55.5780853
@@ -2910,17 +2873,16 @@ export const csvJobs = [
     "geocodeDisplayName": "9, Загорьевский проезд, район Бирюлёво Восточное, Москва, Центральный федеральный округ, 115598, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 3,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "62011",
@@ -2933,8 +2895,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "blue",
     "region": "Юго-восток",
-    "engineerId": "southeast-5xpjbk",
-    "baselineEngineerId": "southeast-5xpjbk",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       38.2453976,
       54.8423286
@@ -2944,17 +2906,16 @@ export const csvJobs = [
     "geocodeDisplayName": "18, Садовая улица, Кашира-2, Кашира, городской округ Кашира, Московская область, Центральный федеральный округ, 142904, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Общественный транспорт",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "57353",
@@ -2967,8 +2928,8 @@ export const csvJobs = [
     "workType": "Заказ подключения/Дозаказ оборудования",
     "tone": "amber",
     "region": "Юго-восток",
-    "engineerId": "southeast-5xpjbk",
-    "baselineEngineerId": "southeast-5xpjbk",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       38.2443522,
       54.8500604
@@ -2978,17 +2939,16 @@ export const csvJobs = [
     "geocodeDisplayName": "2/11, Садовая улица, Кашира-2, Кашира, городской округ Кашира, Московская область, Центральный федеральный округ, 142904, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Общественный транспорт",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 3,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "2245",
@@ -3001,8 +2961,8 @@ export const csvJobs = [
     "workType": "Заявка на подключение",
     "tone": "amber",
     "region": "Юго-восток",
-    "engineerId": "southeast-9mjsap",
-    "baselineEngineerId": "southeast-9mjsap",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7630982,
       55.6369125
@@ -3012,17 +2972,16 @@ export const csvJobs = [
     "geocodeDisplayName": "9 к1, Паромная улица, район Братеево, Москва, Центральный федеральный округ, 115408, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 3,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "14494",
@@ -3035,8 +2994,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "blue",
     "region": "Юго-восток",
-    "engineerId": "southeast-9mjsap",
-    "baselineEngineerId": "southeast-9mjsap",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7658937,
       55.6343465
@@ -3046,17 +3005,16 @@ export const csvJobs = [
     "geocodeDisplayName": "16 к1, Братеевская улица, район Братеево, Москва, Центральный федеральный округ, 115408, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "78920",
@@ -3069,8 +3027,8 @@ export const csvJobs = [
     "workType": "Заявка на подключение",
     "tone": "green",
     "region": "Юго-восток",
-    "engineerId": "southeast-9mjsap",
-    "baselineEngineerId": "southeast-9mjsap",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7518423,
       55.6379834
@@ -3080,17 +3038,16 @@ export const csvJobs = [
     "geocodeDisplayName": "20 к1, улица Борисовские Пруды, район Братеево, Москва, Центральный федеральный округ, 115612, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 3,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "78876",
@@ -3103,8 +3060,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "green",
     "region": "Юго-восток",
-    "engineerId": "southeast-lhx82j",
-    "baselineEngineerId": "southeast-lhx82j",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       38.2494867,
       54.8400884
@@ -3114,17 +3071,16 @@ export const csvJobs = [
     "geocodeDisplayName": "9, Юбилейная улица, Кашира-2, Кашира, городской округ Кашира, Московская область, Центральный федеральный округ, 142904, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "23094",
@@ -3137,8 +3093,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "green",
     "region": "Юго-восток",
-    "engineerId": "southeast-lhx82j",
-    "baselineEngineerId": "southeast-lhx82j",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       38.2768274,
       54.8041762
@@ -3148,17 +3104,16 @@ export const csvJobs = [
     "geocodeDisplayName": "22/2, улица 8 Марта, Центролит, Ожерелье, Кашира, городской округ Кашира, Московская область, Центральный федеральный округ, 142921, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "79144",
@@ -3171,8 +3126,8 @@ export const csvJobs = [
     "workType": "Заявка на подключение",
     "tone": "violet",
     "region": "Юго-восток",
-    "engineerId": "southeast-lhcpec",
-    "baselineEngineerId": "southeast-lhcpec",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7060471,
       55.6096657
@@ -3182,17 +3137,16 @@ export const csvJobs = [
     "geocodeDisplayName": "7 к1, Ореховый бульвар, район Орехово-Борисово Северное, Москва, Центральный федеральный округ, 115551, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Общественный транспорт",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 3,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "60141",
@@ -3205,8 +3159,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "blue",
     "region": "Юго-восток",
-    "engineerId": "southeast-lhcpec",
-    "baselineEngineerId": "southeast-lhcpec",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7137838,
       55.614969
@@ -3216,17 +3170,16 @@ export const csvJobs = [
     "geocodeDisplayName": "94 к1, Каширское шоссе (дублёр), Орехово-Борисово, район Орехово-Борисово Северное, Москва, Центральный федеральный округ, 115551, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Общественный транспорт",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "79450",
@@ -3239,8 +3192,8 @@ export const csvJobs = [
     "workType": "Заказ подключения/Дозаказ оборудования",
     "tone": "amber",
     "region": "Юго-восток",
-    "engineerId": "southeast-lhcpec",
-    "baselineEngineerId": "southeast-lhcpec",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7128459,
       55.6108754
@@ -3250,17 +3203,16 @@ export const csvJobs = [
     "geocodeDisplayName": "11 к1, Ореховый бульвар, Орехово-Борисово, район Орехово-Борисово Северное, Москва, Центральный федеральный округ, 115551, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Общественный транспорт",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 3,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "58129",
@@ -3273,8 +3225,8 @@ export const csvJobs = [
     "workType": "Заявка на подключение",
     "tone": "amber",
     "region": "Юго-восток",
-    "engineerId": "southeast-bjucyq",
-    "baselineEngineerId": "southeast-bjucyq",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7226952,
       55.6144125
@@ -3284,17 +3236,16 @@ export const csvJobs = [
     "geocodeDisplayName": "44 к3, Борисовский проезд, район Орехово-Борисово Северное, Москва, Центральный федеральный округ, 115563, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 3,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "93798",
@@ -3307,8 +3258,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "green",
     "region": "Юго-восток",
-    "engineerId": "southeast-cohmg5",
-    "baselineEngineerId": "southeast-cohmg5",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7307244,
       55.6165342
@@ -3318,17 +3269,16 @@ export const csvJobs = [
     "geocodeDisplayName": "41, Ореховый проезд, район Зябликово, Москва, Центральный федеральный округ, 115573, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Общественный транспорт",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "89696",
@@ -3341,8 +3291,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "green",
     "region": "Юго-восток",
-    "engineerId": "southeast-1329nj3",
-    "baselineEngineerId": "southeast-1329nj3",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.8378227,
       55.4105367
@@ -3352,17 +3302,16 @@ export const csvJobs = [
     "geocodeDisplayName": "20, улица Ильюшина, микрорайон Авиационный, Домодедово, городской округ Домодедово, Московская область, Центральный федеральный округ, 142007, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "20362",
@@ -3375,8 +3324,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "violet",
     "region": "Юго-восток",
-    "engineerId": "southeast-5xpjbk",
-    "baselineEngineerId": "southeast-5xpjbk",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       38.248056,
       54.8419626
@@ -3386,17 +3335,16 @@ export const csvJobs = [
     "geocodeDisplayName": "8, Юбилейная улица, Кашира-2, Кашира, городской округ Кашира, Московская область, Центральный федеральный округ, 142904, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Общественный транспорт",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Просрочена"
+    "status": "Новая"
   },
   {
     "id": "40698",
@@ -3409,8 +3357,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "violet",
     "region": "Юго-восток",
-    "engineerId": "southeast-cohmg5",
-    "baselineEngineerId": "southeast-cohmg5",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7543157,
       55.6180751
@@ -3420,17 +3368,16 @@ export const csvJobs = [
     "geocodeDisplayName": "9 к1, Кустанайская улица, район Зябликово, Москва, Центральный федеральный округ, 115682, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Общественный транспорт",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Просрочена"
+    "status": "Новая"
   },
   {
     "id": "2427",
@@ -3443,8 +3390,8 @@ export const csvJobs = [
     "workType": "Дозаказ оборудования",
     "tone": "violet",
     "region": "Юго-восток",
-    "engineerId": "southeast-1j21qyz",
-    "baselineEngineerId": "southeast-1j21qyz",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6538396,
       55.6338547
@@ -3454,17 +3401,16 @@ export const csvJobs = [
     "geocodeDisplayName": "18 к4, Пролетарский проспект, район Царицыно, Москва, Центральный федеральный округ, 115447, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 3,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Отправлена"
+    "status": "Новая"
   },
   {
     "id": "51603",
@@ -3477,8 +3423,8 @@ export const csvJobs = [
     "workType": "Заказ подключения/Дозаказ оборудования",
     "tone": "amber",
     "region": "Юго-восток",
-    "engineerId": "southeast-9mjsap",
-    "baselineEngineerId": "southeast-9mjsap",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7518423,
       55.6379834
@@ -3488,17 +3434,16 @@ export const csvJobs = [
     "geocodeDisplayName": "20 к1, улица Борисовские Пруды, район Братеево, Москва, Центральный федеральный округ, 115612, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 3,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Отправлена"
+    "status": "Новая"
   },
   {
     "id": "13404",
@@ -3511,8 +3456,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "green",
     "region": "Юго-восток",
-    "engineerId": "southeast-lhx82j",
-    "baselineEngineerId": "southeast-lhx82j",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       38.2399045,
       54.8398702
@@ -3522,17 +3467,16 @@ export const csvJobs = [
     "geocodeDisplayName": "7, улица Кржижановского, Кашира-2, Кашира, городской округ Кашира, Московская область, Центральный федеральный округ, 142904, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Отправлена"
+    "status": "Новая"
   },
   {
     "id": "72476",
@@ -3545,8 +3489,8 @@ export const csvJobs = [
     "workType": "Дозаказ оборудования",
     "tone": "blue",
     "region": "Юго-восток",
-    "engineerId": "southeast-1j21qyz",
-    "baselineEngineerId": "southeast-1j21qyz",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6483741,
       55.5899951
@@ -3556,17 +3500,16 @@ export const csvJobs = [
     "geocodeDisplayName": "5 к1, Медынская улица, район Бирюлёво Западное, Москва, Центральный федеральный округ, 117546, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 3,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "90989",
@@ -3579,8 +3522,8 @@ export const csvJobs = [
     "workType": "Нет линка",
     "tone": "violet",
     "region": "Юго-восток",
-    "engineerId": "southeast-1av5hst",
-    "baselineEngineerId": "southeast-1av5hst",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7394233,
       55.4515305
@@ -3590,15 +3533,17 @@ export const csvJobs = [
     "geocodeDisplayName": "улица Гагарина, 55 к2, Домодедово, Московская область",
     "risk": false,
     "equipment": "Рефлектометр",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Велосипед",
-      "Автомобиль"
-    ],
+    "requiredTransport": "",
     "priority": 5,
-    "serviceMinutes": 60,
+    "serviceMinutes": 80,
+    "normativeMinutes": 100,
+    "travelReserveMinutes": 20,
+    "estimatedTravelMinutes": 20,
+    "normSource": "экспертный норматив",
+    "urgency": "normal",
+    "workClass": "emergency",
     "source": "CSV",
-    "status": "Отправлена"
+    "status": "Новая"
   },
   {
     "id": "7660",
@@ -3611,8 +3556,8 @@ export const csvJobs = [
     "workType": "Нет линка",
     "tone": "amber",
     "region": "Юго-восток",
-    "engineerId": "southeast-1av5hst",
-    "baselineEngineerId": "southeast-1av5hst",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7444395,
       55.4546029
@@ -3622,15 +3567,17 @@ export const csvJobs = [
     "geocodeDisplayName": "1-я Коммунистическая улица, 39, Домодедово, Московская область",
     "risk": false,
     "equipment": "Рефлектометр",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Велосипед",
-      "Автомобиль"
-    ],
+    "requiredTransport": "",
     "priority": 5,
-    "serviceMinutes": 60,
+    "serviceMinutes": 80,
+    "normativeMinutes": 100,
+    "travelReserveMinutes": 20,
+    "estimatedTravelMinutes": 20,
+    "normSource": "экспертный норматив",
+    "urgency": "normal",
+    "workClass": "emergency",
     "source": "CSV",
-    "status": "Отправлена"
+    "status": "Новая"
   },
   {
     "id": "89067",
@@ -3643,8 +3590,8 @@ export const csvJobs = [
     "workType": "Работа с кабелем",
     "tone": "blue",
     "region": "Юго-восток",
-    "engineerId": "southeast-9mjsap",
-    "baselineEngineerId": "southeast-9mjsap",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7747995,
       55.6418225
@@ -3654,17 +3601,16 @@ export const csvJobs = [
     "geocodeDisplayName": "48 к2, улица Борисовские Пруды, район Братеево, Москва, Центральный федеральный округ, 109469, Россия",
     "risk": false,
     "equipment": "Диагностический комплект",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "repair",
     "source": "CSV",
-    "status": "Отправлена"
+    "status": "Новая"
   },
   {
     "id": "65268",
@@ -3677,8 +3623,8 @@ export const csvJobs = [
     "workType": "Работа с кабелем",
     "tone": "violet",
     "region": "Юго-восток",
-    "engineerId": "southeast-lhx82j",
-    "baselineEngineerId": "southeast-lhx82j",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       38.0692054,
       54.8917937
@@ -3688,17 +3634,16 @@ export const csvJobs = [
     "geocodeDisplayName": "34, улица Калинина, Северо-Западный микрорайон, Ступино, городской округ Ступино, Московская область, Центральный федеральный округ, 142802, Россия",
     "risk": false,
     "equipment": "Диагностический комплект",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "repair",
     "source": "CSV",
-    "status": "Отправлена"
+    "status": "Новая"
   },
   {
     "id": "33880",
@@ -3711,8 +3656,8 @@ export const csvJobs = [
     "workType": "Низкая скорость",
     "tone": "blue",
     "region": "Юго-восток",
-    "engineerId": "southeast-bjucyq",
-    "baselineEngineerId": "southeast-bjucyq",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7067109,
       55.6060564
@@ -3722,17 +3667,16 @@ export const csvJobs = [
     "geocodeDisplayName": "59 к2, Шипиловский проезд, район Орехово-Борисово Южное, Москва, Центральный федеральный округ, 115191, Россия",
     "risk": false,
     "equipment": "Диагностический комплект",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "repair",
     "source": "CSV",
-    "status": "Отправлена"
+    "status": "Новая"
   },
   {
     "id": "37590",
@@ -3745,8 +3689,8 @@ export const csvJobs = [
     "workType": "Нет линка",
     "tone": "green",
     "region": "Юго-восток",
-    "engineerId": "southeast-cohmg5",
-    "baselineEngineerId": "southeast-cohmg5",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6461681,
       55.5760549
@@ -3756,15 +3700,17 @@ export const csvJobs = [
     "geocodeDisplayName": "15 к2, Востряковский проезд, район Бирюлёво Западное, Москва, Центральный федеральный округ, 117546, Россия",
     "risk": false,
     "equipment": "Рефлектометр",
-    "requiredTransport": "Общественный транспорт",
-    "allowedTransports": [
-      "Общественный транспорт",
-      "Автомобиль"
-    ],
+    "requiredTransport": "",
     "priority": 5,
-    "serviceMinutes": 60,
+    "serviceMinutes": 80,
+    "normativeMinutes": 100,
+    "travelReserveMinutes": 20,
+    "estimatedTravelMinutes": 20,
+    "normSource": "экспертный норматив",
+    "urgency": "normal",
+    "workClass": "emergency",
     "source": "CSV",
-    "status": "Отправлена"
+    "status": "Новая"
   },
   {
     "id": "33507",
@@ -3777,8 +3723,8 @@ export const csvJobs = [
     "workType": "Нет линка",
     "tone": "green",
     "region": "Юго-восток",
-    "engineerId": "southeast-udu43b",
-    "baselineEngineerId": "southeast-udu43b",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6681476,
       55.5806701
@@ -3788,14 +3734,17 @@ export const csvJobs = [
     "geocodeDisplayName": "58 к3, Бирюлёвская улица, район Бирюлёво Восточное, Москва, Центральный федеральный округ, 115372, Россия",
     "risk": false,
     "equipment": "Рефлектометр",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль"
-    ],
+    "requiredTransport": "",
     "priority": 5,
-    "serviceMinutes": 60,
+    "serviceMinutes": 80,
+    "normativeMinutes": 100,
+    "travelReserveMinutes": 20,
+    "estimatedTravelMinutes": 20,
+    "normSource": "экспертный норматив",
+    "urgency": "normal",
+    "workClass": "emergency",
     "source": "CSV",
-    "status": "В пути"
+    "status": "Новая"
   },
   {
     "id": "88209",
@@ -3808,8 +3757,8 @@ export const csvJobs = [
     "workType": "Низкая скорость",
     "tone": "amber",
     "region": "Юго-восток",
-    "engineerId": "southeast-bjucyq",
-    "baselineEngineerId": "southeast-bjucyq",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7161258,
       55.6039003
@@ -3819,17 +3768,16 @@ export const csvJobs = [
     "geocodeDisplayName": "31, Домодедовская улица, район Орехово-Борисово Южное, Москва, Центральный федеральный округ, 127474, Россия",
     "risk": false,
     "equipment": "Диагностический комплект",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "repair",
     "source": "CSV",
-    "status": "В пути"
+    "status": "Новая"
   },
   {
     "id": "24482",
@@ -3842,8 +3790,8 @@ export const csvJobs = [
     "workType": "Рост ошибок на порту",
     "tone": "green",
     "region": "Юго-восток",
-    "engineerId": "southeast-1j21qyz",
-    "baselineEngineerId": "southeast-1j21qyz",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6631328,
       55.6235129
@@ -3853,17 +3801,16 @@ export const csvJobs = [
     "geocodeDisplayName": "33 к7, Весёлая улица, район Царицыно, Москва, Центральный федеральный округ, 115516, Россия",
     "risk": false,
     "equipment": "Диагностический комплект",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "repair",
     "source": "CSV",
-    "status": "Отменена"
+    "status": "Новая"
   },
   {
     "id": "40111",
@@ -3876,8 +3823,8 @@ export const csvJobs = [
     "workType": "Работа с кабелем",
     "tone": "amber",
     "region": "Юго-восток",
-    "engineerId": "southeast-lhx82j",
-    "baselineEngineerId": "southeast-lhx82j",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       38.0692054,
       54.8917937
@@ -3887,17 +3834,16 @@ export const csvJobs = [
     "geocodeDisplayName": "34, улица Калинина, Северо-Западный микрорайон, Ступино, городской округ Ступино, Московская область, Центральный федеральный округ, 142802, Россия",
     "risk": false,
     "equipment": "Диагностический комплект",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "repair",
     "source": "CSV",
-    "status": "Отменена"
+    "status": "Новая"
   },
   {
     "id": "46199",
@@ -3910,8 +3856,8 @@ export const csvJobs = [
     "workType": "Нет линка",
     "tone": "violet",
     "region": "Юго-восток",
-    "engineerId": "southeast-1av5hst",
-    "baselineEngineerId": "southeast-1av5hst",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.8424754,
       55.4144868
@@ -3921,15 +3867,17 @@ export const csvJobs = [
     "geocodeDisplayName": "11 к2, улица Ильюшина, микрорайон Авиационный, Домодедово, городской округ Домодедово, Московская область, Центральный федеральный округ, 142007, Россия",
     "risk": false,
     "equipment": "Рефлектометр",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Велосипед",
-      "Автомобиль"
-    ],
+    "requiredTransport": "",
     "priority": 5,
-    "serviceMinutes": 60,
+    "serviceMinutes": 80,
+    "normativeMinutes": 100,
+    "travelReserveMinutes": 20,
+    "estimatedTravelMinutes": 20,
+    "normSource": "экспертный норматив",
+    "urgency": "normal",
+    "workClass": "emergency",
     "source": "CSV",
-    "status": "В работе"
+    "status": "Новая"
   },
   {
     "id": "75282",
@@ -3942,8 +3890,8 @@ export const csvJobs = [
     "workType": "Роутер. Замена техническим специалистом",
     "tone": "green",
     "region": "Юго-восток",
-    "engineerId": "southeast-1j21qyz",
-    "baselineEngineerId": "southeast-1j21qyz",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6492402,
       55.5768738
@@ -3953,17 +3901,16 @@ export const csvJobs = [
     "geocodeDisplayName": "15 к4, Востряковский проезд, район Бирюлёво Западное, Москва, Центральный федеральный округ, 117403, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "В работе"
+    "status": "Новая"
   },
   {
     "id": "63577",
@@ -3976,8 +3923,8 @@ export const csvJobs = [
     "workType": "Нет линка",
     "tone": "green",
     "region": "Юго-восток",
-    "engineerId": "southeast-1av5hst",
-    "baselineEngineerId": "southeast-1av5hst",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7782889,
       55.4235837
@@ -3987,15 +3934,17 @@ export const csvJobs = [
     "geocodeDisplayName": "48, улица Корнеева, Домодедово, городской округ Домодедово, Московская область, Центральный федеральный округ, 142000, Россия",
     "risk": false,
     "equipment": "Рефлектометр",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Велосипед",
-      "Автомобиль"
-    ],
+    "requiredTransport": "",
     "priority": 5,
-    "serviceMinutes": 60,
+    "serviceMinutes": 80,
+    "normativeMinutes": 100,
+    "travelReserveMinutes": 20,
+    "estimatedTravelMinutes": 20,
+    "normSource": "экспертный норматив",
+    "urgency": "normal",
+    "workClass": "emergency",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "7610",
@@ -4008,8 +3957,8 @@ export const csvJobs = [
     "workType": "Переключение на Гбит/с",
     "tone": "blue",
     "region": "Юго-восток",
-    "engineerId": "southeast-1j21qyz",
-    "baselineEngineerId": "southeast-1j21qyz",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.665112,
       55.6248172
@@ -4019,17 +3968,16 @@ export const csvJobs = [
     "geocodeDisplayName": "4 к1, Луганская улица, район Царицыно, Москва, Центральный федеральный округ, 115516, Россия",
     "risk": false,
     "equipment": "Диагностический комплект",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "repair",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "19216",
@@ -4042,8 +3990,8 @@ export const csvJobs = [
     "workType": "TVE/ENT. Замена приставки техником",
     "tone": "violet",
     "region": "Юго-восток",
-    "engineerId": "southeast-1j21qyz",
-    "baselineEngineerId": "southeast-1j21qyz",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.664554,
       55.6278364
@@ -4053,17 +4001,16 @@ export const csvJobs = [
     "geocodeDisplayName": "3 к1, Луганская улица, район Царицыно, Москва, Центральный федеральный округ, 115516, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "11872",
@@ -4076,8 +4023,8 @@ export const csvJobs = [
     "workType": "Рост ошибок на порту",
     "tone": "violet",
     "region": "Юго-восток",
-    "engineerId": "southeast-1j21qyz",
-    "baselineEngineerId": "southeast-1j21qyz",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6631328,
       55.6235129
@@ -4087,17 +4034,16 @@ export const csvJobs = [
     "geocodeDisplayName": "33 к7, Весёлая улица, район Царицыно, Москва, Центральный федеральный округ, 115516, Россия",
     "risk": false,
     "equipment": "Диагностический комплект",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "repair",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "54422",
@@ -4110,8 +4056,8 @@ export const csvJobs = [
     "workType": "IP-адрес 169...",
     "tone": "violet",
     "region": "Юго-восток",
-    "engineerId": "southeast-1j21qyz",
-    "baselineEngineerId": "southeast-1j21qyz",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6637203,
       55.6287028
@@ -4121,17 +4067,16 @@ export const csvJobs = [
     "geocodeDisplayName": "1, Луганская улица, район Царицыно, Москва, Центральный федеральный округ, 115516, Россия",
     "risk": false,
     "equipment": "Диагностический комплект",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "repair",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "4724",
@@ -4144,8 +4089,8 @@ export const csvJobs = [
     "workType": "Низкая скорость",
     "tone": "amber",
     "region": "Юго-восток",
-    "engineerId": "southeast-1j21qyz",
-    "baselineEngineerId": "southeast-1j21qyz",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6773965,
       55.6351144
@@ -4155,17 +4100,16 @@ export const csvJobs = [
     "geocodeDisplayName": "5 к2, Кантемировская улица, район Царицыно, Москва, Центральный федеральный округ, 115409, Россия",
     "risk": false,
     "equipment": "Диагностический комплект",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "repair",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "11899",
@@ -4178,8 +4122,8 @@ export const csvJobs = [
     "workType": "Низкая скорость",
     "tone": "green",
     "region": "Юго-восток",
-    "engineerId": "southeast-udu43b",
-    "baselineEngineerId": "southeast-udu43b",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6663646,
       55.574132
@@ -4189,17 +4133,16 @@ export const csvJobs = [
     "geocodeDisplayName": "7 к2, Загорьевский проезд, район Бирюлёво Восточное, Москва, Центральный федеральный округ, 115547, Россия",
     "risk": false,
     "equipment": "Диагностический комплект",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "repair",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "60886",
@@ -4212,8 +4155,8 @@ export const csvJobs = [
     "workType": "Переключение на Гбит/с",
     "tone": "green",
     "region": "Юго-восток",
-    "engineerId": "southeast-lhcpec",
-    "baselineEngineerId": "southeast-lhcpec",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6958848,
       55.6204412
@@ -4223,17 +4166,16 @@ export const csvJobs = [
     "geocodeDisplayName": "18 к1, улица Маршала Захарова, район Орехово-Борисово Северное, Москва, Центральный федеральный округ, 115569, Россия",
     "risk": false,
     "equipment": "Диагностический комплект",
-    "requiredTransport": "Общественный транспорт",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "repair",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "32066",
@@ -4246,8 +4188,8 @@ export const csvJobs = [
     "workType": "Нет линка",
     "tone": "violet",
     "region": "Юго-восток",
-    "engineerId": "southeast-lhcpec",
-    "baselineEngineerId": "southeast-lhcpec",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7261342,
       55.6072105
@@ -4257,15 +4199,17 @@ export const csvJobs = [
     "geocodeDisplayName": "45 к2, улица Генерала Белова, район Орехово-Борисово Южное, Москва, Центральный федеральный округ, 109387, Россия",
     "risk": false,
     "equipment": "Рефлектометр",
-    "requiredTransport": "Общественный транспорт",
-    "allowedTransports": [
-      "Общественный транспорт",
-      "Автомобиль"
-    ],
+    "requiredTransport": "",
     "priority": 5,
-    "serviceMinutes": 60,
+    "serviceMinutes": 80,
+    "normativeMinutes": 100,
+    "travelReserveMinutes": 20,
+    "estimatedTravelMinutes": 20,
+    "normSource": "экспертный норматив",
+    "urgency": "normal",
+    "workClass": "emergency",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "63894",
@@ -4278,8 +4222,8 @@ export const csvJobs = [
     "workType": "IP-адрес 169...",
     "tone": "green",
     "region": "Юго-восток",
-    "engineerId": "southeast-lhcpec",
-    "baselineEngineerId": "southeast-lhcpec",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7245073,
       55.6205105
@@ -4289,17 +4233,16 @@ export const csvJobs = [
     "geocodeDisplayName": "38, Шипиловская улица, район Орехово-Борисово Северное, Москва, Центральный федеральный округ, 115563, Россия",
     "risk": false,
     "equipment": "Диагностический комплект",
-    "requiredTransport": "Общественный транспорт",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "repair",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "64168",
@@ -4312,8 +4255,8 @@ export const csvJobs = [
     "workType": "TVE/ENT. Замена приставки техником",
     "tone": "violet",
     "region": "Юго-восток",
-    "engineerId": "southeast-lhcpec",
-    "baselineEngineerId": "southeast-lhcpec",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7474422,
       55.6072073
@@ -4323,17 +4266,16 @@ export const csvJobs = [
     "geocodeDisplayName": "19 к3, Гурьевский проезд, район Орехово-Борисово Южное, Москва, Центральный федеральный округ, 115597, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Общественный транспорт",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "40919",
@@ -4346,8 +4288,8 @@ export const csvJobs = [
     "workType": "Рост ошибок на порту",
     "tone": "amber",
     "region": "Юго-восток",
-    "engineerId": "southeast-bjucyq",
-    "baselineEngineerId": "southeast-bjucyq",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7226952,
       55.6144125
@@ -4357,17 +4299,16 @@ export const csvJobs = [
     "geocodeDisplayName": "44 к3, Борисовский проезд, район Орехово-Борисово Северное, Москва, Центральный федеральный округ, 115563, Россия",
     "risk": false,
     "equipment": "Диагностический комплект",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "repair",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "36961",
@@ -4380,8 +4321,8 @@ export const csvJobs = [
     "workType": "Нет линка",
     "tone": "amber",
     "region": "Юго-восток",
-    "engineerId": "southeast-bjucyq",
-    "baselineEngineerId": "southeast-bjucyq",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7313782,
       55.6228247
@@ -4391,15 +4332,17 @@ export const csvJobs = [
     "geocodeDisplayName": "23 к1, Ореховый проезд, район Зябликово, Москва, Центральный федеральный округ, 115573, Россия",
     "risk": false,
     "equipment": "Рефлектометр",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Велосипед",
-      "Автомобиль"
-    ],
+    "requiredTransport": "",
     "priority": 5,
-    "serviceMinutes": 60,
+    "serviceMinutes": 80,
+    "normativeMinutes": 100,
+    "travelReserveMinutes": 20,
+    "estimatedTravelMinutes": 20,
+    "normSource": "экспертный норматив",
+    "urgency": "normal",
+    "workClass": "emergency",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "12329",
@@ -4412,8 +4355,8 @@ export const csvJobs = [
     "workType": "Разрывы",
     "tone": "amber",
     "region": "Юго-восток",
-    "engineerId": "southeast-pt7jrx",
-    "baselineEngineerId": "southeast-pt7jrx",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6475142,
       55.5812013
@@ -4423,17 +4366,16 @@ export const csvJobs = [
     "geocodeDisplayName": "4 к1, Булатниковская улица, район Бирюлёво Западное, Москва, Центральный федеральный округ, 117403, Россия",
     "risk": false,
     "equipment": "Диагностический комплект",
-    "requiredTransport": "Общественный транспорт",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "repair",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "95692",
@@ -4446,8 +4388,8 @@ export const csvJobs = [
     "workType": "Нет линка",
     "tone": "violet",
     "region": "Юго-восток",
-    "engineerId": "southeast-cohmg5",
-    "baselineEngineerId": "southeast-cohmg5",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7583887,
       55.6170816
@@ -4457,15 +4399,17 @@ export const csvJobs = [
     "geocodeDisplayName": "61 к1, Ореховый бульвар, район Зябликово, Москва, Центральный федеральный округ, 115682, Россия",
     "risk": false,
     "equipment": "Рефлектометр",
-    "requiredTransport": "Общественный транспорт",
-    "allowedTransports": [
-      "Общественный транспорт",
-      "Автомобиль"
-    ],
+    "requiredTransport": "",
     "priority": 5,
-    "serviceMinutes": 60,
+    "serviceMinutes": 80,
+    "normativeMinutes": 100,
+    "travelReserveMinutes": 20,
+    "estimatedTravelMinutes": 20,
+    "normSource": "экспертный норматив",
+    "urgency": "normal",
+    "workClass": "emergency",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "13583",
@@ -4478,8 +4422,8 @@ export const csvJobs = [
     "workType": "Нет линка",
     "tone": "blue",
     "region": "Юго-восток",
-    "engineerId": "southeast-1av5hst",
-    "baselineEngineerId": "southeast-1av5hst",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7619456,
       55.4371874
@@ -4489,15 +4433,17 @@ export const csvJobs = [
     "geocodeDisplayName": "16, Кутузовский проезд, микрорайон Северный, Домодедово, городской округ Домодедово, Московская область, Центральный федеральный округ, 142000, Россия",
     "risk": false,
     "equipment": "Рефлектометр",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Велосипед",
-      "Автомобиль"
-    ],
+    "requiredTransport": "",
     "priority": 5,
-    "serviceMinutes": 60,
+    "serviceMinutes": 80,
+    "normativeMinutes": 100,
+    "travelReserveMinutes": 20,
+    "estimatedTravelMinutes": 20,
+    "normSource": "экспертный норматив",
+    "urgency": "normal",
+    "workClass": "emergency",
     "source": "CSV",
-    "status": "Просрочена"
+    "status": "Новая"
   },
   {
     "id": "3151",
@@ -4510,8 +4456,8 @@ export const csvJobs = [
     "workType": "Нет линка",
     "tone": "green",
     "region": "Юго-восток",
-    "engineerId": "southeast-5xpjbk",
-    "baselineEngineerId": "southeast-5xpjbk",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       38.1907273,
       54.8429121
@@ -4521,15 +4467,17 @@ export const csvJobs = [
     "geocodeDisplayName": "11 к3, улица Ленина, Кашира-3, Кашира, городской округ Кашира, Московская область, Центральный федеральный округ, 142903, Россия",
     "risk": false,
     "equipment": "Рефлектометр",
-    "requiredTransport": "Общественный транспорт",
-    "allowedTransports": [
-      "Общественный транспорт",
-      "Автомобиль"
-    ],
+    "requiredTransport": "",
     "priority": 5,
-    "serviceMinutes": 60,
+    "serviceMinutes": 80,
+    "normativeMinutes": 100,
+    "travelReserveMinutes": 20,
+    "estimatedTravelMinutes": 20,
+    "normSource": "экспертный норматив",
+    "urgency": "normal",
+    "workClass": "emergency",
     "source": "CSV",
-    "status": "Просрочена"
+    "status": "Новая"
   },
   {
     "id": "45778",
@@ -4542,8 +4490,8 @@ export const csvJobs = [
     "workType": "Рост ошибок на порту",
     "tone": "violet",
     "region": "Юго-восток",
-    "engineerId": "southeast-lhx82j",
-    "baselineEngineerId": "southeast-lhx82j",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       38.1897638,
       54.8409976
@@ -4553,17 +4501,16 @@ export const csvJobs = [
     "geocodeDisplayName": "5 к3, улица Металлургов, Кашира-3, Кашира, городской округ Кашира, Московская область, Центральный федеральный округ, 142903, Россия",
     "risk": false,
     "equipment": "Диагностический комплект",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "repair",
     "source": "CSV",
-    "status": "Просрочена"
+    "status": "Новая"
   },
   {
     "id": "20055",
@@ -4576,8 +4523,8 @@ export const csvJobs = [
     "workType": "IP-адрес 169...",
     "tone": "green",
     "region": "Юго-восток",
-    "engineerId": "southeast-cohmg5",
-    "baselineEngineerId": "southeast-cohmg5",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.7437967,
       55.6274499
@@ -4587,17 +4534,16 @@ export const csvJobs = [
     "geocodeDisplayName": "9 к1, улица Мусы Джалиля, район Зябликово, Москва, Центральный федеральный округ, 115573, Россия",
     "risk": false,
     "equipment": "Диагностический комплект",
-    "requiredTransport": "Общественный транспорт",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "repair",
     "source": "CSV",
-    "status": "Просрочена"
+    "status": "Новая"
   },
   {
     "id": "7258",
@@ -4610,8 +4556,8 @@ export const csvJobs = [
     "workType": "Авария",
     "tone": "blue",
     "region": "Юго-восток",
-    "engineerId": "southeast-1av5hst",
-    "baselineEngineerId": "southeast-1av5hst",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.8409177,
       55.4122673
@@ -4621,20 +4567,22 @@ export const csvJobs = [
     "geocodeDisplayName": "улица Жуковского, 14/18 с1, Домодедово, Московская область",
     "risk": false,
     "equipment": "Рефлектометр",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Велосипед",
-      "Автомобиль"
-    ],
+    "requiredTransport": "",
     "priority": 5,
-    "serviceMinutes": 60,
+    "serviceMinutes": 80,
+    "normativeMinutes": 100,
+    "travelReserveMinutes": 20,
+    "estimatedTravelMinutes": 20,
+    "normSource": "экспертный норматив",
+    "urgency": "normal",
+    "workClass": "emergency",
     "source": "CSV",
-    "status": "Отправлена"
+    "status": "Новая"
   },
   {
     "id": "78673",
-    "time": "09:00–23:59",
-    "windowStart": 540,
+    "time": "00:01–23:59",
+    "windowStart": 1,
     "windowEnd": 1439,
     "area": "Кашира",
     "address": "МО, г. Кашира Центральная ул. д. 21",
@@ -4642,8 +4590,8 @@ export const csvJobs = [
     "workType": "Авария",
     "tone": "amber",
     "region": "Юго-восток",
-    "engineerId": "southeast-5xpjbk",
-    "baselineEngineerId": "southeast-5xpjbk",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       38.2397671,
       54.8421235
@@ -4653,20 +4601,22 @@ export const csvJobs = [
     "geocodeDisplayName": "Центральная улица, 21, Кашира, Московская область",
     "risk": false,
     "equipment": "Рефлектометр",
-    "requiredTransport": "Общественный транспорт",
-    "allowedTransports": [
-      "Общественный транспорт",
-      "Автомобиль"
-    ],
+    "requiredTransport": "",
     "priority": 5,
-    "serviceMinutes": 60,
+    "serviceMinutes": 80,
+    "normativeMinutes": 100,
+    "travelReserveMinutes": 20,
+    "estimatedTravelMinutes": 20,
+    "normSource": "экспертный норматив",
+    "urgency": "normal",
+    "workClass": "emergency",
     "source": "CSV",
-    "status": "Отправлена"
+    "status": "Новая"
   },
   {
     "id": "98998",
-    "time": "09:00–23:59",
-    "windowStart": 540,
+    "time": "00:01–23:59",
+    "windowStart": 1,
     "windowEnd": 1439,
     "area": "Кашира",
     "address": "МО, г. Кашира Кржижановского ул. д. 5/1",
@@ -4674,8 +4624,8 @@ export const csvJobs = [
     "workType": "Авария",
     "tone": "amber",
     "region": "Юго-восток",
-    "engineerId": "southeast-5xpjbk",
-    "baselineEngineerId": "southeast-5xpjbk",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       38.2404648,
       54.8404598
@@ -4685,20 +4635,22 @@ export const csvJobs = [
     "geocodeDisplayName": "улица Кржижановского, 5 к1, Кашира, Московская область",
     "risk": false,
     "equipment": "Рефлектометр",
-    "requiredTransport": "Общественный транспорт",
-    "allowedTransports": [
-      "Общественный транспорт",
-      "Автомобиль"
-    ],
+    "requiredTransport": "",
     "priority": 5,
-    "serviceMinutes": 60,
+    "serviceMinutes": 80,
+    "normativeMinutes": 100,
+    "travelReserveMinutes": 20,
+    "estimatedTravelMinutes": 20,
+    "normSource": "экспертный норматив",
+    "urgency": "normal",
+    "workClass": "emergency",
     "source": "CSV",
-    "status": "Отправлена"
+    "status": "Новая"
   },
   {
     "id": "32589",
-    "time": "09:00–23:59",
-    "windowStart": 540,
+    "time": "00:01–23:59",
+    "windowStart": 1,
     "windowEnd": 1439,
     "area": "Кашира",
     "address": "МО, г. Кашира Кржижановского ул. д. 7к2",
@@ -4706,8 +4658,8 @@ export const csvJobs = [
     "workType": "Авария",
     "tone": "violet",
     "region": "Юго-восток",
-    "engineerId": "southeast-5xpjbk",
-    "baselineEngineerId": "southeast-5xpjbk",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       38.239367,
       54.8398433
@@ -4717,20 +4669,22 @@ export const csvJobs = [
     "geocodeDisplayName": "улица Кржижановского, Кашира, Московская область",
     "risk": false,
     "equipment": "Рефлектометр",
-    "requiredTransport": "Общественный транспорт",
-    "allowedTransports": [
-      "Общественный транспорт",
-      "Автомобиль"
-    ],
+    "requiredTransport": "",
     "priority": 5,
-    "serviceMinutes": 60,
+    "serviceMinutes": 80,
+    "normativeMinutes": 100,
+    "travelReserveMinutes": 20,
+    "estimatedTravelMinutes": 20,
+    "normSource": "экспертный норматив",
+    "urgency": "normal",
+    "workClass": "emergency",
     "source": "CSV",
-    "status": "Отправлена"
+    "status": "Новая"
   },
   {
     "id": "51774",
-    "time": "09:00–23:59",
-    "windowStart": 540,
+    "time": "00:01–23:59",
+    "windowStart": 1,
     "windowEnd": 1439,
     "area": "Кашира",
     "address": "МО, г. Кашира Кржижановского ул. д. 5/3",
@@ -4738,8 +4692,8 @@ export const csvJobs = [
     "workType": "Авария",
     "tone": "green",
     "region": "Юго-восток",
-    "engineerId": "southeast-5xpjbk",
-    "baselineEngineerId": "southeast-5xpjbk",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       38.242988,
       54.8408174
@@ -4749,20 +4703,22 @@ export const csvJobs = [
     "geocodeDisplayName": "улица Кржижановского, 5 к3, Кашира, Московская область",
     "risk": false,
     "equipment": "Рефлектометр",
-    "requiredTransport": "Общественный транспорт",
-    "allowedTransports": [
-      "Общественный транспорт",
-      "Автомобиль"
-    ],
+    "requiredTransport": "",
     "priority": 5,
-    "serviceMinutes": 60,
+    "serviceMinutes": 80,
+    "normativeMinutes": 100,
+    "travelReserveMinutes": 20,
+    "estimatedTravelMinutes": 20,
+    "normSource": "экспертный норматив",
+    "urgency": "normal",
+    "workClass": "emergency",
     "source": "CSV",
-    "status": "Отправлена"
+    "status": "Новая"
   },
   {
     "id": "90915",
-    "time": "09:00–23:59",
-    "windowStart": 540,
+    "time": "00:01–23:59",
+    "windowStart": 1,
     "windowEnd": 1439,
     "area": "Кашира",
     "address": "МО, г. Кашира Кржижановского ул. д. 5/2",
@@ -4770,8 +4726,8 @@ export const csvJobs = [
     "workType": "Авария",
     "tone": "blue",
     "region": "Юго-восток",
-    "engineerId": "southeast-5xpjbk",
-    "baselineEngineerId": "southeast-5xpjbk",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       38.2420016,
       54.8406569
@@ -4781,20 +4737,22 @@ export const csvJobs = [
     "geocodeDisplayName": "улица Кржижановского, 5 к2, Кашира, Московская область",
     "risk": false,
     "equipment": "Рефлектометр",
-    "requiredTransport": "Общественный транспорт",
-    "allowedTransports": [
-      "Общественный транспорт",
-      "Автомобиль"
-    ],
+    "requiredTransport": "",
     "priority": 5,
-    "serviceMinutes": 60,
+    "serviceMinutes": 80,
+    "normativeMinutes": 100,
+    "travelReserveMinutes": 20,
+    "estimatedTravelMinutes": 20,
+    "normSource": "экспертный норматив",
+    "urgency": "normal",
+    "workClass": "emergency",
     "source": "CSV",
-    "status": "Отправлена"
+    "status": "Новая"
   },
   {
     "id": "45243",
-    "time": "09:00–23:59",
-    "windowStart": 540,
+    "time": "00:01–23:59",
+    "windowStart": 1,
     "windowEnd": 1439,
     "area": "Кашира",
     "address": "МО, г. Кашира Кржижановского ул. д. 5/1",
@@ -4802,8 +4760,8 @@ export const csvJobs = [
     "workType": "Авария",
     "tone": "blue",
     "region": "Юго-восток",
-    "engineerId": "southeast-5xpjbk",
-    "baselineEngineerId": "southeast-5xpjbk",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       38.2404648,
       54.8404598
@@ -4813,20 +4771,22 @@ export const csvJobs = [
     "geocodeDisplayName": "улица Кржижановского, 5 к1, Кашира, Московская область",
     "risk": false,
     "equipment": "Рефлектометр",
-    "requiredTransport": "Общественный транспорт",
-    "allowedTransports": [
-      "Общественный транспорт",
-      "Автомобиль"
-    ],
+    "requiredTransport": "",
     "priority": 5,
-    "serviceMinutes": 60,
+    "serviceMinutes": 80,
+    "normativeMinutes": 100,
+    "travelReserveMinutes": 20,
+    "estimatedTravelMinutes": 20,
+    "normSource": "экспертный норматив",
+    "urgency": "normal",
+    "workClass": "emergency",
     "source": "CSV",
-    "status": "Отправлена"
+    "status": "Новая"
   },
   {
     "id": "81698",
-    "time": "09:00–23:59",
-    "windowStart": 540,
+    "time": "00:01–23:59",
+    "windowStart": 1,
     "windowEnd": 1439,
     "area": "Ступино",
     "address": "МО, г. Ступино Андропова ул. д. 37",
@@ -4834,8 +4794,8 @@ export const csvJobs = [
     "workType": "Авария",
     "tone": "blue",
     "region": "Юго-восток",
-    "engineerId": "southeast-lhx82j",
-    "baselineEngineerId": "southeast-lhx82j",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       38.0821597,
       54.8858274
@@ -4845,20 +4805,22 @@ export const csvJobs = [
     "geocodeDisplayName": "37, улица Андропова, Ступино, Московская область",
     "risk": false,
     "equipment": "Рефлектометр",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Велосипед",
-      "Автомобиль"
-    ],
+    "requiredTransport": "",
     "priority": 5,
-    "serviceMinutes": 60,
+    "serviceMinutes": 80,
+    "normativeMinutes": 100,
+    "travelReserveMinutes": 20,
+    "estimatedTravelMinutes": 20,
+    "normSource": "экспертный норматив",
+    "urgency": "normal",
+    "workClass": "emergency",
     "source": "CSV",
-    "status": "Отправлена"
+    "status": "Новая"
   },
   {
     "id": "97168",
-    "time": "09:00–23:59",
-    "windowStart": 540,
+    "time": "00:01–23:59",
+    "windowStart": 1,
     "windowEnd": 1439,
     "area": "Ступино",
     "address": "МО, г. Ступино Андропова ул. д. 33",
@@ -4866,8 +4828,8 @@ export const csvJobs = [
     "workType": "Авария",
     "tone": "amber",
     "region": "Юго-восток",
-    "engineerId": "southeast-lhx82j",
-    "baselineEngineerId": "southeast-lhx82j",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       38.082999,
       54.8857555
@@ -4877,20 +4839,22 @@ export const csvJobs = [
     "geocodeDisplayName": "33, улица Андропова, Ступино, Московская область",
     "risk": false,
     "equipment": "Рефлектометр",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Велосипед",
-      "Автомобиль"
-    ],
+    "requiredTransport": "",
     "priority": 5,
-    "serviceMinutes": 60,
+    "serviceMinutes": 80,
+    "normativeMinutes": 100,
+    "travelReserveMinutes": 20,
+    "estimatedTravelMinutes": 20,
+    "normSource": "экспертный норматив",
+    "urgency": "normal",
+    "workClass": "emergency",
     "source": "CSV",
-    "status": "Отправлена"
+    "status": "Новая"
   },
   {
     "id": "65034",
-    "time": "09:00–23:59",
-    "windowStart": 540,
+    "time": "00:01–23:59",
+    "windowStart": 1,
     "windowEnd": 1439,
     "area": "Кашира",
     "address": "МО, г. Кашира Центральная ул. д. 19",
@@ -4898,8 +4862,8 @@ export const csvJobs = [
     "workType": "Авария",
     "tone": "green",
     "region": "Юго-восток",
-    "engineerId": "southeast-5xpjbk",
-    "baselineEngineerId": "southeast-5xpjbk",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       38.2407727,
       54.8415134
@@ -4909,20 +4873,22 @@ export const csvJobs = [
     "geocodeDisplayName": "19, Центральная улица, Кашира, Московская область",
     "risk": false,
     "equipment": "Рефлектометр",
-    "requiredTransport": "Общественный транспорт",
-    "allowedTransports": [
-      "Общественный транспорт",
-      "Автомобиль"
-    ],
+    "requiredTransport": "",
     "priority": 5,
-    "serviceMinutes": 60,
+    "serviceMinutes": 80,
+    "normativeMinutes": 100,
+    "travelReserveMinutes": 20,
+    "estimatedTravelMinutes": 20,
+    "normSource": "экспертный норматив",
+    "urgency": "normal",
+    "workClass": "emergency",
     "source": "CSV",
-    "status": "В пути"
+    "status": "Новая"
   },
   {
     "id": "1287",
-    "time": "09:00–23:59",
-    "windowStart": 540,
+    "time": "00:01–23:59",
+    "windowStart": 1,
     "windowEnd": 1439,
     "area": "Бирюлево Восточное",
     "address": "Москва Бирюлевская ул. д. 44",
@@ -4930,8 +4896,8 @@ export const csvJobs = [
     "workType": "Авария",
     "tone": "green",
     "region": "Юго-восток",
-    "engineerId": "southeast-1j21qyz",
-    "baselineEngineerId": "southeast-1j21qyz",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6654561,
       55.5868278
@@ -4941,20 +4907,22 @@ export const csvJobs = [
     "geocodeDisplayName": "Бирюлёвская улица, район Бирюлёво Восточное, Москва, Центральный федеральный округ, 115372, Россия",
     "risk": false,
     "equipment": "Рефлектометр",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Велосипед",
-      "Автомобиль"
-    ],
+    "requiredTransport": "",
     "priority": 5,
-    "serviceMinutes": 60,
+    "serviceMinutes": 80,
+    "normativeMinutes": 100,
+    "travelReserveMinutes": 20,
+    "estimatedTravelMinutes": 20,
+    "normSource": "экспертный норматив",
+    "urgency": "normal",
+    "workClass": "emergency",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "31495",
-    "time": "09:00–23:59",
-    "windowStart": 540,
+    "time": "00:01–23:59",
+    "windowStart": 1,
     "windowEnd": 1439,
     "area": "Бирюлево Западное",
     "address": "Москва Булатниковский пр-зд. д. 6к1",
@@ -4962,8 +4930,8 @@ export const csvJobs = [
     "workType": "Авария",
     "tone": "blue",
     "region": "Юго-восток",
-    "engineerId": "southeast-1j21qyz",
-    "baselineEngineerId": "southeast-1j21qyz",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.65135,
       55.59361
@@ -4973,15 +4941,17 @@ export const csvJobs = [
     "geocodeDisplayName": "Булатниковский проезд, 6 к1, Москва",
     "risk": false,
     "equipment": "Рефлектометр",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Велосипед",
-      "Автомобиль"
-    ],
+    "requiredTransport": "",
     "priority": 5,
-    "serviceMinutes": 60,
+    "serviceMinutes": 80,
+    "normativeMinutes": 100,
+    "travelReserveMinutes": 20,
+    "estimatedTravelMinutes": 20,
+    "normSource": "экспертный норматив",
+    "urgency": "normal",
+    "workClass": "emergency",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "32840",
@@ -4994,8 +4964,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "violet",
     "region": "Югоцентр",
-    "engineerId": "southcenter-1q5v9g1",
-    "baselineEngineerId": "southcenter-1q5v9g1",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6405504,
       55.7107376
@@ -5005,17 +4975,16 @@ export const csvJobs = [
     "geocodeDisplayName": "3-й Павелецкий проезд, 9, Москва, Москва",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Отправлена"
+    "status": "Новая"
   },
   {
     "id": "78540",
@@ -5028,8 +4997,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "blue",
     "region": "Югоцентр",
-    "engineerId": "southcenter-1q5v9g1",
-    "baselineEngineerId": "southcenter-1q5v9g1",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6604783,
       55.7169675
@@ -5039,17 +5008,16 @@ export const csvJobs = [
     "geocodeDisplayName": "2 к2, Восточная улица, Даниловский район, Москва, Центральный федеральный округ, 115280, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Отправлена"
+    "status": "Новая"
   },
   {
     "id": "66376",
@@ -5062,8 +5030,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "green",
     "region": "Югоцентр",
-    "engineerId": "southcenter-1hqu9oe",
-    "baselineEngineerId": "southcenter-1hqu9oe",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6348001,
       55.7191142
@@ -5073,17 +5041,16 @@ export const csvJobs = [
     "geocodeDisplayName": "59, Дубининская улица, Даниловский район, Москва, Центральный федеральный округ, 111111, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Отправлена"
+    "status": "Новая"
   },
   {
     "id": "23637",
@@ -5096,8 +5063,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "amber",
     "region": "Югоцентр",
-    "engineerId": "southcenter-1ar2pqi",
-    "baselineEngineerId": "southcenter-1ar2pqi",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.5927091,
       55.6890678
@@ -5107,17 +5074,16 @@ export const csvJobs = [
     "geocodeDisplayName": "18 к2, улица Шверника, Академический район, Москва, Центральный федеральный округ, 117449, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Отправлена"
+    "status": "Новая"
   },
   {
     "id": "97770",
@@ -5130,8 +5096,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "blue",
     "region": "Югоцентр",
-    "engineerId": "southcenter-g1luap",
-    "baselineEngineerId": "southcenter-g1luap",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.5892003,
       55.6702038
@@ -5141,17 +5107,16 @@ export const csvJobs = [
     "geocodeDisplayName": "44 к2, Нагорная улица, район Котловка, Москва, Центральный федеральный округ, 117186, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Отправлена"
+    "status": "Новая"
   },
   {
     "id": "55711",
@@ -5164,8 +5129,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "amber",
     "region": "Югоцентр",
-    "engineerId": "southcenter-1w4ee8g",
-    "baselineEngineerId": "southcenter-1w4ee8g",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.5678576,
       55.6520916
@@ -5175,17 +5140,16 @@ export const csvJobs = [
     "geocodeDisplayName": "18, Херсонская улица, район Зюзино, Москва, Центральный федеральный округ, 117420, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Пешком",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Отменена"
+    "status": "Новая"
   },
   {
     "id": "76944",
@@ -5198,8 +5162,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "green",
     "region": "Югоцентр",
-    "engineerId": "southcenter-1vpvbdo",
-    "baselineEngineerId": "southcenter-1vpvbdo",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.573364,
       55.6894338
@@ -5209,17 +5173,16 @@ export const csvJobs = [
     "geocodeDisplayName": "18 к2, проспект 60-летия Октября, Академический район, Москва, Центральный федеральный округ, 117036, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Отменена"
+    "status": "Новая"
   },
   {
     "id": "75881",
@@ -5232,8 +5195,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "violet",
     "region": "Югоцентр",
-    "engineerId": "southcenter-g1luap",
-    "baselineEngineerId": "southcenter-g1luap",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.5809496,
       55.6858472
@@ -5243,17 +5206,16 @@ export const csvJobs = [
     "geocodeDisplayName": "27, улица Дмитрия Ульянова, Академический район, Москва, Центральный федеральный округ, 117218, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Отменена"
+    "status": "Новая"
   },
   {
     "id": "85188",
@@ -5266,8 +5228,8 @@ export const csvJobs = [
     "workType": "Заказ подключения/Дозаказ оборудования",
     "tone": "blue",
     "region": "Югоцентр",
-    "engineerId": "southcenter-tzaogv",
-    "baselineEngineerId": "southcenter-tzaogv",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.5634155,
       55.7242516
@@ -5277,17 +5239,16 @@ export const csvJobs = [
     "geocodeDisplayName": "29 к1, Усачёва улица, квартал 532, район Хамовники, Москва, Центральный федеральный округ, 119048, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 3,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Отменена"
+    "status": "Новая"
   },
   {
     "id": "19376",
@@ -5300,8 +5261,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "blue",
     "region": "Югоцентр",
-    "engineerId": "southcenter-1vpvbdo",
-    "baselineEngineerId": "southcenter-1vpvbdo",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.5883596,
       55.6854662
@@ -5311,17 +5272,16 @@ export const csvJobs = [
     "geocodeDisplayName": "12 к4, улица Винокурова, Академический район, Москва, Центральный федеральный округ, 117447, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "В работе"
+    "status": "Новая"
   },
   {
     "id": "6185",
@@ -5334,8 +5294,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "green",
     "region": "Югоцентр",
-    "engineerId": "southcenter-xb5y18",
-    "baselineEngineerId": "southcenter-xb5y18",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.5959185,
       55.6423446
@@ -5345,17 +5305,16 @@ export const csvJobs = [
     "geocodeDisplayName": "20 к4, Балаклавский проспект, район Зюзино, Москва, Центральный федеральный округ, 117452, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "В работе"
+    "status": "Новая"
   },
   {
     "id": "80548",
@@ -5368,8 +5327,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "violet",
     "region": "Югоцентр",
-    "engineerId": "southcenter-1xtqelv",
-    "baselineEngineerId": "southcenter-1xtqelv",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6527567,
       55.6710631
@@ -5379,17 +5338,16 @@ export const csvJobs = [
     "geocodeDisplayName": "10 к1, улица Садовники, район Нагатино-Садовники, Москва, Центральный федеральный округ, 115487, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "В работе"
+    "status": "Новая"
   },
   {
     "id": "76452",
@@ -5402,8 +5360,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "green",
     "region": "Югоцентр",
-    "engineerId": "southcenter-1w4ee8g",
-    "baselineEngineerId": "southcenter-1w4ee8g",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.5899929,
       55.6510015
@@ -5413,17 +5371,16 @@ export const csvJobs = [
     "geocodeDisplayName": "7 к1, улица Каховка, район Зюзино, Москва, Центральный федеральный округ, 117303, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Пешком",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "47560",
@@ -5436,8 +5393,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "blue",
     "region": "Югоцентр",
-    "engineerId": "southcenter-1q5v9g1",
-    "baselineEngineerId": "southcenter-1q5v9g1",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6351637,
       55.7261963
@@ -5447,17 +5404,16 @@ export const csvJobs = [
     "geocodeDisplayName": "33 к2, Большая Пионерская улица, район Замоскворечье, Москва, Центральный федеральный округ, 115054, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "79707",
@@ -5470,8 +5426,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "green",
     "region": "Югоцентр",
-    "engineerId": "southcenter-1q5v9g1",
-    "baselineEngineerId": "southcenter-1q5v9g1",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.5763858,
       55.7411713
@@ -5481,17 +5437,16 @@ export const csvJobs = [
     "geocodeDisplayName": "42, улица Плющиха, Плющиха, 540, район Хамовники, Москва, Центральный федеральный округ, 119121, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "23142",
@@ -5504,8 +5459,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "green",
     "region": "Югоцентр",
-    "engineerId": "southcenter-116n8g7",
-    "baselineEngineerId": "southcenter-116n8g7",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6804749,
       55.6848526
@@ -5515,17 +5470,16 @@ export const csvJobs = [
     "geocodeDisplayName": "31 к3, Судостроительная улица, Нагатино, Коломенка, район Нагатинский Затон, Москва, Центральный федеральный округ, 127238, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "10776",
@@ -5538,8 +5492,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "violet",
     "region": "Югоцентр",
-    "engineerId": "southcenter-116n8g7",
-    "baselineEngineerId": "southcenter-116n8g7",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6875838,
       55.6841931
@@ -5549,17 +5503,16 @@ export const csvJobs = [
     "geocodeDisplayName": "36, Судостроительная улица, Нагатино, Коломенка, район Нагатинский Затон, Москва, Центральный федеральный округ, 115407, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "94447",
@@ -5572,8 +5525,8 @@ export const csvJobs = [
     "workType": "Заказ подключения/Дозаказ оборудования",
     "tone": "blue",
     "region": "Югоцентр",
-    "engineerId": "southcenter-1o3urmb",
-    "baselineEngineerId": "southcenter-1o3urmb",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6884067,
       55.6790858
@@ -5583,17 +5536,16 @@ export const csvJobs = [
     "geocodeDisplayName": "11 к3, Затонная улица, Нагатино, Коломенка, район Нагатинский Затон, Москва, Центральный федеральный округ, 115407, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Пешком",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 3,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "94575",
@@ -5606,8 +5558,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "green",
     "region": "Югоцентр",
-    "engineerId": "southcenter-1hqu9oe",
-    "baselineEngineerId": "southcenter-1hqu9oe",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6576591,
       55.706526
@@ -5617,17 +5569,16 @@ export const csvJobs = [
     "geocodeDisplayName": "11, Автозаводская улица, Даниловский район, Москва, Центральный федеральный округ, 115068, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "94431",
@@ -5640,8 +5591,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "violet",
     "region": "Югоцентр",
-    "engineerId": "southcenter-1ar2pqi",
-    "baselineEngineerId": "southcenter-1ar2pqi",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.5866891,
       55.6913492
@@ -5651,17 +5602,16 @@ export const csvJobs = [
     "geocodeDisplayName": "12/2 к3, улица Шверника, Академический район, Москва, Центральный федеральный округ, 117449, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "52576",
@@ -5674,8 +5624,8 @@ export const csvJobs = [
     "workType": "Заявка на подключение",
     "tone": "violet",
     "region": "Югоцентр",
-    "engineerId": "southcenter-g1luap",
-    "baselineEngineerId": "southcenter-g1luap",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6793639,
       55.683529
@@ -5685,17 +5635,16 @@ export const csvJobs = [
     "geocodeDisplayName": "27 к2, Судостроительная улица, Нагатино, Коломенка, район Нагатинский Затон, Москва, Центральный федеральный округ, 127238, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 3,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "66315",
@@ -5708,8 +5657,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "violet",
     "region": "Югоцентр",
-    "engineerId": "southcenter-g1luap",
-    "baselineEngineerId": "southcenter-g1luap",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.5818461,
       55.694198
@@ -5719,17 +5668,16 @@ export const csvJobs = [
     "geocodeDisplayName": "3, улица Шверника, Академический район, Москва, Центральный федеральный округ, 117036, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "93544",
@@ -5742,8 +5690,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "violet",
     "region": "Югоцентр",
-    "engineerId": "southcenter-xb5y18",
-    "baselineEngineerId": "southcenter-xb5y18",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.5978906,
       55.6448239
@@ -5753,17 +5701,16 @@ export const csvJobs = [
     "geocodeDisplayName": "19 к2, Черноморский бульвар, район Зюзино, Москва, Центральный федеральный округ, 117452, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "19203",
@@ -5776,8 +5723,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "amber",
     "region": "Югоцентр",
-    "engineerId": "southcenter-xb5y18",
-    "baselineEngineerId": "southcenter-xb5y18",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.583089,
       55.6572931
@@ -5787,17 +5734,16 @@ export const csvJobs = [
     "geocodeDisplayName": "6 к2, Керченская улица, район Зюзино, Москва, Центральный федеральный округ, 117209, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "16024",
@@ -5810,8 +5756,8 @@ export const csvJobs = [
     "workType": "Заявка на подключение",
     "tone": "violet",
     "region": "Югоцентр",
-    "engineerId": "southcenter-1xtqelv",
-    "baselineEngineerId": "southcenter-1xtqelv",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6732411,
       55.6827402
@@ -5821,17 +5767,16 @@ export const csvJobs = [
     "geocodeDisplayName": "10 к1, Кленовый бульвар, Нагатино, Коломенка, район Нагатинский Затон, Москва, Центральный федеральный округ, 127238, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 3,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "90373",
@@ -5844,8 +5789,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "green",
     "region": "Югоцентр",
-    "engineerId": "southcenter-1xtqelv",
-    "baselineEngineerId": "southcenter-1xtqelv",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.704796,
       55.6821727
@@ -5855,17 +5800,16 @@ export const csvJobs = [
     "geocodeDisplayName": "5, Коломенская улица, район Нагатинский Затон, Москва, Центральный федеральный округ, 115142, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "79719",
@@ -5878,8 +5822,8 @@ export const csvJobs = [
     "workType": "Заказ подключения/Дозаказ оборудования",
     "tone": "violet",
     "region": "Югоцентр",
-    "engineerId": "southcenter-tzaogv",
-    "baselineEngineerId": "southcenter-tzaogv",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.5835089,
       55.742465
@@ -5889,17 +5833,16 @@ export const csvJobs = [
     "geocodeDisplayName": "17 с1, Смоленский бульвар (дублёр), Плющиха, 540, район Хамовники, Москва, Центральный федеральный округ, 119121, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 3,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "6957",
@@ -5912,8 +5855,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "violet",
     "region": "Югоцентр",
-    "engineerId": "southcenter-tzaogv",
-    "baselineEngineerId": "southcenter-tzaogv",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.5651309,
       55.7249586
@@ -5923,17 +5866,16 @@ export const csvJobs = [
     "geocodeDisplayName": "25, Усачёва улица, квартал 533, район Хамовники, Москва, Центральный федеральный округ, 119048, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "78036",
@@ -5946,8 +5888,8 @@ export const csvJobs = [
     "workType": "Конвергенция абонента",
     "tone": "green",
     "region": "Югоцентр",
-    "engineerId": "southcenter-1ar2pqi",
-    "baselineEngineerId": "southcenter-1ar2pqi",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.5798241,
       55.6953306
@@ -5957,17 +5899,16 @@ export const csvJobs = [
     "geocodeDisplayName": "17, проспект 60-летия Октября, Академический район, Москва, Центральный федеральный округ, 117312, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Отправлена"
+    "status": "Новая"
   },
   {
     "id": "49105",
@@ -5980,8 +5921,8 @@ export const csvJobs = [
     "workType": "Заказ подключения/Дозаказ оборудования",
     "tone": "amber",
     "region": "Югоцентр",
-    "engineerId": "southcenter-g1luap",
-    "baselineEngineerId": "southcenter-g1luap",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6040072,
       55.6757919
@@ -5991,17 +5932,16 @@ export const csvJobs = [
     "geocodeDisplayName": "15 к2, улица Ремизова, район Котловка, Москва, Центральный федеральный округ, 117186, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 3,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Отменена"
+    "status": "Новая"
   },
   {
     "id": "27023",
@@ -6014,8 +5954,8 @@ export const csvJobs = [
     "workType": "Нет линка",
     "tone": "blue",
     "region": "Югоцентр",
-    "engineerId": "southcenter-1vpvbdo",
-    "baselineEngineerId": "southcenter-1vpvbdo",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.5827805,
       55.6945964
@@ -6025,15 +5965,17 @@ export const csvJobs = [
     "geocodeDisplayName": "5 к2, улица Шверника, Академический район, Москва, Центральный федеральный округ, 117312, Россия",
     "risk": false,
     "equipment": "Рефлектометр",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Велосипед",
-      "Автомобиль"
-    ],
+    "requiredTransport": "",
     "priority": 5,
-    "serviceMinutes": 60,
+    "serviceMinutes": 80,
+    "normativeMinutes": 100,
+    "travelReserveMinutes": 20,
+    "estimatedTravelMinutes": 20,
+    "normSource": "экспертный норматив",
+    "urgency": "normal",
+    "workClass": "emergency",
     "source": "CSV",
-    "status": "Отправлена"
+    "status": "Новая"
   },
   {
     "id": "26177",
@@ -6046,8 +5988,8 @@ export const csvJobs = [
     "workType": "Нет линка",
     "tone": "amber",
     "region": "Югоцентр",
-    "engineerId": "southcenter-116n8g7",
-    "baselineEngineerId": "southcenter-116n8g7",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6498005,
       55.6700206
@@ -6057,15 +5999,17 @@ export const csvJobs = [
     "geocodeDisplayName": "13 к1, улица Академика Миллионщикова, район Нагатино-Садовники, Москва, Центральный федеральный округ, 115533, Россия",
     "risk": false,
     "equipment": "Рефлектометр",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Велосипед",
-      "Автомобиль"
-    ],
+    "requiredTransport": "",
     "priority": 5,
-    "serviceMinutes": 60,
+    "serviceMinutes": 80,
+    "normativeMinutes": 100,
+    "travelReserveMinutes": 20,
+    "estimatedTravelMinutes": 20,
+    "normSource": "экспертный норматив",
+    "urgency": "normal",
+    "workClass": "emergency",
     "source": "CSV",
-    "status": "Отправлена"
+    "status": "Новая"
   },
   {
     "id": "77795",
@@ -6078,8 +6022,8 @@ export const csvJobs = [
     "workType": "TVE/ENT. Другие ошибки",
     "tone": "amber",
     "region": "Югоцентр",
-    "engineerId": "southcenter-1ar2pqi",
-    "baselineEngineerId": "southcenter-1ar2pqi",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.5850112,
       55.6898618
@@ -6089,17 +6033,16 @@ export const csvJobs = [
     "geocodeDisplayName": "5/6 к2, улица Винокурова, Академический район, Москва, Центральный федеральный округ, 117449, Россия",
     "risk": false,
     "equipment": "Диагностический комплект",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "repair",
     "source": "CSV",
-    "status": "Отправлена"
+    "status": "Новая"
   },
   {
     "id": "24132",
@@ -6112,8 +6055,8 @@ export const csvJobs = [
     "workType": "Нет линка",
     "tone": "green",
     "region": "Югоцентр",
-    "engineerId": "southcenter-xb5y18",
-    "baselineEngineerId": "southcenter-xb5y18",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.5705283,
       55.6494293
@@ -6123,14 +6066,17 @@ export const csvJobs = [
     "geocodeDisplayName": "50, Балаклавский проспект, район Зюзино, Москва, Центральный федеральный округ, 117461, Россия",
     "risk": false,
     "equipment": "Рефлектометр",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль"
-    ],
+    "requiredTransport": "",
     "priority": 5,
-    "serviceMinutes": 60,
+    "serviceMinutes": 80,
+    "normativeMinutes": 100,
+    "travelReserveMinutes": 20,
+    "estimatedTravelMinutes": 20,
+    "normSource": "экспертный норматив",
+    "urgency": "normal",
+    "workClass": "emergency",
     "source": "CSV",
-    "status": "Отправлена"
+    "status": "Новая"
   },
   {
     "id": "99841",
@@ -6143,8 +6089,8 @@ export const csvJobs = [
     "workType": "Нет линка",
     "tone": "amber",
     "region": "Югоцентр",
-    "engineerId": "southcenter-1w4ee8g",
-    "baselineEngineerId": "southcenter-1w4ee8g",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6062192,
       55.6486775
@@ -6154,15 +6100,17 @@ export const csvJobs = [
     "geocodeDisplayName": "27, Симферопольский бульвар, Нагорный район, Москва, Центральный федеральный округ, 117452, Россия",
     "risk": false,
     "equipment": "Рефлектометр",
-    "requiredTransport": "Пешком",
-    "allowedTransports": [
-      "Пешком",
-      "Автомобиль"
-    ],
+    "requiredTransport": "",
     "priority": 5,
-    "serviceMinutes": 60,
+    "serviceMinutes": 80,
+    "normativeMinutes": 100,
+    "travelReserveMinutes": 20,
+    "estimatedTravelMinutes": 20,
+    "normSource": "экспертный норматив",
+    "urgency": "normal",
+    "workClass": "emergency",
     "source": "CSV",
-    "status": "В работе"
+    "status": "Новая"
   },
   {
     "id": "20263",
@@ -6175,8 +6123,8 @@ export const csvJobs = [
     "workType": "Нет линка",
     "tone": "violet",
     "region": "Югоцентр",
-    "engineerId": "southcenter-1w4ee8g",
-    "baselineEngineerId": "southcenter-1w4ee8g",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6095951,
       55.655272
@@ -6186,15 +6134,17 @@ export const csvJobs = [
     "geocodeDisplayName": "9 к2, Болотниковская улица, Нагорный район, Москва, Центральный федеральный округ, 117556, Россия",
     "risk": false,
     "equipment": "Рефлектометр",
-    "requiredTransport": "Пешком",
-    "allowedTransports": [
-      "Пешком",
-      "Автомобиль"
-    ],
+    "requiredTransport": "",
     "priority": 5,
-    "serviceMinutes": 60,
+    "serviceMinutes": 80,
+    "normativeMinutes": 100,
+    "travelReserveMinutes": 20,
+    "estimatedTravelMinutes": 20,
+    "normSource": "экспертный норматив",
+    "urgency": "normal",
+    "workClass": "emergency",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "51133",
@@ -6207,8 +6157,8 @@ export const csvJobs = [
     "workType": "Нет линка",
     "tone": "violet",
     "region": "Югоцентр",
-    "engineerId": "southcenter-1q5v9g1",
-    "baselineEngineerId": "southcenter-1q5v9g1",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6614474,
       55.7011084
@@ -6218,14 +6168,17 @@ export const csvJobs = [
     "geocodeDisplayName": "4А, улица Трофимова, Даниловский район, Москва, Центральный федеральный округ, 115432, Россия",
     "risk": false,
     "equipment": "Рефлектометр",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль"
-    ],
+    "requiredTransport": "",
     "priority": 5,
-    "serviceMinutes": 60,
+    "serviceMinutes": 80,
+    "normativeMinutes": 100,
+    "travelReserveMinutes": 20,
+    "estimatedTravelMinutes": 20,
+    "normSource": "экспертный норматив",
+    "urgency": "normal",
+    "workClass": "emergency",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "90709",
@@ -6238,8 +6191,8 @@ export const csvJobs = [
     "workType": "Разрывы",
     "tone": "amber",
     "region": "Югоцентр",
-    "engineerId": "southcenter-116n8g7",
-    "baselineEngineerId": "southcenter-116n8g7",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6943031,
       55.6777277
@@ -6249,17 +6202,16 @@ export const csvJobs = [
     "geocodeDisplayName": "21, Коломенская улица, Коломенка, район Нагатинский Затон, Москва, Центральный федеральный округ, 115142, Россия",
     "risk": false,
     "equipment": "Диагностический комплект",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "repair",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "84074",
@@ -6272,8 +6224,8 @@ export const csvJobs = [
     "workType": "Нет линка",
     "tone": "violet",
     "region": "Югоцентр",
-    "engineerId": "southcenter-116n8g7",
-    "baselineEngineerId": "southcenter-116n8g7",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6872923,
       55.687915
@@ -6283,15 +6235,17 @@ export const csvJobs = [
     "geocodeDisplayName": "60 к2, Нагатинская набережная, Коломенка, район Нагатинский Затон, Москва, Центральный федеральный округ, 115407, Россия",
     "risk": false,
     "equipment": "Рефлектометр",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Велосипед",
-      "Автомобиль"
-    ],
+    "requiredTransport": "",
     "priority": 5,
-    "serviceMinutes": 60,
+    "serviceMinutes": 80,
+    "normativeMinutes": 100,
+    "travelReserveMinutes": 20,
+    "estimatedTravelMinutes": 20,
+    "normSource": "экспертный норматив",
+    "urgency": "normal",
+    "workClass": "emergency",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "12263",
@@ -6304,8 +6258,8 @@ export const csvJobs = [
     "workType": "Нет линка",
     "tone": "green",
     "region": "Югоцентр",
-    "engineerId": "southcenter-1o3urmb",
-    "baselineEngineerId": "southcenter-1o3urmb",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.658283,
       55.6688423
@@ -6315,15 +6269,17 @@ export const csvJobs = [
     "geocodeDisplayName": "27 к3, Коломенский проезд, район Нагатино-Садовники, Москва, Центральный федеральный округ, 115487, Россия",
     "risk": false,
     "equipment": "Рефлектометр",
-    "requiredTransport": "Пешком",
-    "allowedTransports": [
-      "Пешком",
-      "Автомобиль"
-    ],
+    "requiredTransport": "",
     "priority": 5,
-    "serviceMinutes": 60,
+    "serviceMinutes": 80,
+    "normativeMinutes": 100,
+    "travelReserveMinutes": 20,
+    "estimatedTravelMinutes": 20,
+    "normSource": "экспертный норматив",
+    "urgency": "normal",
+    "workClass": "emergency",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "95501",
@@ -6336,8 +6292,8 @@ export const csvJobs = [
     "workType": "Нет линка",
     "tone": "blue",
     "region": "Югоцентр",
-    "engineerId": "southcenter-1o3urmb",
-    "baselineEngineerId": "southcenter-1o3urmb",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6857562,
       55.6771232
@@ -6347,15 +6303,17 @@ export const csvJobs = [
     "geocodeDisplayName": "12 к1, Затонная улица, Нагатино, Коломенка, район Нагатинский Затон, Москва, Центральный федеральный округ, 115407, Россия",
     "risk": false,
     "equipment": "Рефлектометр",
-    "requiredTransport": "Пешком",
-    "allowedTransports": [
-      "Пешком",
-      "Автомобиль"
-    ],
+    "requiredTransport": "",
     "priority": 5,
-    "serviceMinutes": 60,
+    "serviceMinutes": 80,
+    "normativeMinutes": 100,
+    "travelReserveMinutes": 20,
+    "estimatedTravelMinutes": 20,
+    "normSource": "экспертный норматив",
+    "urgency": "normal",
+    "workClass": "emergency",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "86002",
@@ -6368,8 +6326,8 @@ export const csvJobs = [
     "workType": "Нет линка",
     "tone": "green",
     "region": "Югоцентр",
-    "engineerId": "southcenter-1hqu9oe",
-    "baselineEngineerId": "southcenter-1hqu9oe",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6180122,
       55.7150778
@@ -6379,14 +6337,17 @@ export const csvJobs = [
     "geocodeDisplayName": "9, Городская улица, Даниловский район, Москва, Центральный федеральный округ, 115162, Россия",
     "risk": false,
     "equipment": "Рефлектометр",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль"
-    ],
+    "requiredTransport": "",
     "priority": 5,
-    "serviceMinutes": 60,
+    "serviceMinutes": 80,
+    "normativeMinutes": 100,
+    "travelReserveMinutes": 20,
+    "estimatedTravelMinutes": 20,
+    "normSource": "экспертный норматив",
+    "urgency": "normal",
+    "workClass": "emergency",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "92618",
@@ -6399,8 +6360,8 @@ export const csvJobs = [
     "workType": "IP-адрес 169...",
     "tone": "blue",
     "region": "Югоцентр",
-    "engineerId": "southcenter-1hqu9oe",
-    "baselineEngineerId": "southcenter-1hqu9oe",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6075362,
       55.6911832
@@ -6410,17 +6371,16 @@ export const csvJobs = [
     "geocodeDisplayName": "9 к1, Севастопольский проспект, Канатчиково, Донской район, Москва, Центральный федеральный округ, 117152, Россия",
     "risk": false,
     "equipment": "Диагностический комплект",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "repair",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "26845",
@@ -6433,8 +6393,8 @@ export const csvJobs = [
     "workType": "Роутер. Замена техническим специалистом",
     "tone": "violet",
     "region": "Югоцентр",
-    "engineerId": "southcenter-1hqu9oe",
-    "baselineEngineerId": "southcenter-1hqu9oe",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6431955,
       55.7116749
@@ -6444,17 +6404,16 @@ export const csvJobs = [
     "geocodeDisplayName": "3-й Павелецкий проезд, 7, 3-й Павелецкий проезд, Даниловский район, Москва, Центральный федеральный округ, 115114, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "80308",
@@ -6467,8 +6426,8 @@ export const csvJobs = [
     "workType": "IP-адрес 169...",
     "tone": "amber",
     "region": "Югоцентр",
-    "engineerId": "southcenter-1hqu9oe",
-    "baselineEngineerId": "southcenter-1hqu9oe",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6286049,
       55.7233901
@@ -6478,17 +6437,16 @@ export const csvJobs = [
     "geocodeDisplayName": "31 к6, Большая Серпуховская улица, район Замоскворечье, Москва, Центральный федеральный округ, 115093, Россия",
     "risk": false,
     "equipment": "Диагностический комплект",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "repair",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "93276",
@@ -6501,8 +6459,8 @@ export const csvJobs = [
     "workType": "Разрывы",
     "tone": "violet",
     "region": "Югоцентр",
-    "engineerId": "southcenter-1hqu9oe",
-    "baselineEngineerId": "southcenter-1hqu9oe",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6125848,
       55.7092888
@@ -6512,17 +6470,16 @@ export const csvJobs = [
     "geocodeDisplayName": "2-я Рощинская улица, 11, Москва, Москва",
     "risk": false,
     "equipment": "Диагностический комплект",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "repair",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "61311",
@@ -6535,8 +6492,8 @@ export const csvJobs = [
     "workType": "ТВ. Замена приставки техником",
     "tone": "green",
     "region": "Югоцентр",
-    "engineerId": "southcenter-1hqu9oe",
-    "baselineEngineerId": "southcenter-1hqu9oe",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6603865,
       55.7131672
@@ -6546,17 +6503,16 @@ export const csvJobs = [
     "geocodeDisplayName": "3, Ослябинский переулок, Даниловский район, Москва, Центральный федеральный округ, 115280, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "46513",
@@ -6569,8 +6525,8 @@ export const csvJobs = [
     "workType": "Рост ошибок на порту",
     "tone": "amber",
     "region": "Югоцентр",
-    "engineerId": "southcenter-1ar2pqi",
-    "baselineEngineerId": "southcenter-1ar2pqi",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.5902587,
       55.6899877
@@ -6580,17 +6536,16 @@ export const csvJobs = [
     "geocodeDisplayName": "14/1 к2, улица Шверника, Академический район, Москва, Центральный федеральный округ, 117447, Россия",
     "risk": false,
     "equipment": "Диагностический комплект",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "repair",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "35265",
@@ -6603,8 +6558,8 @@ export const csvJobs = [
     "workType": "Работа с кабелем",
     "tone": "violet",
     "region": "Югоцентр",
-    "engineerId": "southcenter-1ar2pqi",
-    "baselineEngineerId": "southcenter-1ar2pqi",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.5694046,
       55.6864404
@@ -6614,17 +6569,16 @@ export const csvJobs = [
     "geocodeDisplayName": "8 к2, Профсоюзная улица, Академический район, Москва, Центральный федеральный округ, 117292, Россия",
     "risk": false,
     "equipment": "Диагностический комплект",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "repair",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "13203",
@@ -6637,8 +6591,8 @@ export const csvJobs = [
     "workType": "ТВ. Замена приставки техником",
     "tone": "violet",
     "region": "Югоцентр",
-    "engineerId": "southcenter-1ar2pqi",
-    "baselineEngineerId": "southcenter-1ar2pqi",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.5590236,
       55.6807498
@@ -6648,17 +6602,16 @@ export const csvJobs = [
     "geocodeDisplayName": "50, Нахимовский проспект, Академический район, Москва, Центральный федеральный округ, 117292, Россия",
     "risk": false,
     "equipment": "ONT",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "connection",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "26896",
@@ -6671,8 +6624,8 @@ export const csvJobs = [
     "workType": "Переключение на Гбит/с",
     "tone": "violet",
     "region": "Югоцентр",
-    "engineerId": "southcenter-g1luap",
-    "baselineEngineerId": "southcenter-g1luap",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6036892,
       55.6543202
@@ -6682,17 +6635,16 @@ export const csvJobs = [
     "geocodeDisplayName": "22 к2, Чонгарский бульвар, район Зюзино, Москва, Центральный федеральный округ, 117149, Россия",
     "risk": false,
     "equipment": "Диагностический комплект",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "repair",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "87819",
@@ -6705,8 +6657,8 @@ export const csvJobs = [
     "workType": "Переключение на Гбит/с",
     "tone": "amber",
     "region": "Югоцентр",
-    "engineerId": "southcenter-g1luap",
-    "baselineEngineerId": "southcenter-g1luap",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6224055,
       55.7273725
@@ -6716,17 +6668,16 @@ export const csvJobs = [
     "geocodeDisplayName": "4, Люсиновская улица, район Замоскворечье, Москва, Центральный федеральный округ, 115054, Россия",
     "risk": false,
     "equipment": "Диагностический комплект",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "repair",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "5406",
@@ -6739,8 +6690,8 @@ export const csvJobs = [
     "workType": "Переключение на Гбит/с",
     "tone": "amber",
     "region": "Югоцентр",
-    "engineerId": "southcenter-g1luap",
-    "baselineEngineerId": "southcenter-g1luap",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6040072,
       55.6757919
@@ -6750,17 +6701,16 @@ export const csvJobs = [
     "geocodeDisplayName": "15 к2, улица Ремизова, район Котловка, Москва, Центральный федеральный округ, 117186, Россия",
     "risk": false,
     "equipment": "Диагностический комплект",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "repair",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "86864",
@@ -6773,8 +6723,8 @@ export const csvJobs = [
     "workType": "Работа с кабелем",
     "tone": "green",
     "region": "Югоцентр",
-    "engineerId": "southcenter-g1luap",
-    "baselineEngineerId": "southcenter-g1luap",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.6157017,
       55.6520362
@@ -6784,17 +6734,16 @@ export const csvJobs = [
     "geocodeDisplayName": "1 к4, Чонгарский бульвар, Нагорный район, Москва, Центральный федеральный округ, 117556, Россия",
     "risk": false,
     "equipment": "Диагностический комплект",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "repair",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "17896",
@@ -6807,8 +6756,8 @@ export const csvJobs = [
     "workType": "IP-адрес 169...",
     "tone": "violet",
     "region": "Югоцентр",
-    "engineerId": "southcenter-xb5y18",
-    "baselineEngineerId": "southcenter-xb5y18",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.5816709,
       55.6556242
@@ -6818,17 +6767,16 @@ export const csvJobs = [
     "geocodeDisplayName": "10 к2, Керченская улица, район Зюзино, Москва, Центральный федеральный округ, 117209, Россия",
     "risk": false,
     "equipment": "Диагностический комплект",
-    "requiredTransport": "Автомобиль",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 45,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "repair",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   },
   {
     "id": "18023",
@@ -6841,8 +6789,8 @@ export const csvJobs = [
     "workType": "Информация",
     "tone": "green",
     "region": "Югоцентр",
-    "engineerId": "southcenter-1vpvbdo",
-    "baselineEngineerId": "southcenter-1vpvbdo",
+    "engineerId": null,
+    "baselineEngineerId": null,
     "coordinates": [
       37.5407755,
       55.6879261
@@ -6852,28 +6800,27 @@ export const csvJobs = [
     "geocodeDisplayName": "70/11, Ленинский проспект, Гагаринский район, Москва, Центральный федеральный округ, 119261, Россия",
     "risk": false,
     "equipment": "Диагностический комплект",
-    "requiredTransport": "Велосипед",
-    "allowedTransports": [
-      "Автомобиль",
-      "Общественный транспорт",
-      "Велосипед",
-      "Пешком"
-    ],
+    "requiredTransport": "",
     "priority": 2,
     "serviceMinutes": 30,
+    "travelReserveMinutes": 0,
+    "estimatedTravelMinutes": 0,
+    "normSource": "демонстрационное допущение",
+    "urgency": "normal",
+    "workClass": "repair",
     "source": "CSV",
-    "status": "Выполнена"
+    "status": "Новая"
   }
 ];
 export const csvEngineers = [
   {
-    "id": "east-1vxx77r",
-    "initials": "ИС",
-    "name": "Инженер Соколов",
+    "id": "east-demo-01",
+    "initials": "В1",
+    "name": "Инженер Восток 01",
     "route": "Маршрут 01",
-    "jobs": 7,
+    "jobs": 0,
     "distance": "0 км",
-    "load": 39,
+    "load": 0,
     "color": "#7657ff",
     "region": "Восток",
     "start": [
@@ -6881,27 +6828,28 @@ export const csvEngineers = [
       55.7022013
     ],
     "skills": [
+      "Локальные работы",
       "Подключение и модернизация",
-      "Аварийно-восстановительные работы",
-      "Локальные работы"
+      "Аварийно-восстановительные работы"
     ],
     "equipment": [
+      "Диагностический комплект",
       "ONT",
-      "Рефлектометр",
-      "Диагностический комплект"
+      "Комплект GPON",
+      "Рефлектометр"
     ],
     "transport": "Автомобиль",
     "shiftStart": 480,
     "shiftEnd": 1320
   },
   {
-    "id": "east-13lpigy",
-    "initials": "ИМ",
-    "name": "Инженер Мельников",
+    "id": "east-demo-02",
+    "initials": "В2",
+    "name": "Инженер Восток 02",
     "route": "Маршрут 02",
-    "jobs": 6,
+    "jobs": 0,
     "distance": "0 км",
-    "load": 34,
+    "load": 0,
     "color": "#00a89d",
     "region": "Восток",
     "start": [
@@ -6909,27 +6857,26 @@ export const csvEngineers = [
       55.7022013
     ],
     "skills": [
-      "Подключение и модернизация",
-      "Аварийно-восстановительные работы",
-      "Локальные работы"
+      "Локальные работы",
+      "Подключение и модернизация"
     ],
     "equipment": [
+      "Диагностический комплект",
       "ONT",
-      "Рефлектометр",
-      "Диагностический комплект"
+      "Комплект GPON"
     ],
     "transport": "Общественный транспорт",
     "shiftStart": 480,
     "shiftEnd": 1320
   },
   {
-    "id": "east-d6ty7z",
-    "initials": "ИМ",
-    "name": "Инженер Матвеев",
+    "id": "east-demo-03",
+    "initials": "В3",
+    "name": "Инженер Восток 03",
     "route": "Маршрут 03",
-    "jobs": 8,
+    "jobs": 0,
     "distance": "0 км",
-    "load": 46,
+    "load": 0,
     "color": "#ff8b3d",
     "region": "Восток",
     "start": [
@@ -6937,27 +6884,25 @@ export const csvEngineers = [
       55.7022013
     ],
     "skills": [
-      "Подключение и модернизация",
-      "Аварийно-восстановительные работы",
-      "Локальные работы"
+      "Локальные работы",
+      "Аварийно-восстановительные работы"
     ],
     "equipment": [
-      "ONT",
-      "Рефлектометр",
-      "Диагностический комплект"
+      "Диагностический комплект",
+      "Рефлектометр"
     ],
-    "transport": "Пешком",
+    "transport": "Велосипед",
     "shiftStart": 480,
     "shiftEnd": 1320
   },
   {
-    "id": "east-1x8p0t9",
-    "initials": "ИП",
-    "name": "Инженер Попов",
+    "id": "east-demo-04",
+    "initials": "В4",
+    "name": "Инженер Восток 04",
     "route": "Маршрут 04",
-    "jobs": 6,
+    "jobs": 0,
     "distance": "0 км",
-    "load": 30,
+    "load": 0,
     "color": "#2d82d7",
     "region": "Восток",
     "start": [
@@ -6966,24 +6911,25 @@ export const csvEngineers = [
     ],
     "skills": [
       "Подключение и модернизация",
-      "Локальные работы"
+      "Аварийно-восстановительные работы"
     ],
     "equipment": [
       "ONT",
-      "Диагностический комплект"
+      "Комплект GPON",
+      "Рефлектометр"
     ],
     "transport": "Пешком",
     "shiftStart": 480,
     "shiftEnd": 1320
   },
   {
-    "id": "east-1tnupka",
-    "initials": "ИА",
-    "name": "Инженер Арташкин",
+    "id": "east-demo-05",
+    "initials": "В5",
+    "name": "Инженер Восток 05",
     "route": "Маршрут 05",
-    "jobs": 4,
+    "jobs": 0,
     "distance": "0 км",
-    "load": 23,
+    "load": 0,
     "color": "#e84f87",
     "region": "Восток",
     "start": [
@@ -6991,27 +6937,23 @@ export const csvEngineers = [
       55.7022013
     ],
     "skills": [
-      "Подключение и модернизация",
-      "Локальные работы",
-      "Аварийно-восстановительные работы"
+      "Локальные работы"
     ],
     "equipment": [
-      "ONT",
-      "Диагностический комплект",
-      "Рефлектометр"
+      "Диагностический комплект"
     ],
     "transport": "Автомобиль",
     "shiftStart": 480,
     "shiftEnd": 1320
   },
   {
-    "id": "east-wugar1",
-    "initials": "ИК",
-    "name": "Инженер Комарь",
+    "id": "east-demo-06",
+    "initials": "В6",
+    "name": "Инженер Восток 06",
     "route": "Маршрут 06",
-    "jobs": 4,
+    "jobs": 0,
     "distance": "0 км",
-    "load": 21,
+    "load": 0,
     "color": "#8b5e34",
     "region": "Восток",
     "start": [
@@ -7019,25 +6961,24 @@ export const csvEngineers = [
       55.7022013
     ],
     "skills": [
-      "Подключение и модернизация",
-      "Локальные работы"
+      "Подключение и модернизация"
     ],
     "equipment": [
       "ONT",
-      "Диагностический комплект"
+      "Комплект GPON"
     ],
-    "transport": "Автомобиль",
+    "transport": "Общественный транспорт",
     "shiftStart": 480,
     "shiftEnd": 1320
   },
   {
-    "id": "east-1329nj3",
-    "initials": "ИК",
-    "name": "Инженер Каушнян",
+    "id": "east-demo-07",
+    "initials": "В7",
+    "name": "Инженер Восток 07",
     "route": "Маршрут 07",
-    "jobs": 5,
+    "jobs": 0,
     "distance": "0 км",
-    "load": 29,
+    "load": 0,
     "color": "#7a9c32",
     "region": "Восток",
     "start": [
@@ -7045,25 +6986,23 @@ export const csvEngineers = [
       55.7022013
     ],
     "skills": [
-      "Подключение и модернизация",
       "Аварийно-восстановительные работы"
     ],
     "equipment": [
-      "ONT",
       "Рефлектометр"
     ],
-    "transport": "Автомобиль",
+    "transport": "Велосипед",
     "shiftStart": 480,
     "shiftEnd": 1320
   },
   {
-    "id": "east-xit4gm",
-    "initials": "ИЗ",
-    "name": "Инженер Зверев",
+    "id": "east-demo-08",
+    "initials": "В8",
+    "name": "Инженер Восток 08",
     "route": "Маршрут 08",
-    "jobs": 3,
+    "jobs": 0,
     "distance": "0 км",
-    "load": 18,
+    "load": 0,
     "color": "#d35f45",
     "region": "Восток",
     "start": [
@@ -7071,25 +7010,28 @@ export const csvEngineers = [
       55.7022013
     ],
     "skills": [
+      "Локальные работы",
       "Подключение и модернизация",
       "Аварийно-восстановительные работы"
     ],
     "equipment": [
+      "Диагностический комплект",
       "ONT",
+      "Комплект GPON",
       "Рефлектометр"
     ],
-    "transport": "Автомобиль",
+    "transport": "Пешком",
     "shiftStart": 480,
     "shiftEnd": 1320
   },
   {
-    "id": "east-1y8w39f",
-    "initials": "ИП",
-    "name": "Инженер Перов",
+    "id": "east-demo-09",
+    "initials": "В9",
+    "name": "Инженер Восток 09",
     "route": "Маршрут 09",
-    "jobs": 4,
+    "jobs": 0,
     "distance": "0 км",
-    "load": 21,
+    "load": 0,
     "color": "#5367c9",
     "region": "Восток",
     "start": [
@@ -7097,25 +7039,26 @@ export const csvEngineers = [
       55.7022013
     ],
     "skills": [
-      "Подключение и модернизация",
-      "Локальные работы"
+      "Локальные работы",
+      "Подключение и модернизация"
     ],
     "equipment": [
+      "Диагностический комплект",
       "ONT",
-      "Диагностический комплект"
+      "Комплект GPON"
     ],
-    "transport": "Велосипед",
+    "transport": "Автомобиль",
     "shiftStart": 480,
     "shiftEnd": 1320
   },
   {
-    "id": "east-1cl8l6t",
-    "initials": "ИБ",
-    "name": "Инженер Белузин",
+    "id": "east-demo-10",
+    "initials": "В10",
+    "name": "Инженер Восток 10",
     "route": "Маршрут 10",
-    "jobs": 6,
+    "jobs": 0,
     "distance": "0 км",
-    "load": 29,
+    "load": 0,
     "color": "#a04fa4",
     "region": "Восток",
     "start": [
@@ -7123,27 +7066,25 @@ export const csvEngineers = [
       55.7022013
     ],
     "skills": [
-      "Подключение и модернизация",
       "Локальные работы",
       "Аварийно-восстановительные работы"
     ],
     "equipment": [
-      "ONT",
       "Диагностический комплект",
       "Рефлектометр"
     ],
-    "transport": "Автомобиль",
+    "transport": "Общественный транспорт",
     "shiftStart": 480,
     "shiftEnd": 1320
   },
   {
-    "id": "east-1yvomc",
-    "initials": "ИГ",
-    "name": "Инженер Гусаковский",
+    "id": "east-demo-11",
+    "initials": "В11",
+    "name": "Инженер Восток 11",
     "route": "Маршрут 11",
-    "jobs": 6,
+    "jobs": 0,
     "distance": "0 км",
-    "load": 32,
+    "load": 0,
     "color": "#168b67",
     "region": "Восток",
     "start": [
@@ -7152,24 +7093,25 @@ export const csvEngineers = [
     ],
     "skills": [
       "Подключение и модернизация",
-      "Локальные работы"
+      "Аварийно-восстановительные работы"
     ],
     "equipment": [
       "ONT",
-      "Диагностический комплект"
+      "Комплект GPON",
+      "Рефлектометр"
     ],
     "transport": "Велосипед",
     "shiftStart": 480,
     "shiftEnd": 1320
   },
   {
-    "id": "east-8duits",
-    "initials": "ИС",
-    "name": "Инженер Свеженцев",
+    "id": "east-demo-12",
+    "initials": "В12",
+    "name": "Инженер Восток 12",
     "route": "Маршрут 12",
-    "jobs": 5,
+    "jobs": 0,
     "distance": "0 км",
-    "load": 32,
+    "load": 0,
     "color": "#b67b1f",
     "region": "Восток",
     "start": [
@@ -7177,25 +7119,23 @@ export const csvEngineers = [
       55.7022013
     ],
     "skills": [
-      "Аварийно-восстановительные работы",
       "Локальные работы"
     ],
     "equipment": [
-      "Рефлектометр",
       "Диагностический комплект"
     ],
-    "transport": "Автомобиль",
+    "transport": "Пешком",
     "shiftStart": 480,
     "shiftEnd": 1320
   },
   {
-    "id": "southeast-1av5hst",
-    "initials": "ИП",
-    "name": "Инженер Паршин",
+    "id": "southeast-demo-01",
+    "initials": "Ю1",
+    "name": "Инженер Юго-восток 01",
     "route": "Маршрут 13",
-    "jobs": 11,
+    "jobs": 0,
     "distance": "0 км",
-    "load": 70,
+    "load": 0,
     "color": "#7657ff",
     "region": "Юго-восток",
     "start": [
@@ -7203,25 +7143,28 @@ export const csvEngineers = [
       55.6020854
     ],
     "skills": [
+      "Локальные работы",
       "Подключение и модернизация",
       "Аварийно-восстановительные работы"
     ],
     "equipment": [
+      "Диагностический комплект",
       "ONT",
+      "Комплект GPON",
       "Рефлектометр"
     ],
-    "transport": "Велосипед",
+    "transport": "Автомобиль",
     "shiftStart": 480,
     "shiftEnd": 1320
   },
   {
-    "id": "southeast-bjucyq",
-    "initials": "ИА",
-    "name": "Инженер Андреев",
+    "id": "southeast-demo-02",
+    "initials": "Ю2",
+    "name": "Инженер Юго-восток 02",
     "route": "Маршрут 14",
-    "jobs": 7,
+    "jobs": 0,
     "distance": "0 км",
-    "load": 39,
+    "load": 0,
     "color": "#00a89d",
     "region": "Юго-восток",
     "start": [
@@ -7229,12 +7172,37 @@ export const csvEngineers = [
       55.6020854
     ],
     "skills": [
-      "Подключение и модернизация",
+      "Локальные работы",
+      "Подключение и модернизация"
+    ],
+    "equipment": [
+      "Диагностический комплект",
+      "ONT",
+      "Комплект GPON"
+    ],
+    "transport": "Общественный транспорт",
+    "shiftStart": 480,
+    "shiftEnd": 1320
+  },
+  {
+    "id": "southeast-demo-03",
+    "initials": "Ю3",
+    "name": "Инженер Юго-восток 03",
+    "route": "Маршрут 15",
+    "jobs": 0,
+    "distance": "0 км",
+    "load": 0,
+    "color": "#ff8b3d",
+    "region": "Юго-восток",
+    "start": [
+      37.6653422,
+      55.6020854
+    ],
+    "skills": [
       "Локальные работы",
       "Аварийно-восстановительные работы"
     ],
     "equipment": [
-      "ONT",
       "Диагностический комплект",
       "Рефлектометр"
     ],
@@ -7243,41 +7211,13 @@ export const csvEngineers = [
     "shiftEnd": 1320
   },
   {
-    "id": "southeast-cohmg5",
-    "initials": "ИБ",
-    "name": "Инженер Белоновский",
-    "route": "Маршрут 15",
-    "jobs": 8,
-    "distance": "0 км",
-    "load": 46,
-    "color": "#ff8b3d",
-    "region": "Юго-восток",
-    "start": [
-      37.6653422,
-      55.6020854
-    ],
-    "skills": [
-      "Подключение и модернизация",
-      "Аварийно-восстановительные работы",
-      "Локальные работы"
-    ],
-    "equipment": [
-      "ONT",
-      "Рефлектометр",
-      "Диагностический комплект"
-    ],
-    "transport": "Общественный транспорт",
-    "shiftStart": 480,
-    "shiftEnd": 1320
-  },
-  {
-    "id": "southeast-lhcpec",
-    "initials": "ИР",
-    "name": "Инженер Рыбин",
+    "id": "southeast-demo-04",
+    "initials": "Ю4",
+    "name": "Инженер Юго-восток 04",
     "route": "Маршрут 16",
-    "jobs": 8,
+    "jobs": 0,
     "distance": "0 км",
-    "load": 45,
+    "load": 0,
     "color": "#2d82d7",
     "region": "Юго-восток",
     "start": [
@@ -7286,26 +7226,25 @@ export const csvEngineers = [
     ],
     "skills": [
       "Подключение и модернизация",
-      "Локальные работы",
       "Аварийно-восстановительные работы"
     ],
     "equipment": [
       "ONT",
-      "Диагностический комплект",
+      "Комплект GPON",
       "Рефлектометр"
     ],
-    "transport": "Общественный транспорт",
+    "transport": "Пешком",
     "shiftStart": 480,
     "shiftEnd": 1320
   },
   {
-    "id": "southeast-1j21qyz",
-    "initials": "ИГ",
-    "name": "Инженер Горбанев",
+    "id": "southeast-demo-05",
+    "initials": "Ю5",
+    "name": "Инженер Юго-восток 05",
     "route": "Маршрут 17",
-    "jobs": 14,
+    "jobs": 0,
     "distance": "0 км",
-    "load": 79,
+    "load": 0,
     "color": "#e84f87",
     "region": "Юго-восток",
     "start": [
@@ -7313,27 +7252,23 @@ export const csvEngineers = [
       55.6020854
     ],
     "skills": [
-      "Подключение и модернизация",
-      "Локальные работы",
-      "Аварийно-восстановительные работы"
+      "Локальные работы"
     ],
     "equipment": [
-      "ONT",
-      "Диагностический комплект",
-      "Рефлектометр"
+      "Диагностический комплект"
     ],
-    "transport": "Велосипед",
+    "transport": "Автомобиль",
     "shiftStart": 480,
     "shiftEnd": 1320
   },
   {
-    "id": "southeast-udu43b",
-    "initials": "ИБ",
-    "name": "Инженер Бузань",
+    "id": "southeast-demo-06",
+    "initials": "Ю6",
+    "name": "Инженер Юго-восток 06",
     "route": "Маршрут 18",
-    "jobs": 7,
+    "jobs": 0,
     "distance": "0 км",
-    "load": 39,
+    "load": 0,
     "color": "#8b5e34",
     "region": "Юго-восток",
     "start": [
@@ -7341,27 +7276,24 @@ export const csvEngineers = [
       55.6020854
     ],
     "skills": [
-      "Подключение и модернизация",
-      "Аварийно-восстановительные работы",
-      "Локальные работы"
+      "Подключение и модернизация"
     ],
     "equipment": [
       "ONT",
-      "Рефлектометр",
-      "Диагностический комплект"
+      "Комплект GPON"
     ],
-    "transport": "Автомобиль",
+    "transport": "Общественный транспорт",
     "shiftStart": 480,
     "shiftEnd": 1320
   },
   {
-    "id": "southeast-lhx82j",
-    "initials": "ИК",
-    "name": "Инженер Козырь",
+    "id": "southeast-demo-07",
+    "initials": "Ю7",
+    "name": "Инженер Юго-восток 07",
     "route": "Маршрут 19",
-    "jobs": 9,
+    "jobs": 0,
     "distance": "0 км",
-    "load": 52,
+    "load": 0,
     "color": "#7a9c32",
     "region": "Юго-восток",
     "start": [
@@ -7369,13 +7301,9 @@ export const csvEngineers = [
       55.6020854
     ],
     "skills": [
-      "Подключение и модернизация",
-      "Локальные работы",
       "Аварийно-восстановительные работы"
     ],
     "equipment": [
-      "ONT",
-      "Диагностический комплект",
       "Рефлектометр"
     ],
     "transport": "Велосипед",
@@ -7383,13 +7311,13 @@ export const csvEngineers = [
     "shiftEnd": 1320
   },
   {
-    "id": "southeast-d29ohr",
-    "initials": "ИЦ",
-    "name": "Инженер Царьков",
+    "id": "southeast-demo-08",
+    "initials": "Ю8",
+    "name": "Инженер Юго-восток 08",
     "route": "Маршрут 20",
-    "jobs": 1,
+    "jobs": 0,
     "distance": "0 км",
-    "load": 5,
+    "load": 0,
     "color": "#d35f45",
     "region": "Юго-восток",
     "start": [
@@ -7397,24 +7325,82 @@ export const csvEngineers = [
       55.6020854
     ],
     "skills": [
+      "Локальные работы",
+      "Подключение и модернизация",
+      "Аварийно-восстановительные работы"
+    ],
+    "equipment": [
+      "Диагностический комплект",
+      "ONT",
+      "Комплект GPON",
+      "Рефлектометр"
+    ],
+    "transport": "Пешком",
+    "shiftStart": 480,
+    "shiftEnd": 1320
+  },
+  {
+    "id": "southeast-demo-09",
+    "initials": "Ю9",
+    "name": "Инженер Юго-восток 09",
+    "route": "Маршрут 21",
+    "jobs": 0,
+    "distance": "0 км",
+    "load": 0,
+    "color": "#5367c9",
+    "region": "Юго-восток",
+    "start": [
+      37.6653422,
+      55.6020854
+    ],
+    "skills": [
+      "Локальные работы",
       "Подключение и модернизация"
     ],
     "equipment": [
-      "ONT"
+      "Диагностический комплект",
+      "ONT",
+      "Комплект GPON"
     ],
     "transport": "Автомобиль",
     "shiftStart": 480,
     "shiftEnd": 1320
   },
   {
-    "id": "southeast-5xpjbk",
-    "initials": "ИС",
-    "name": "Инженер Саламатин",
-    "route": "Маршрут 21",
-    "jobs": 11,
+    "id": "southeast-demo-10",
+    "initials": "Ю10",
+    "name": "Инженер Юго-восток 10",
+    "route": "Маршрут 22",
+    "jobs": 0,
     "distance": "0 км",
-    "load": 73,
-    "color": "#5367c9",
+    "load": 0,
+    "color": "#a04fa4",
+    "region": "Юго-восток",
+    "start": [
+      37.6653422,
+      55.6020854
+    ],
+    "skills": [
+      "Локальные работы",
+      "Аварийно-восстановительные работы"
+    ],
+    "equipment": [
+      "Диагностический комплект",
+      "Рефлектометр"
+    ],
+    "transport": "Общественный транспорт",
+    "shiftStart": 480,
+    "shiftEnd": 1320
+  },
+  {
+    "id": "southeast-demo-11",
+    "initials": "Ю11",
+    "name": "Инженер Юго-восток 11",
+    "route": "Маршрут 23",
+    "jobs": 0,
+    "distance": "0 км",
+    "load": 0,
+    "color": "#168b67",
     "region": "Юго-восток",
     "start": [
       37.6653422,
@@ -7426,70 +7412,21 @@ export const csvEngineers = [
     ],
     "equipment": [
       "ONT",
+      "Комплект GPON",
       "Рефлектометр"
     ],
-    "transport": "Общественный транспорт",
+    "transport": "Велосипед",
     "shiftStart": 480,
     "shiftEnd": 1320
   },
   {
-    "id": "southeast-9mjsap",
-    "initials": "ИМ",
-    "name": "Инженер Макаров",
-    "route": "Маршрут 22",
-    "jobs": 5,
-    "distance": "0 км",
-    "load": 27,
-    "color": "#a04fa4",
-    "region": "Юго-восток",
-    "start": [
-      37.6653422,
-      55.6020854
-    ],
-    "skills": [
-      "Подключение и модернизация",
-      "Локальные работы"
-    ],
-    "equipment": [
-      "ONT",
-      "Диагностический комплект"
-    ],
-    "transport": "Автомобиль",
-    "shiftStart": 480,
-    "shiftEnd": 1320
-  },
-  {
-    "id": "southeast-1329nj3",
-    "initials": "ИК",
-    "name": "Инженер Каушнян",
-    "route": "Маршрут 23",
-    "jobs": 1,
-    "distance": "0 км",
-    "load": 5,
-    "color": "#168b67",
-    "region": "Юго-восток",
-    "start": [
-      37.6653422,
-      55.6020854
-    ],
-    "skills": [
-      "Подключение и модернизация"
-    ],
-    "equipment": [
-      "ONT"
-    ],
-    "transport": "Автомобиль",
-    "shiftStart": 480,
-    "shiftEnd": 1320
-  },
-  {
-    "id": "southeast-pt7jrx",
-    "initials": "ИД",
-    "name": "Инженер Демин",
+    "id": "southeast-demo-12",
+    "initials": "Ю12",
+    "name": "Инженер Юго-восток 12",
     "route": "Маршрут 24",
-    "jobs": 1,
+    "jobs": 0,
     "distance": "0 км",
-    "load": 5,
+    "load": 0,
     "color": "#b67b1f",
     "region": "Юго-восток",
     "start": [
@@ -7502,18 +7439,18 @@ export const csvEngineers = [
     "equipment": [
       "Диагностический комплект"
     ],
-    "transport": "Общественный транспорт",
+    "transport": "Пешком",
     "shiftStart": 480,
     "shiftEnd": 1320
   },
   {
-    "id": "southcenter-1q5v9g1",
-    "initials": "КА",
-    "name": "Капитанчук Александр",
+    "id": "southcenter-demo-01",
+    "initials": "Ю1",
+    "name": "Инженер Югоцентр 01",
     "route": "Маршрут 25",
-    "jobs": 5,
+    "jobs": 0,
     "distance": "0 км",
-    "load": 29,
+    "load": 0,
     "color": "#7657ff",
     "region": "Югоцентр",
     "start": [
@@ -7521,11 +7458,14 @@ export const csvEngineers = [
       55.6647568
     ],
     "skills": [
+      "Локальные работы",
       "Подключение и модернизация",
       "Аварийно-восстановительные работы"
     ],
     "equipment": [
+      "Диагностический комплект",
       "ONT",
+      "Комплект GPON",
       "Рефлектометр"
     ],
     "transport": "Автомобиль",
@@ -7533,13 +7473,13 @@ export const csvEngineers = [
     "shiftEnd": 1320
   },
   {
-    "id": "southcenter-1hqu9oe",
-    "initials": "ИД",
-    "name": "Исхаков Денис",
+    "id": "southcenter-demo-02",
+    "initials": "Ю2",
+    "name": "Инженер Югоцентр 02",
     "route": "Маршрут 26",
-    "jobs": 8,
+    "jobs": 0,
     "distance": "0 км",
-    "load": 45,
+    "load": 0,
     "color": "#00a89d",
     "region": "Югоцентр",
     "start": [
@@ -7547,27 +7487,26 @@ export const csvEngineers = [
       55.6647568
     ],
     "skills": [
-      "Подключение и модернизация",
-      "Аварийно-восстановительные работы",
-      "Локальные работы"
+      "Локальные работы",
+      "Подключение и модернизация"
     ],
     "equipment": [
+      "Диагностический комплект",
       "ONT",
-      "Рефлектометр",
-      "Диагностический комплект"
+      "Комплект GPON"
     ],
-    "transport": "Автомобиль",
+    "transport": "Общественный транспорт",
     "shiftStart": 480,
     "shiftEnd": 1320
   },
   {
-    "id": "southcenter-1ar2pqi",
-    "initials": "БЯ",
-    "name": "Брюзгин Ярослав",
+    "id": "southcenter-demo-03",
+    "initials": "Ю3",
+    "name": "Инженер Югоцентр 03",
     "route": "Маршрут 27",
-    "jobs": 7,
+    "jobs": 0,
     "distance": "0 км",
-    "load": 38,
+    "load": 0,
     "color": "#ff8b3d",
     "region": "Югоцентр",
     "start": [
@@ -7575,25 +7514,25 @@ export const csvEngineers = [
       55.6647568
     ],
     "skills": [
-      "Подключение и модернизация",
-      "Локальные работы"
+      "Локальные работы",
+      "Аварийно-восстановительные работы"
     ],
     "equipment": [
-      "ONT",
-      "Диагностический комплект"
+      "Диагностический комплект",
+      "Рефлектометр"
     ],
-    "transport": "Автомобиль",
+    "transport": "Велосипед",
     "shiftStart": 480,
     "shiftEnd": 1320
   },
   {
-    "id": "southcenter-g1luap",
-    "initials": "БА",
-    "name": "Бахарев Андрей",
+    "id": "southcenter-demo-04",
+    "initials": "Ю4",
+    "name": "Инженер Югоцентр 04",
     "route": "Маршрут 28",
-    "jobs": 9,
+    "jobs": 0,
     "distance": "0 км",
-    "load": 48,
+    "load": 0,
     "color": "#2d82d7",
     "region": "Югоцентр",
     "start": [
@@ -7602,36 +7541,11 @@ export const csvEngineers = [
     ],
     "skills": [
       "Подключение и модернизация",
-      "Локальные работы"
-    ],
-    "equipment": [
-      "ONT",
-      "Диагностический комплект"
-    ],
-    "transport": "Автомобиль",
-    "shiftStart": 480,
-    "shiftEnd": 1320
-  },
-  {
-    "id": "southcenter-1w4ee8g",
-    "initials": "ПВ",
-    "name": "Прокопенко Вячеслав",
-    "route": "Маршрут 29",
-    "jobs": 4,
-    "distance": "0 км",
-    "load": 25,
-    "color": "#e84f87",
-    "region": "Югоцентр",
-    "start": [
-      37.6158385,
-      55.6647568
-    ],
-    "skills": [
-      "Подключение и модернизация",
       "Аварийно-восстановительные работы"
     ],
     "equipment": [
       "ONT",
+      "Комплект GPON",
       "Рефлектометр"
     ],
     "transport": "Пешком",
@@ -7639,13 +7553,37 @@ export const csvEngineers = [
     "shiftEnd": 1320
   },
   {
-    "id": "southcenter-1vpvbdo",
-    "initials": "ВС",
-    "name": "Выговский Сергей",
-    "route": "Маршрут 30",
-    "jobs": 4,
+    "id": "southcenter-demo-05",
+    "initials": "Ю5",
+    "name": "Инженер Югоцентр 05",
+    "route": "Маршрут 29",
+    "jobs": 0,
     "distance": "0 км",
-    "load": 21,
+    "load": 0,
+    "color": "#e84f87",
+    "region": "Югоцентр",
+    "start": [
+      37.6158385,
+      55.6647568
+    ],
+    "skills": [
+      "Локальные работы"
+    ],
+    "equipment": [
+      "Диагностический комплект"
+    ],
+    "transport": "Автомобиль",
+    "shiftStart": 480,
+    "shiftEnd": 1320
+  },
+  {
+    "id": "southcenter-demo-06",
+    "initials": "Ю6",
+    "name": "Инженер Югоцентр 06",
+    "route": "Маршрут 30",
+    "jobs": 0,
+    "distance": "0 км",
+    "load": 0,
     "color": "#8b5e34",
     "region": "Югоцентр",
     "start": [
@@ -7653,27 +7591,24 @@ export const csvEngineers = [
       55.6647568
     ],
     "skills": [
-      "Подключение и модернизация",
-      "Аварийно-восстановительные работы",
-      "Локальные работы"
+      "Подключение и модернизация"
     ],
     "equipment": [
       "ONT",
-      "Рефлектометр",
-      "Диагностический комплект"
+      "Комплект GPON"
     ],
-    "transport": "Велосипед",
+    "transport": "Общественный транспорт",
     "shiftStart": 480,
     "shiftEnd": 1320
   },
   {
-    "id": "southcenter-tzaogv",
-    "initials": "ДД",
-    "name": "Данилов Даниил",
+    "id": "southcenter-demo-07",
+    "initials": "Ю7",
+    "name": "Инженер Югоцентр 07",
     "route": "Маршрут 31",
-    "jobs": 3,
+    "jobs": 0,
     "distance": "0 км",
-    "load": 16,
+    "load": 0,
     "color": "#7a9c32",
     "region": "Югоцентр",
     "start": [
@@ -7681,23 +7616,23 @@ export const csvEngineers = [
       55.6647568
     ],
     "skills": [
-      "Подключение и модернизация"
+      "Аварийно-восстановительные работы"
     ],
     "equipment": [
-      "ONT"
+      "Рефлектометр"
     ],
-    "transport": "Автомобиль",
+    "transport": "Велосипед",
     "shiftStart": 480,
     "shiftEnd": 1320
   },
   {
-    "id": "southcenter-xb5y18",
-    "initials": "ПА",
-    "name": "Переладов Алексей",
+    "id": "southcenter-demo-08",
+    "initials": "Ю8",
+    "name": "Инженер Югоцентр 08",
     "route": "Маршрут 32",
-    "jobs": 5,
+    "jobs": 0,
     "distance": "0 км",
-    "load": 29,
+    "load": 0,
     "color": "#d35f45",
     "region": "Югоцентр",
     "start": [
@@ -7705,27 +7640,28 @@ export const csvEngineers = [
       55.6647568
     ],
     "skills": [
+      "Локальные работы",
       "Подключение и модернизация",
-      "Аварийно-восстановительные работы",
-      "Локальные работы"
+      "Аварийно-восстановительные работы"
     ],
     "equipment": [
+      "Диагностический комплект",
       "ONT",
-      "Рефлектометр",
-      "Диагностический комплект"
+      "Комплект GPON",
+      "Рефлектометр"
     ],
-    "transport": "Автомобиль",
+    "transport": "Пешком",
     "shiftStart": 480,
     "shiftEnd": 1320
   },
   {
-    "id": "southcenter-1xtqelv",
-    "initials": "СТ",
-    "name": "Сакур Тимофей",
+    "id": "southcenter-demo-09",
+    "initials": "Ю9",
+    "name": "Инженер Югоцентр 09",
     "route": "Маршрут 33",
-    "jobs": 3,
+    "jobs": 0,
     "distance": "0 км",
-    "load": 16,
+    "load": 0,
     "color": "#5367c9",
     "region": "Югоцентр",
     "start": [
@@ -7733,23 +7669,26 @@ export const csvEngineers = [
       55.6647568
     ],
     "skills": [
+      "Локальные работы",
       "Подключение и модернизация"
     ],
     "equipment": [
-      "ONT"
+      "Диагностический комплект",
+      "ONT",
+      "Комплект GPON"
     ],
     "transport": "Автомобиль",
     "shiftStart": 480,
     "shiftEnd": 1320
   },
   {
-    "id": "southcenter-116n8g7",
-    "initials": "РЕ",
-    "name": "Рыбалкин Егор",
+    "id": "southcenter-demo-10",
+    "initials": "Ю10",
+    "name": "Инженер Югоцентр 10",
     "route": "Маршрут 34",
-    "jobs": 5,
+    "jobs": 0,
     "distance": "0 км",
-    "load": 30,
+    "load": 0,
     "color": "#a04fa4",
     "region": "Югоцентр",
     "start": [
@@ -7757,27 +7696,25 @@ export const csvEngineers = [
       55.6647568
     ],
     "skills": [
-      "Подключение и модернизация",
-      "Аварийно-восстановительные работы",
-      "Локальные работы"
+      "Локальные работы",
+      "Аварийно-восстановительные работы"
     ],
     "equipment": [
-      "ONT",
-      "Рефлектометр",
-      "Диагностический комплект"
+      "Диагностический комплект",
+      "Рефлектометр"
     ],
-    "transport": "Велосипед",
+    "transport": "Общественный транспорт",
     "shiftStart": 480,
     "shiftEnd": 1320
   },
   {
-    "id": "southcenter-1o3urmb",
-    "initials": "ИГ",
-    "name": "Ионов Геннадий",
+    "id": "southcenter-demo-11",
+    "initials": "Ю11",
+    "name": "Инженер Югоцентр 11",
     "route": "Маршрут 35",
-    "jobs": 3,
+    "jobs": 0,
     "distance": "0 км",
-    "load": 20,
+    "load": 0,
     "color": "#168b67",
     "region": "Югоцентр",
     "start": [
@@ -7790,9 +7727,10 @@ export const csvEngineers = [
     ],
     "equipment": [
       "ONT",
+      "Комплект GPON",
       "Рефлектометр"
     ],
-    "transport": "Пешком",
+    "transport": "Велосипед",
     "shiftStart": 480,
     "shiftEnd": 1320
   }
@@ -7804,7 +7742,7 @@ export const csvMeta = {
     "Юго-восток",
     "Югоцентр"
   ],
-  "generatedAt": "2026-09-24",
+  "generatedAt": "2026-09-25",
   "geocoding": {
     "uniqueAddresses": 198,
     "fallbackAddresses": 0,

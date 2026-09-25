@@ -1,6 +1,9 @@
 from fastapi.testclient import TestClient
+from pathlib import Path
+import json
+import math
 
-from solver_service.app import SolveRequest, app, solve_vrptw, vehicle_travel_minutes
+from solver_service.app import SolveRequest, app, compatible, solve_vrptw, vehicle_travel_minutes
 
 
 def payload(engineers=None, jobs=None, distances=None, durations=None):
@@ -110,9 +113,68 @@ def test_completed_job_is_forced_inactive():
 def test_allowed_transport_list_is_honoured():
     data = payload()
     data["engineers"][0]["transport"] = "Велосипед"
+    data["jobs"][0]["requiredTransport"] = ""
     data["jobs"][0]["allowedTransports"] = ["Автомобиль", "Велосипед"]
     result = solve_vrptw(SolveRequest.model_validate(data))
     assert "a" not in result.droppedJobIds
+
+
+def test_explicit_transport_is_hard_and_missing_transport_is_unrestricted():
+    data = payload()
+    data["engineers"][0]["transport"] = "Велосипед"
+    data["jobs"][0]["requiredTransport"] = "Велосипед"
+    data["jobs"][0].pop("allowedTransports", None)
+    request = SolveRequest.model_validate(data)
+    assert compatible(request.engineers[0], request.jobs[0])
+    assert not compatible(request.engineers[1], request.jobs[0])
+    request.jobs[0].allowedTransports = ["Велосипед", "Автомобиль"]
+    assert not compatible(request.engineers[1], request.jobs[0])
+    request.jobs[0].requiredTransport = ""
+    assert all(compatible(engineer, request.jobs[0]) for engineer in request.engineers)
+
+
+def test_emergency_wins_over_two_ordinary_jobs_in_a_conflict():
+    data = payload()
+    data["engineers"] = data["engineers"][:1]
+    data["jobs"] = [
+        {**data["jobs"][0], "id": "normal-1", "coordinates": [1, 0], "windowStart": 483, "windowEnd": 483, "serviceMinutes": 60, "workClass": "repair"},
+        {**data["jobs"][0], "id": "normal-2", "coordinates": [1, 0], "windowStart": 543, "windowEnd": 543, "serviceMinutes": 60, "workClass": "repair"},
+        {**data["jobs"][0], "id": "incident", "coordinates": [1, 0], "windowStart": 483, "windowEnd": 483, "serviceMinutes": 80, "workClass": "emergency", "urgency": "urgent"},
+    ]
+    points = [data["engineers"][0]["start"]] + [job["coordinates"] for job in data["jobs"]]
+    data["matrix"] = {"points": points, "distancesKm": [[abs(a[0] - b[0]) for b in points] for a in points], "durationsMin": [[abs(a[0] - b[0]) * 3 for b in points] for a in points]}
+    data["urgentId"] = "incident"
+    result = solve_vrptw(SolveRequest.model_validate(data))
+    assert "incident" in [job_id for route in result.routes for job_id in route.jobIds]
+    assert len(result.droppedJobIds) >= 1
+
+
+def test_event_continuation_cannot_start_before_event_time():
+    data = payload()
+    data["eventTime"] = 790
+    data["eventType"] = "new_job"
+    response = TestClient(app).post("/solve", json=data)
+    assert response.status_code == 422
+    assert "before eventTime" in response.text
+
+
+def test_saved_demonstration_case_runs_in_real_ortools():
+    demo = json.loads((Path(__file__).resolve().parents[1] / "data" / "demo-scenario.json").read_text(encoding="utf-8"))
+    points = [engineer["start"] for engineer in demo["engineers"]] + [job["coordinates"] for job in demo["jobs"]]
+    def haversine(a, b):
+        rad = math.pi / 180
+        dlat, dlon = (b[1] - a[1]) * rad, (b[0] - a[0]) * rad
+        value = math.sin(dlat / 2) ** 2 + math.cos(a[1] * rad) * math.cos(b[1] * rad) * math.sin(dlon / 2) ** 2
+        return 6371 * 2 * math.atan2(math.sqrt(value), math.sqrt(1 - value)) * 1.5
+    distances = [[haversine(a, b) for b in points] for a in points]
+    durations = [[0 if value < 0.001 else max(4, value / 24 * 60 + 3) for value in row] for row in distances]
+    request = SolveRequest.model_validate({"engineers": demo["engineers"], "jobs": demo["jobs"], "speedKmh": 24,
+        "matrix": {"points": points, "distancesKm": distances, "durationsMin": durations}, "timeLimitSeconds": 5})
+    result = solve_vrptw(request)
+    served = {job_id for route in result.routes for job_id in route.jobIds}
+    assert "D-NARROW" in served
+    assert "D-NO-TRANSPORT" not in served
+    assert len(served) == 50
 
 
 def test_bad_matrix_is_rejected():
@@ -161,6 +223,7 @@ def test_transport_modes_and_individual_speed_change_travel_time():
 def test_bicycle_uses_its_own_network_matrix_in_solver():
     data = payload()
     data["engineers"][0]["transport"] = "Велосипед"
+    data["jobs"][0]["requiredTransport"] = ""
     data["jobs"][0]["allowedTransports"] = ["Велосипед"]
     data["jobs"][0]["windowEnd"] = 505
     data["jobs"][0]["serviceMinutes"] = 10
@@ -182,6 +245,7 @@ def test_slow_pedestrian_cannot_arrive_in_car_window():
     data["engineers"] = data["engineers"][:1]
     data["engineers"][0]["transport"] = "Пешком"
     data["jobs"] = data["jobs"][:1]
+    data["jobs"][0]["requiredTransport"] = ""
     data["jobs"][0]["allowedTransports"] = ["Пешком", "Автомобиль"]
     data["jobs"][0]["windowEnd"] = 510
     data["matrix"]["distancesKm"][0][2] = 10

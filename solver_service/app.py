@@ -27,7 +27,7 @@ class Job(BaseModel):
     coordinates: tuple[float, float]
     kind: str
     equipment: str
-    requiredTransport: str
+    requiredTransport: str = ""
     allowedTransports: list[str] | None = None
     priority: int = Field(default=1, ge=1, le=100)
     windowStart: int
@@ -35,6 +35,8 @@ class Job(BaseModel):
     serviceMinutes: int
     cancelled: bool = False
     executionStatus: Literal["not_started", "in_progress", "completed"] = "not_started"
+    urgency: Literal["normal", "urgent"] = "normal"
+    workClass: Literal["emergency", "connection", "repair"] = "repair"
 
 
 class Matrix(BaseModel):
@@ -58,6 +60,8 @@ class SolveRequest(BaseModel):
     jobs: list[Job] = Field(max_length=1000)
     speedKmh: float = Field(ge=5, le=200)
     urgentId: str | None = None
+    eventTime: int | None = Field(default=None, ge=0, le=1440)
+    eventType: Literal["new_job", "cancel_job", "engineer_unavailable", "recalculate"] | None = None
     forcedAssignments: dict[str, str] = Field(default_factory=dict)
     matrix: Matrix
     modeMatrices: dict[str, Matrix] = Field(default_factory=dict)
@@ -89,7 +93,11 @@ def compatible(engineer: Engineer, job: Job) -> bool:
         not job.cancelled
         and job.executionStatus != "completed"
         and engineer.region == job.region
-        and engineer.transport in (job.allowedTransports or [job.requiredTransport])
+        and (
+            engineer.transport == job.requiredTransport if job.requiredTransport
+            else engineer.transport in job.allowedTransports if job.allowedTransports
+            else True
+        )
         and job.equipment in engineer.equipment
         and job.kind in engineer.skills
     )
@@ -128,6 +136,8 @@ def solve_vrptw(data: SolveRequest) -> SolveResponse:
     started = time.perf_counter()
     if not data.jobs:
         return SolveResponse(routes=[], droppedJobIds=[], runtimeMs=0, status="empty")
+    if data.eventTime is not None and any(engineer.shiftStart < data.eventTime for engineer in data.engineers):
+        raise HTTPException(status_code=422, detail="event continuation starts before eventTime")
 
     point_index = {key(point): index for index, point in enumerate(data.matrix.points)}
     node_points = [engineer.start for engineer in data.engineers] + [job.coordinates for job in data.jobs]
@@ -162,7 +172,10 @@ def solve_vrptw(data: SolveRequest) -> SolveResponse:
             from_node = manager.IndexToNode(from_index)
             to_node = manager.IndexToNode(to_index)
             value = matrix_for_vehicle(data, vehicle).distancesKm[matrix_nodes[from_node]][matrix_nodes[to_node]]
-            return max(0, int(round(value * 1000)))
+            # Decimetric-kilometre objective (100 m units): preserve useful
+            # route ordering without multiplying lexicographic penalties into
+            # int64 overflow for the complete 205-job source dataset.
+            return max(0, int(round(value * 10)))
         return distance
 
     def time_callback(vehicle: int):
@@ -180,17 +193,26 @@ def solve_vrptw(data: SolveRequest) -> SolveResponse:
     for vehicle, distance_index in enumerate(distance_indices):
         routing.SetArcCostEvaluatorOfVehicle(distance_index, vehicle)
 
-    # Exact integer weights implement a lexicographic objective rather than a
-    # hand-tuned approximation:
-    # served count -> served priority -> active fleet -> road distance.
-    max_arc_m = max(int(math.ceil(value * 1000)) for matrix in [data.matrix, *data.modeMatrices.values()] for row in matrix.distancesKm for value in row)
-    max_total_distance = max(1, max_arc_m * len(data.jobs))
+    # Lexicographic: emergencies -> urgent jobs -> total served -> work class
+    # and business priority -> active fleet -> road distance. A new incident
+    # can displace several ordinary jobs; ordinary work cannot displace it.
+    max_arc_cost = max(int(math.ceil(value * 10)) for matrix in [data.matrix, *data.modeMatrices.values()] for row in matrix.distancesKm for value in row)
+    max_total_distance = max(1, max_arc_cost * len(data.jobs))
     vehicle_weight = max_total_distance + 1
     max_fleet_and_distance = len(data.engineers) * vehicle_weight + max_total_distance
     priority_weight = max_fleet_and_distance + 1
-    priority_sum = sum(job.priority for job in data.jobs)
+    class_rank = {"repair": 0, "connection": 1, "emergency": 2}
+    effective_priority = {job.id: class_rank[job.workClass] * 101 + job.priority for job in data.jobs}
+    priority_sum = sum(effective_priority.values())
     dropped_job_weight = priority_sum * priority_weight + max_fleet_and_distance + 1
-    max_objective = len(data.jobs) * dropped_job_weight + priority_sum * priority_weight + max_fleet_and_distance
+    urgent_weight = len(data.jobs) * dropped_job_weight + priority_sum * priority_weight + max_fleet_and_distance + 1
+    emergency_weight = len(data.jobs) * urgent_weight + len(data.jobs) * dropped_job_weight + priority_sum * priority_weight + max_fleet_and_distance + 1
+    def drop_penalty(job: Job) -> int:
+        urgent = job.urgency == "urgent" or job.id == data.urgentId
+        return (dropped_job_weight + effective_priority[job.id] * priority_weight
+                + (urgent_weight if urgent else 0)
+                + (emergency_weight if job.workClass == "emergency" else 0))
+    max_objective = sum(drop_penalty(job) for job in data.jobs) + max_fleet_and_distance
     if max_objective >= 8_000_000_000_000_000_000:
         raise HTTPException(status_code=422, detail="matrix costs are too large for a safe integer objective")
 
@@ -236,7 +258,7 @@ def solve_vrptw(data: SolveRequest) -> SolveResponse:
             routing.VehicleVar(index).SetValue(forced_vehicle)
             routing.ActiveVar(index).SetValue(1)
         else:
-            penalty = dropped_job_weight + job.priority * priority_weight
+            penalty = drop_penalty(job)
             routing.AddDisjunction([index], penalty)
         if not allowed and not forced_engineer_id:
             # An optional node without an allowed vehicle must be forced inactive;
