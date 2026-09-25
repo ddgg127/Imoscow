@@ -139,7 +139,8 @@ function looksLikeEngineerRows(headers: string[], rows: Record<string, unknown>[
 function rowsToJobs(rows: Record<string, unknown>[], centers: Record<Region, Coordinate>, source = "Импорт") {
   const warnings: string[] = [];
   const jobs = rows.map((row, index): Job => {
-    const id = value(row, ["id", "номер", "заявка", "номер заявки", "id заявки"]) || `IMPORT-${index + 1}`;
+    const rawId = value(row, ["id", "номер", "заявка", "номер заявки", "id заявки"]);
+    const id = /^\d+$/.test(rawId) ? rawId.padStart(4, "0") : rawId || String(index + 1).padStart(4, "0");
     const address = value(row, ["address", "адрес"]);
     if (!address) throw new Error(`Строка ${index + 2}: отсутствует адрес`);
     const rawWork = value(row, ["worktype", "work_type", "тип работы", "тип заявки hd", "тип заявки bk", "kind", "навык", "навыки", "название задачи", "title"]) || "Локальные работы";

@@ -151,6 +151,15 @@ function pick<T>(rng: () => number, list: T[]): T {
   return list[Math.floor(rng() * list.length)] ?? list[0];
 }
 
+function shuffleList<T>(rng: () => number, list: readonly T[]): T[] {
+  const arr = [...list];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 function minutesToHm(total: number): string {
   const wrapped = ((total % (24 * 60)) + 24 * 60) % (24 * 60);
   const h = String(Math.floor(wrapped / 60)).padStart(2, "0");
@@ -181,6 +190,16 @@ export function generateTzDataset(rawOptions: Partial<GenerateTzOptions> = {}): 
   const workplace = allBuildings.filter(b => b.kind === "workplace");
   const resPool = residential.length > 0 ? residential : allBuildings;
   const workPool = workplace.length > 0 ? workplace : allBuildings;
+
+  // Равномерно перемешиваем по сиду, чтобы адреса распределялись по всей Москве, а не кучковались в одном районе
+  const shuffledResEngineers = shuffleList(rng, resPool);
+  // Пул зданий для заявок: 75% реальные жилые дома москвичей (квартиры/интернет/ремонт) + 25% коммерческие объекты
+  const mixedJobPool = shuffleList(rng, [
+    ...resPool,
+    ...resPool,
+    ...resPool,
+    ...workPool,
+  ]);
 
   // 1. Инженеры: сбалансированное распределение навыков, оборудования и транспорта
   const noviceN = Math.max(1, Math.round(engineerCount * ((rawOptions.novice ?? 30) / 100)));
@@ -214,7 +233,7 @@ export function generateTzDataset(rawOptions: Partial<GenerateTzOptions> = {}): 
     }
     if (!name) name = `Инженер ${i + 1}`;
 
-    const b = resPool[i % resPool.length];
+    const b = shuffledResEngineers[i % shuffledResEngineers.length];
     const shift = SHIFTS[i % SHIFTS.length];
     const vehicle = VEHICLES[i % VEHICLES.length];
     const equipment = skills.map(s => SKILL_EQUIPMENT[s]);
@@ -262,7 +281,7 @@ export function generateTzDataset(rawOptions: Partial<GenerateTzOptions> = {}): 
   }
 
   const jobs: Job[] = jobSkills.map((skill, i) => {
-    const b = workPool[i % workPool.length];
+    const b = mixedJobPool[i % mixedJobPool.length];
     const urgent = (rng() * 100) < urgentShare;
     const titles = JOB_TITLES_BY_SKILL[skill];
     const title = titles[i % titles.length];
@@ -290,7 +309,7 @@ export function generateTzDataset(rawOptions: Partial<GenerateTzOptions> = {}): 
 
     const region = regionForPoint(b.lon, b.lat);
     const jobItem: Job = {
-      id: `J${String(i + 1).padStart(3, "0")}`,
+      id: String(i + 1).padStart(4, "0"),
       time: `${minutesToHm(windowStart)}–${minutesToHm(windowEnd)}`,
       windowStart,
       windowEnd,
@@ -329,10 +348,10 @@ export function generateTzDataset(rawOptions: Partial<GenerateTzOptions> = {}): 
   const cancelJob = normalJobs[Math.floor(normalJobs.length / 2)] ?? jobs[0];
   const unavailableEngineer = engineers[Math.floor(engineers.length / 2)] ?? engineers[0];
 
-  const urgentBuilding = workPool[(jobCount + 5) % workPool.length];
+  const urgentBuilding = mixedJobPool[(jobCount + 7) % mixedJobPool.length];
   const urgentSkill = TZ_SKILLS[2]; // Аварийные работы
   const urgentJob: Job = {
-    id: `U${String(jobs.length + 1).padStart(3, "0")}`,
+    id: String(jobs.length + 1).padStart(4, "0"),
     time: "10:30–12:30",
     windowStart: 10 * 60 + 30,
     windowEnd: 12 * 60 + 30,

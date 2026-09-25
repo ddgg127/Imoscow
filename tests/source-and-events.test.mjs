@@ -18,8 +18,8 @@ test("source CSV windows survive import and the first plan unchanged", () => {
     return rows.filter(row => /^\d+$/.test(row[col("Заявка")])).map(row => ({ id: row[col("Заявка")], start: row[col("Начало")], end: row[col("Окончание")] }));
   });
   assert.equal(source.length, 205);
-  for (const row of source) {
-    const job = csvJobs.find(item => item.id === row.id);
+  for (const [index, row] of source.entries()) {
+    const job = csvJobs.find(item => item.sourceId === row.id || item.id === String(index + 1).padStart(4, "0"));
     assert.ok(job, row.id);
     assert.equal(job.windowStart, Number(row.start.slice(-5, -3)) * 60 + Number(row.start.slice(-2)));
     assert.equal(job.windowEnd, Number(row.end.slice(-5, -3)) * 60 + Number(row.end.slice(-2)));

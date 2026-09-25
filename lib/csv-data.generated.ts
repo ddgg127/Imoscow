@@ -1,7 +1,8 @@
 /* Generated from data/csv by scripts/import-csv.mjs. Coordinates are cached geocodes or explicitly counted fallbacks. */
 export const csvJobs = [
   {
-    "id": "74198",
+    "id": "0001",
+    "sourceId": "74198",
     "time": "20:00–22:00",
     "windowStart": 1200,
     "windowEnd": 1320,
@@ -9,7 +10,7 @@ export const csvJobs = [
     "address": "Город Москва, пр-кт.Волгоградский, д. 128 к 5",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "violet",
+    "tone": "amber",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -34,7 +35,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "86160",
+    "id": "0002",
+    "sourceId": "86160",
     "time": "18:00–20:00",
     "windowStart": 1080,
     "windowEnd": 1200,
@@ -42,7 +44,7 @@ export const csvJobs = [
     "address": "Город Москва, пер.Маяковского, д. 2",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "violet",
+    "tone": "green",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -67,7 +69,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "50104",
+    "id": "0003",
+    "sourceId": "50104",
     "time": "18:00–20:00",
     "windowStart": 1080,
     "windowEnd": 1200,
@@ -75,7 +78,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Грайвороновская, д. 10 к 2",
     "kind": "Подключение и модернизация",
     "workType": "Заявка на подключение",
-    "tone": "green",
+    "tone": "violet",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -100,7 +103,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "46393",
+    "id": "0004",
+    "sourceId": "46393",
     "time": "20:00–22:00",
     "windowStart": 1200,
     "windowEnd": 1320,
@@ -108,7 +112,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Михайлова, д. 14",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "violet",
+    "tone": "blue",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -133,7 +137,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "10135",
+    "id": "0005",
+    "sourceId": "10135",
     "time": "18:00–20:00",
     "windowStart": 1080,
     "windowEnd": 1200,
@@ -141,7 +146,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.3-я Институтская, д. 5 к 2",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "green",
+    "tone": "amber",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -166,7 +171,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "18754",
+    "id": "0006",
+    "sourceId": "18754",
     "time": "18:00–20:00",
     "windowStart": 1080,
     "windowEnd": 1200,
@@ -174,7 +180,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.1-я Новокузьминская, д. 16 к 1",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "violet",
+    "tone": "green",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -199,7 +205,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "84627",
+    "id": "0007",
+    "sourceId": "84627",
     "time": "20:00–22:00",
     "windowStart": 1200,
     "windowEnd": 1320,
@@ -207,7 +214,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Окская, д. 32",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "amber",
+    "tone": "violet",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -232,7 +239,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "61540",
+    "id": "0008",
+    "sourceId": "61540",
     "time": "16:00–18:00",
     "windowStart": 960,
     "windowEnd": 1080,
@@ -240,7 +248,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Юных Ленинцев, д. 84",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "green",
+    "tone": "blue",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -265,7 +273,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "74949",
+    "id": "0009",
+    "sourceId": "74949",
     "time": "10:00–12:00",
     "windowStart": 600,
     "windowEnd": 720,
@@ -298,7 +307,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "41077",
+    "id": "0010",
+    "sourceId": "41077",
     "time": "12:00–14:00",
     "windowStart": 720,
     "windowEnd": 840,
@@ -331,7 +341,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "87693",
+    "id": "0011",
+    "sourceId": "87693",
     "time": "16:00–18:00",
     "windowStart": 960,
     "windowEnd": 1080,
@@ -339,7 +350,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Чистова, д. 12",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "amber",
+    "tone": "green",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -364,7 +375,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "93086",
+    "id": "0012",
+    "sourceId": "93086",
     "time": "12:00–14:00",
     "windowStart": 720,
     "windowEnd": 840,
@@ -372,7 +384,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Паперника, д. 19",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "blue",
+    "tone": "amber",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -397,7 +409,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "57866",
+    "id": "0013",
+    "sourceId": "57866",
     "time": "14:00–16:00",
     "windowStart": 840,
     "windowEnd": 960,
@@ -405,7 +418,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Окская, д. 48/2",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "green",
+    "tone": "blue",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -430,7 +443,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "35675",
+    "id": "0014",
+    "sourceId": "35675",
     "time": "16:00–18:00",
     "windowStart": 960,
     "windowEnd": 1080,
@@ -438,7 +452,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Трофимова, д. 24 к 2",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "blue",
+    "tone": "violet",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -463,7 +477,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "82388",
+    "id": "0015",
+    "sourceId": "82388",
     "time": "14:00–16:00",
     "windowStart": 840,
     "windowEnd": 960,
@@ -471,7 +486,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.1-я Дубровская, д. 6",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "violet",
+    "tone": "green",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -496,7 +511,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "23380",
+    "id": "0016",
+    "sourceId": "23380",
     "time": "12:00–14:00",
     "windowStart": 720,
     "windowEnd": 840,
@@ -504,7 +520,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Рогожский Вал, д. 2/50",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "green",
+    "tone": "amber",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -529,7 +545,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "37272",
+    "id": "0017",
+    "sourceId": "37272",
     "time": "10:00–12:00",
     "windowStart": 600,
     "windowEnd": 720,
@@ -537,7 +554,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Талалихина, д. 2/1 к 4",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "amber",
+    "tone": "blue",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -562,7 +579,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "71388",
+    "id": "0018",
+    "sourceId": "71388",
     "time": "14:00–16:00",
     "windowStart": 840,
     "windowEnd": 960,
@@ -570,7 +588,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Артюхиной, д. 20А",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "amber",
+    "tone": "violet",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -595,7 +613,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "34366",
+    "id": "0019",
+    "sourceId": "34366",
     "time": "10:00–12:00",
     "windowStart": 600,
     "windowEnd": 720,
@@ -628,7 +647,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "67554",
+    "id": "0020",
+    "sourceId": "67554",
     "time": "12:00–14:00",
     "windowStart": 720,
     "windowEnd": 840,
@@ -636,7 +656,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Бронницкая, д. 12",
     "kind": "Подключение и модернизация",
     "workType": "Заявка на подключение",
-    "tone": "violet",
+    "tone": "green",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -661,7 +681,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "94409",
+    "id": "0021",
+    "sourceId": "94409",
     "time": "12:00–14:00",
     "windowStart": 720,
     "windowEnd": 840,
@@ -669,7 +690,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Авиамоторная, д. 14",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "green",
+    "tone": "violet",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -694,7 +715,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "10245",
+    "id": "0022",
+    "sourceId": "10245",
     "time": "12:00–14:00",
     "windowStart": 720,
     "windowEnd": 840,
@@ -727,7 +749,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "52405",
+    "id": "0023",
+    "sourceId": "52405",
     "time": "10:00–12:00",
     "windowStart": 600,
     "windowEnd": 720,
@@ -735,7 +758,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Зарайская, д. 51 к 2",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "blue",
+    "tone": "amber",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -760,7 +783,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "30769",
+    "id": "0024",
+    "sourceId": "30769",
     "time": "14:00–16:00",
     "windowStart": 840,
     "windowEnd": 960,
@@ -768,7 +792,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Саратовская, д. 14/1",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "amber",
+    "tone": "green",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -793,7 +817,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "98182",
+    "id": "0025",
+    "sourceId": "98182",
     "time": "10:00–12:00",
     "windowStart": 600,
     "windowEnd": 720,
@@ -801,7 +826,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Нижегородская, д. 63",
     "kind": "Подключение и модернизация",
     "workType": "Заявка на подключение",
-    "tone": "blue",
+    "tone": "violet",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -826,7 +851,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "76082",
+    "id": "0026",
+    "sourceId": "76082",
     "time": "12:00–14:00",
     "windowStart": 720,
     "windowEnd": 840,
@@ -834,7 +860,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Смирновская, д. 6",
     "kind": "Подключение и модернизация",
     "workType": "Заказ подключения/Дозаказ оборудования",
-    "tone": "amber",
+    "tone": "blue",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -859,7 +885,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "29890",
+    "id": "0027",
+    "sourceId": "29890",
     "time": "12:00–14:00",
     "windowStart": 720,
     "windowEnd": 840,
@@ -867,7 +894,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Нижегородская, д. 61",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "blue",
+    "tone": "amber",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -892,7 +919,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "77563",
+    "id": "0028",
+    "sourceId": "77563",
     "time": "10:00–12:00",
     "windowStart": 600,
     "windowEnd": 720,
@@ -900,7 +928,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Зеленодольская, д. 28Б",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "blue",
+    "tone": "green",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -925,7 +953,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "53587",
+    "id": "0029",
+    "sourceId": "53587",
     "time": "12:00–14:00",
     "windowStart": 720,
     "windowEnd": 840,
@@ -933,7 +962,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Артюхиной, д. 16",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "blue",
+    "tone": "violet",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -958,7 +987,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "82808",
+    "id": "0030",
+    "sourceId": "82808",
     "time": "14:00–16:00",
     "windowStart": 840,
     "windowEnd": 960,
@@ -966,7 +996,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.3-я Карачаровская, д. 4 к 1",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "blue",
+    "tone": "amber",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -991,7 +1021,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "7939",
+    "id": "0031",
+    "sourceId": "7939",
     "time": "12:00–14:00",
     "windowStart": 720,
     "windowEnd": 840,
@@ -1024,7 +1055,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "92031",
+    "id": "0032",
+    "sourceId": "92031",
     "time": "18:00–20:00",
     "windowStart": 1080,
     "windowEnd": 1200,
@@ -1032,7 +1064,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Ферганская, д. 28/7",
     "kind": "Подключение и модернизация",
     "workType": "Дозаказ оборудования",
-    "tone": "amber",
+    "tone": "violet",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -1057,7 +1089,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "31260",
+    "id": "0033",
+    "sourceId": "31260",
     "time": "20:00–22:00",
     "windowStart": 1200,
     "windowEnd": 1320,
@@ -1090,7 +1123,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "69967",
+    "id": "0034",
+    "sourceId": "69967",
     "time": "10:00–12:00",
     "windowStart": 600,
     "windowEnd": 720,
@@ -1098,7 +1132,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Боровая, д. 14",
     "kind": "Подключение и модернизация",
     "workType": "Заказ подключения/Дозаказ оборудования",
-    "tone": "violet",
+    "tone": "amber",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -1123,7 +1157,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "22634",
+    "id": "0035",
+    "sourceId": "22634",
     "time": "14:00–16:00",
     "windowStart": 840,
     "windowEnd": 960,
@@ -1131,7 +1166,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Стройковская, д. 8",
     "kind": "Подключение и модернизация",
     "workType": "Дозаказ оборудования",
-    "tone": "amber",
+    "tone": "blue",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -1156,7 +1191,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "98815",
+    "id": "0036",
+    "sourceId": "98815",
     "time": "18:00–20:00",
     "windowStart": 1080,
     "windowEnd": 1200,
@@ -1164,7 +1200,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.2-я Синичкина, д. 9 к 1",
     "kind": "Подключение и модернизация",
     "workType": "Дозаказ оборудования",
-    "tone": "amber",
+    "tone": "violet",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -1189,7 +1225,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "33527",
+    "id": "0037",
+    "sourceId": "33527",
     "time": "10:00–12:00",
     "windowStart": 600,
     "windowEnd": 720,
@@ -1197,7 +1234,7 @@ export const csvJobs = [
     "address": "Москва, проезд Орехово-Зуевский, д. 18/8",
     "kind": "Подключение и модернизация",
     "workType": "Дозаказ оборудования",
-    "tone": "blue",
+    "tone": "green",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -1222,7 +1259,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "21571",
+    "id": "0038",
+    "sourceId": "21571",
     "time": "18:00–20:00",
     "windowStart": 1080,
     "windowEnd": 1200,
@@ -1230,7 +1268,7 @@ export const csvJobs = [
     "address": "Город Москва, пер.Большой Рогожский, д. 10 к 2",
     "kind": "Аварийно-восстановительные работы",
     "workType": "Нет линка",
-    "tone": "green",
+    "tone": "amber",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -1256,7 +1294,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "47670",
+    "id": "0039",
+    "sourceId": "47670",
     "time": "20:00–22:00",
     "windowStart": 1200,
     "windowEnd": 1320,
@@ -1290,7 +1329,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "17892",
+    "id": "0040",
+    "sourceId": "17892",
     "time": "18:00–20:00",
     "windowStart": 1080,
     "windowEnd": 1200,
@@ -1298,7 +1338,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.11-я Текстильщиков, д. 10",
     "kind": "Локальные работы",
     "workType": "Переключение на Гбит/с",
-    "tone": "violet",
+    "tone": "blue",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -1323,7 +1363,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "51115",
+    "id": "0041",
+    "sourceId": "51115",
     "time": "18:00–20:00",
     "windowStart": 1080,
     "windowEnd": 1200,
@@ -1331,7 +1372,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Паперника, д. 18",
     "kind": "Аварийно-восстановительные работы",
     "workType": "Нет линка",
-    "tone": "violet",
+    "tone": "amber",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -1357,7 +1398,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "76643",
+    "id": "0042",
+    "sourceId": "76643",
     "time": "18:00–20:00",
     "windowStart": 1080,
     "windowEnd": 1200,
@@ -1391,7 +1433,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "43506",
+    "id": "0043",
+    "sourceId": "43506",
     "time": "20:00–22:00",
     "windowStart": 1200,
     "windowEnd": 1320,
@@ -1399,7 +1442,7 @@ export const csvJobs = [
     "address": "Город Москва, б-р.Самаркандский Квартал 137а, д. к5",
     "kind": "Локальные работы",
     "workType": "Переключение на Гбит/с",
-    "tone": "blue",
+    "tone": "violet",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -1424,7 +1467,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "48174",
+    "id": "0044",
+    "sourceId": "48174",
     "time": "18:00–20:00",
     "windowStart": 1080,
     "windowEnd": 1200,
@@ -1432,7 +1476,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Маршала Чуйкова, д. 9 к 2",
     "kind": "Локальные работы",
     "workType": "Мониторинг",
-    "tone": "green",
+    "tone": "blue",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -1457,7 +1501,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "48227",
+    "id": "0045",
+    "sourceId": "48227",
     "time": "12:00–14:00",
     "windowStart": 720,
     "windowEnd": 840,
@@ -1491,7 +1536,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "60720",
+    "id": "0046",
+    "sourceId": "60720",
     "time": "12:00–14:00",
     "windowStart": 720,
     "windowEnd": 840,
@@ -1499,7 +1545,7 @@ export const csvJobs = [
     "address": "Город Москва, б-р.Волжский, д. 50 к 2",
     "kind": "Аварийно-восстановительные работы",
     "workType": "Нет линка",
-    "tone": "amber",
+    "tone": "green",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -1525,7 +1571,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "48238",
+    "id": "0047",
+    "sourceId": "48238",
     "time": "14:00–16:00",
     "windowStart": 840,
     "windowEnd": 960,
@@ -1533,7 +1580,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Артюхиной, д. 3",
     "kind": "Локальные работы",
     "workType": "Разрывы",
-    "tone": "amber",
+    "tone": "violet",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -1558,7 +1605,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "41912",
+    "id": "0048",
+    "sourceId": "41912",
     "time": "12:00–14:00",
     "windowStart": 720,
     "windowEnd": 840,
@@ -1566,7 +1614,7 @@ export const csvJobs = [
     "address": "Город Москва, проезд.Ферганский, д. 7 к 5",
     "kind": "Аварийно-восстановительные работы",
     "workType": "Нет линка",
-    "tone": "amber",
+    "tone": "blue",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -1592,7 +1640,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "4893",
+    "id": "0049",
+    "sourceId": "4893",
     "time": "12:00–14:00",
     "windowStart": 720,
     "windowEnd": 840,
@@ -1600,7 +1649,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Земляной Вал, д. 24/30 стр. 1",
     "kind": "Аварийно-восстановительные работы",
     "workType": "Нет линка",
-    "tone": "blue",
+    "tone": "amber",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -1626,7 +1675,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "68476",
+    "id": "0050",
+    "sourceId": "68476",
     "time": "10:00–12:00",
     "windowStart": 600,
     "windowEnd": 720,
@@ -1659,7 +1709,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "50219",
+    "id": "0051",
+    "sourceId": "50219",
     "time": "10:00–12:00",
     "windowStart": 600,
     "windowEnd": 720,
@@ -1667,7 +1718,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Чистопольская, д. 2 к 2",
     "kind": "Аварийно-восстановительные работы",
     "workType": "Нет линка",
-    "tone": "violet",
+    "tone": "green",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -1693,7 +1744,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "76678",
+    "id": "0052",
+    "sourceId": "76678",
     "time": "10:00–12:00",
     "windowStart": 600,
     "windowEnd": 720,
@@ -1701,7 +1753,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Боровая, д. 12",
     "kind": "Локальные работы",
     "workType": "Работа с кабелем",
-    "tone": "blue",
+    "tone": "amber",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -1726,7 +1778,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "47330",
+    "id": "0053",
+    "sourceId": "47330",
     "time": "14:00–16:00",
     "windowStart": 840,
     "windowEnd": 960,
@@ -1734,7 +1787,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Красноказарменная, д. 9Б стр. 1",
     "kind": "Подключение и модернизация",
     "workType": "Роутер. Замена техническим специалистом",
-    "tone": "amber",
+    "tone": "blue",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -1759,7 +1812,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "26645",
+    "id": "0054",
+    "sourceId": "26645",
     "time": "16:00–18:00",
     "windowStart": 960,
     "windowEnd": 1080,
@@ -1767,7 +1821,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Сторожевая, д. 31",
     "kind": "Локальные работы",
     "workType": "TVE/ENT. Другие ошибки",
-    "tone": "amber",
+    "tone": "violet",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -1792,7 +1846,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "24076",
+    "id": "0055",
+    "sourceId": "24076",
     "time": "12:00–14:00",
     "windowStart": 720,
     "windowEnd": 840,
@@ -1800,7 +1855,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Новорогожская, д. 10",
     "kind": "Подключение и модернизация",
     "workType": "Роутер. Замена техническим специалистом",
-    "tone": "violet",
+    "tone": "green",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -1825,7 +1880,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "30243",
+    "id": "0056",
+    "sourceId": "30243",
     "time": "18:00–20:00",
     "windowStart": 1080,
     "windowEnd": 1200,
@@ -1833,7 +1889,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Нижегородская, д. 25",
     "kind": "Подключение и модернизация",
     "workType": "TVE/ENT. Замена приставки техником",
-    "tone": "blue",
+    "tone": "amber",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -1858,7 +1914,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "32807",
+    "id": "0057",
+    "sourceId": "32807",
     "time": "10:00–12:00",
     "windowStart": 600,
     "windowEnd": 720,
@@ -1891,7 +1948,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "73572",
+    "id": "0058",
+    "sourceId": "73572",
     "time": "14:00–16:00",
     "windowStart": 840,
     "windowEnd": 960,
@@ -1899,7 +1957,7 @@ export const csvJobs = [
     "address": "Город Москва, пр-кт.Волгоградский, д. 97 к 1",
     "kind": "Аварийно-восстановительные работы",
     "workType": "Нет линка",
-    "tone": "green",
+    "tone": "violet",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -1925,7 +1983,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "41962",
+    "id": "0059",
+    "sourceId": "41962",
     "time": "16:00–18:00",
     "windowStart": 960,
     "windowEnd": 1080,
@@ -1933,7 +1992,7 @@ export const csvJobs = [
     "address": "г.Город Москва, б-р.Самаркандский, д. 32к1",
     "kind": "Локальные работы",
     "workType": "Информация",
-    "tone": "blue",
+    "tone": "green",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -1958,7 +2017,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "97886",
+    "id": "0060",
+    "sourceId": "97886",
     "time": "16:00–18:00",
     "windowStart": 960,
     "windowEnd": 1080,
@@ -1966,7 +2026,7 @@ export const csvJobs = [
     "address": "г.Город Москва, б-р.Самаркандский, д. 10к2",
     "kind": "Локальные работы",
     "workType": "Информация",
-    "tone": "blue",
+    "tone": "green",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -1991,7 +2051,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "17349",
+    "id": "0061",
+    "sourceId": "17349",
     "time": "14:00–16:00",
     "windowStart": 840,
     "windowEnd": 960,
@@ -1999,7 +2060,7 @@ export const csvJobs = [
     "address": "г.Город Москва, ул.Новорогожская, д. 20",
     "kind": "Локальные работы",
     "workType": "Информация",
-    "tone": "blue",
+    "tone": "violet",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -2024,7 +2085,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "54964",
+    "id": "0062",
+    "sourceId": "54964",
     "time": "10:00–12:00",
     "windowStart": 600,
     "windowEnd": 720,
@@ -2057,7 +2119,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "21367",
+    "id": "0063",
+    "sourceId": "21367",
     "time": "20:00–22:00",
     "windowStart": 1200,
     "windowEnd": 1320,
@@ -2091,7 +2154,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "24980",
+    "id": "0064",
+    "sourceId": "24980",
     "time": "10:00–12:00",
     "windowStart": 600,
     "windowEnd": 720,
@@ -2099,7 +2163,7 @@ export const csvJobs = [
     "address": "г.Город Москва, наб.Семеновская, д. 3/1к2",
     "kind": "Аварийно-восстановительные работы",
     "workType": "Авария",
-    "tone": "amber",
+    "tone": "green",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -2125,7 +2189,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "15648",
+    "id": "0065",
+    "sourceId": "15648",
     "time": "16:00–18:00",
     "windowStart": 960,
     "windowEnd": 1080,
@@ -2133,7 +2198,7 @@ export const csvJobs = [
     "address": "г.Город Москва, наб.Семеновская, д. 2/1",
     "kind": "Локальные работы",
     "workType": "Информация",
-    "tone": "green",
+    "tone": "violet",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -2158,7 +2223,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "57299",
+    "id": "0066",
+    "sourceId": "57299",
     "time": "20:00–22:00",
     "windowStart": 1200,
     "windowEnd": 1320,
@@ -2166,7 +2232,7 @@ export const csvJobs = [
     "address": "г.Город Москва, пр-кт.Волгоградский, д. 128к1",
     "kind": "Аварийно-восстановительные работы",
     "workType": "Авария",
-    "tone": "green",
+    "tone": "blue",
     "region": "Восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -2192,7 +2258,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "67472",
+    "id": "0067",
+    "sourceId": "67472",
     "time": "16:00–18:00",
     "windowStart": 960,
     "windowEnd": 1080,
@@ -2200,7 +2267,7 @@ export const csvJobs = [
     "address": "Домодедово, проезд.Советский 1-й, д. 1А",
     "kind": "Подключение и модернизация",
     "workType": "Заказ подключения/Дозаказ оборудования",
-    "tone": "green",
+    "tone": "amber",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -2225,7 +2292,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "84466",
+    "id": "0068",
+    "sourceId": "84466",
     "time": "18:00–20:00",
     "windowStart": 1080,
     "windowEnd": 1200,
@@ -2258,7 +2326,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "14416",
+    "id": "0069",
+    "sourceId": "14416",
     "time": "16:00–18:00",
     "windowStart": 960,
     "windowEnd": 1080,
@@ -2266,7 +2335,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Кустанайская, д. 8 к 1",
     "kind": "Подключение и модернизация",
     "workType": "Заказ подключения/Дозаказ оборудования",
-    "tone": "green",
+    "tone": "violet",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -2291,7 +2360,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "68359",
+    "id": "0070",
+    "sourceId": "68359",
     "time": "16:00–18:00",
     "windowStart": 960,
     "windowEnd": 1080,
@@ -2324,7 +2394,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "66944",
+    "id": "0071",
+    "sourceId": "66944",
     "time": "10:00–12:00",
     "windowStart": 600,
     "windowEnd": 720,
@@ -2332,7 +2403,7 @@ export const csvJobs = [
     "address": "Домодедово, ул.Зеленая, д. 85",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "violet",
+    "tone": "blue",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -2357,7 +2428,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "52041",
+    "id": "0072",
+    "sourceId": "52041",
     "time": "12:00–14:00",
     "windowStart": 720,
     "windowEnd": 840,
@@ -2365,7 +2437,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Москворечье, д. 4 к 6",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "blue",
+    "tone": "violet",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -2390,7 +2462,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "23807",
+    "id": "0073",
+    "sourceId": "23807",
     "time": "10:00–12:00",
     "windowStart": 600,
     "windowEnd": 720,
@@ -2423,7 +2496,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "60484",
+    "id": "0074",
+    "sourceId": "60484",
     "time": "14:00–16:00",
     "windowStart": 840,
     "windowEnd": 960,
@@ -2431,7 +2505,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.6-я Радиальная, д. 5 к 3",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "blue",
+    "tone": "amber",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -2456,7 +2530,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "63591",
+    "id": "0075",
+    "sourceId": "63591",
     "time": "14:00–16:00",
     "windowStart": 840,
     "windowEnd": 960,
@@ -2464,7 +2539,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Бирюлёвская, д. 39",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "green",
+    "tone": "blue",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -2489,7 +2564,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "53552",
+    "id": "0076",
+    "sourceId": "53552",
     "time": "14:00–16:00",
     "windowStart": 840,
     "windowEnd": 960,
@@ -2497,7 +2573,7 @@ export const csvJobs = [
     "address": "Кашира, ул.Победы, д. 9",
     "kind": "Подключение и модернизация",
     "workType": "Заказ подключения/Дозаказ оборудования",
-    "tone": "green",
+    "tone": "violet",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -2522,7 +2598,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "58066",
+    "id": "0077",
+    "sourceId": "58066",
     "time": "12:00–14:00",
     "windowStart": 720,
     "windowEnd": 840,
@@ -2530,7 +2607,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Братеевская, д. 18 к 1",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "violet",
+    "tone": "green",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -2555,7 +2632,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "2915",
+    "id": "0078",
+    "sourceId": "2915",
     "time": "12:00–14:00",
     "windowStart": 720,
     "windowEnd": 840,
@@ -2588,7 +2666,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "3566",
+    "id": "0079",
+    "sourceId": "3566",
     "time": "12:00–14:00",
     "windowStart": 720,
     "windowEnd": 840,
@@ -2621,7 +2700,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "68946",
+    "id": "0080",
+    "sourceId": "68946",
     "time": "16:00–18:00",
     "windowStart": 960,
     "windowEnd": 1080,
@@ -2629,7 +2709,7 @@ export const csvJobs = [
     "address": "Город Москва, пр-кт.Пролетарский, д. 14А",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "violet",
+    "tone": "blue",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -2654,7 +2734,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "55454",
+    "id": "0081",
+    "sourceId": "55454",
     "time": "12:00–14:00",
     "windowStart": 720,
     "windowEnd": 840,
@@ -2662,7 +2743,7 @@ export const csvJobs = [
     "address": "Домодедово, ул.Корнеева, д. 50",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "violet",
+    "tone": "amber",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -2687,7 +2768,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "35057",
+    "id": "0082",
+    "sourceId": "35057",
     "time": "14:00–16:00",
     "windowStart": 840,
     "windowEnd": 960,
@@ -2720,7 +2802,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "75745",
+    "id": "0083",
+    "sourceId": "75745",
     "time": "10:00–12:00",
     "windowStart": 600,
     "windowEnd": 720,
@@ -2728,7 +2811,7 @@ export const csvJobs = [
     "address": "Домодедово, ул.Зеленая, д. 85",
     "kind": "Подключение и модернизация",
     "workType": "Заказ подключения/Дозаказ оборудования",
-    "tone": "blue",
+    "tone": "violet",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -2753,7 +2836,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "65717",
+    "id": "0084",
+    "sourceId": "65717",
     "time": "10:00–12:00",
     "windowStart": 600,
     "windowEnd": 720,
@@ -2786,7 +2870,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "44117",
+    "id": "0085",
+    "sourceId": "44117",
     "time": "10:00–12:00",
     "windowStart": 600,
     "windowEnd": 720,
@@ -2794,7 +2879,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Севанская, д. 15 к 1",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "violet",
+    "tone": "amber",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -2819,7 +2904,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "76173",
+    "id": "0086",
+    "sourceId": "76173",
     "time": "16:00–18:00",
     "windowStart": 960,
     "windowEnd": 1080,
@@ -2827,7 +2913,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.6-я Радиальная, д. 7/1 к 2",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "blue",
+    "tone": "green",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -2852,7 +2938,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "876",
+    "id": "0087",
+    "sourceId": "876",
     "time": "10:00–12:00",
     "windowStart": 600,
     "windowEnd": 720,
@@ -2860,7 +2947,7 @@ export const csvJobs = [
     "address": "Город Москва, проезд.Загорьевский, д. 9",
     "kind": "Подключение и модернизация",
     "workType": "Заказ подключения/Дозаказ оборудования",
-    "tone": "amber",
+    "tone": "violet",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -2885,7 +2972,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "62011",
+    "id": "0088",
+    "sourceId": "62011",
     "time": "10:00–12:00",
     "windowStart": 600,
     "windowEnd": 720,
@@ -2918,7 +3006,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "57353",
+    "id": "0089",
+    "sourceId": "57353",
     "time": "12:00–14:00",
     "windowStart": 720,
     "windowEnd": 840,
@@ -2951,7 +3040,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "2245",
+    "id": "0090",
+    "sourceId": "2245",
     "time": "14:00–16:00",
     "windowStart": 840,
     "windowEnd": 960,
@@ -2959,7 +3049,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Паромная, д. 9 к 1",
     "kind": "Подключение и модернизация",
     "workType": "Заявка на подключение",
-    "tone": "amber",
+    "tone": "violet",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -2984,7 +3074,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "14494",
+    "id": "0091",
+    "sourceId": "14494",
     "time": "10:00–12:00",
     "windowStart": 600,
     "windowEnd": 720,
@@ -2992,7 +3083,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Братеевская, д. 16 к 1",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "blue",
+    "tone": "green",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -3017,7 +3108,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "78920",
+    "id": "0092",
+    "sourceId": "78920",
     "time": "12:00–14:00",
     "windowStart": 720,
     "windowEnd": 840,
@@ -3025,7 +3117,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Борисовские Пруды, д. 20 к 1",
     "kind": "Подключение и модернизация",
     "workType": "Заявка на подключение",
-    "tone": "green",
+    "tone": "amber",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -3050,7 +3142,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "78876",
+    "id": "0093",
+    "sourceId": "78876",
     "time": "10:00–12:00",
     "windowStart": 600,
     "windowEnd": 720,
@@ -3058,7 +3151,7 @@ export const csvJobs = [
     "address": "Кашира, ул.Юбилейная, д. 9",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "green",
+    "tone": "blue",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -3083,7 +3176,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "23094",
+    "id": "0094",
+    "sourceId": "23094",
     "time": "12:00–14:00",
     "windowStart": 720,
     "windowEnd": 840,
@@ -3091,7 +3185,7 @@ export const csvJobs = [
     "address": "Кашира, ул.8 Марта, д. 22",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "green",
+    "tone": "violet",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -3116,7 +3210,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "79144",
+    "id": "0095",
+    "sourceId": "79144",
     "time": "10:00–12:00",
     "windowStart": 600,
     "windowEnd": 720,
@@ -3124,7 +3219,7 @@ export const csvJobs = [
     "address": "Город Москва, б-р.Ореховый, д. 7 к 1",
     "kind": "Подключение и модернизация",
     "workType": "Заявка на подключение",
-    "tone": "violet",
+    "tone": "green",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -3149,7 +3244,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "60141",
+    "id": "0096",
+    "sourceId": "60141",
     "time": "12:00–14:00",
     "windowStart": 720,
     "windowEnd": 840,
@@ -3157,7 +3253,7 @@ export const csvJobs = [
     "address": "Город Москва, ш.Каширское, д. 94 к 1",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "blue",
+    "tone": "amber",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -3182,7 +3278,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "79450",
+    "id": "0097",
+    "sourceId": "79450",
     "time": "12:00–14:00",
     "windowStart": 720,
     "windowEnd": 840,
@@ -3190,7 +3287,7 @@ export const csvJobs = [
     "address": "Город Москва, б-р.Ореховый, д. 11 к 1",
     "kind": "Подключение и модернизация",
     "workType": "Заказ подключения/Дозаказ оборудования",
-    "tone": "amber",
+    "tone": "blue",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -3215,7 +3312,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "58129",
+    "id": "0098",
+    "sourceId": "58129",
     "time": "10:00–12:00",
     "windowStart": 600,
     "windowEnd": 720,
@@ -3223,7 +3321,7 @@ export const csvJobs = [
     "address": "Город Москва, проезд.Борисовский, д. 44 к 3",
     "kind": "Подключение и модернизация",
     "workType": "Заявка на подключение",
-    "tone": "amber",
+    "tone": "violet",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -3248,7 +3346,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "93798",
+    "id": "0099",
+    "sourceId": "93798",
     "time": "10:00–12:00",
     "windowStart": 600,
     "windowEnd": 720,
@@ -3281,7 +3380,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "89696",
+    "id": "0100",
+    "sourceId": "89696",
     "time": "14:00–16:00",
     "windowStart": 840,
     "windowEnd": 960,
@@ -3289,7 +3389,7 @@ export const csvJobs = [
     "address": "Домодедово, ул.Ильюшина, д. 20",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "green",
+    "tone": "amber",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -3314,7 +3414,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "20362",
+    "id": "0101",
+    "sourceId": "20362",
     "time": "14:00–16:00",
     "windowStart": 840,
     "windowEnd": 960,
@@ -3322,7 +3423,7 @@ export const csvJobs = [
     "address": "Кашира, ул.Юбилейная, д. 8",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "violet",
+    "tone": "blue",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -3347,7 +3448,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "40698",
+    "id": "0102",
+    "sourceId": "40698",
     "time": "12:00–14:00",
     "windowStart": 720,
     "windowEnd": 840,
@@ -3380,7 +3482,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "2427",
+    "id": "0103",
+    "sourceId": "2427",
     "time": "18:00–20:00",
     "windowStart": 1080,
     "windowEnd": 1200,
@@ -3388,7 +3491,7 @@ export const csvJobs = [
     "address": "Город Москва, пр-кт.Пролетарский, д. 18 к 4",
     "kind": "Подключение и модернизация",
     "workType": "Дозаказ оборудования",
-    "tone": "violet",
+    "tone": "green",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -3413,7 +3516,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "51603",
+    "id": "0104",
+    "sourceId": "51603",
     "time": "18:00–20:00",
     "windowStart": 1080,
     "windowEnd": 1200,
@@ -3446,7 +3550,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "13404",
+    "id": "0105",
+    "sourceId": "13404",
     "time": "20:00–22:00",
     "windowStart": 1200,
     "windowEnd": 1320,
@@ -3454,7 +3559,7 @@ export const csvJobs = [
     "address": "Кашира, ул.Кржижановского, д. 7",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "green",
+    "tone": "blue",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -3479,7 +3584,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "72476",
+    "id": "0106",
+    "sourceId": "72476",
     "time": "14:00–16:00",
     "windowStart": 840,
     "windowEnd": 960,
@@ -3487,7 +3593,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Медынская, д. 5 к 1",
     "kind": "Подключение и модернизация",
     "workType": "Дозаказ оборудования",
-    "tone": "blue",
+    "tone": "violet",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -3512,7 +3618,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "90989",
+    "id": "0107",
+    "sourceId": "90989",
     "time": "16:00–18:00",
     "windowStart": 960,
     "windowEnd": 1080,
@@ -3520,7 +3627,7 @@ export const csvJobs = [
     "address": "Домодедово, ул.Гагарина, д. 55/2",
     "kind": "Аварийно-восстановительные работы",
     "workType": "Нет линка",
-    "tone": "violet",
+    "tone": "green",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -3546,7 +3653,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "7660",
+    "id": "0108",
+    "sourceId": "7660",
     "time": "18:00–20:00",
     "windowStart": 1080,
     "windowEnd": 1200,
@@ -3580,7 +3688,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "89067",
+    "id": "0109",
+    "sourceId": "89067",
     "time": "18:00–20:00",
     "windowStart": 1080,
     "windowEnd": 1200,
@@ -3613,7 +3722,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "65268",
+    "id": "0110",
+    "sourceId": "65268",
     "time": "20:00–22:00",
     "windowStart": 1200,
     "windowEnd": 1320,
@@ -3621,7 +3731,7 @@ export const csvJobs = [
     "address": "Ступино, ул.Калинина, д. 34",
     "kind": "Локальные работы",
     "workType": "Работа с кабелем",
-    "tone": "violet",
+    "tone": "green",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -3646,7 +3756,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "33880",
+    "id": "0111",
+    "sourceId": "33880",
     "time": "20:00–22:00",
     "windowStart": 1200,
     "windowEnd": 1320,
@@ -3654,7 +3765,7 @@ export const csvJobs = [
     "address": "Город Москва, проезд.Шипиловский, д. 59 к 2",
     "kind": "Локальные работы",
     "workType": "Низкая скорость",
-    "tone": "blue",
+    "tone": "violet",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -3679,7 +3790,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "37590",
+    "id": "0112",
+    "sourceId": "37590",
     "time": "20:00–22:00",
     "windowStart": 1200,
     "windowEnd": 1320,
@@ -3687,7 +3799,7 @@ export const csvJobs = [
     "address": "Город Москва, проезд.Востряковский, д. 15 к 2",
     "kind": "Аварийно-восстановительные работы",
     "workType": "Нет линка",
-    "tone": "green",
+    "tone": "blue",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -3713,7 +3825,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "33507",
+    "id": "0113",
+    "sourceId": "33507",
     "time": "18:00–20:00",
     "windowStart": 1080,
     "windowEnd": 1200,
@@ -3721,7 +3834,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Бирюлёвская, д. 58 к 3",
     "kind": "Аварийно-восстановительные работы",
     "workType": "Нет линка",
-    "tone": "green",
+    "tone": "amber",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -3747,7 +3860,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "88209",
+    "id": "0114",
+    "sourceId": "88209",
     "time": "12:00–14:00",
     "windowStart": 720,
     "windowEnd": 840,
@@ -3755,7 +3869,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Домодедовская, д. 31",
     "kind": "Локальные работы",
     "workType": "Низкая скорость",
-    "tone": "amber",
+    "tone": "green",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -3780,7 +3894,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "24482",
+    "id": "0115",
+    "sourceId": "24482",
     "time": "20:00–22:00",
     "windowStart": 1200,
     "windowEnd": 1320,
@@ -3788,7 +3903,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Весёлая, д. 33 к 7",
     "kind": "Локальные работы",
     "workType": "Рост ошибок на порту",
-    "tone": "green",
+    "tone": "violet",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -3813,7 +3928,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "40111",
+    "id": "0116",
+    "sourceId": "40111",
     "time": "10:00–12:00",
     "windowStart": 600,
     "windowEnd": 720,
@@ -3821,7 +3937,7 @@ export const csvJobs = [
     "address": "Ступино, ул.Калинина, д. 34",
     "kind": "Локальные работы",
     "workType": "Работа с кабелем",
-    "tone": "amber",
+    "tone": "blue",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -3846,7 +3962,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "46199",
+    "id": "0117",
+    "sourceId": "46199",
     "time": "12:00–14:00",
     "windowStart": 720,
     "windowEnd": 840,
@@ -3854,7 +3971,7 @@ export const csvJobs = [
     "address": "Домодедово, ул.Ильюшина, д. 11 к 2",
     "kind": "Аварийно-восстановительные работы",
     "workType": "Нет линка",
-    "tone": "violet",
+    "tone": "amber",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -3880,7 +3997,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "75282",
+    "id": "0118",
+    "sourceId": "75282",
     "time": "16:00–18:00",
     "windowStart": 960,
     "windowEnd": 1080,
@@ -3913,7 +4031,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "63577",
+    "id": "0119",
+    "sourceId": "63577",
     "time": "10:00–12:00",
     "windowStart": 600,
     "windowEnd": 720,
@@ -3921,7 +4040,7 @@ export const csvJobs = [
     "address": "Домодедово, ул.Корнеева, д. 48",
     "kind": "Аварийно-восстановительные работы",
     "workType": "Нет линка",
-    "tone": "green",
+    "tone": "violet",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -3947,7 +4066,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "7610",
+    "id": "0120",
+    "sourceId": "7610",
     "time": "18:00–20:00",
     "windowStart": 1080,
     "windowEnd": 1200,
@@ -3955,7 +4075,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Луганская, д. 4 к 1",
     "kind": "Локальные работы",
     "workType": "Переключение на Гбит/с",
-    "tone": "blue",
+    "tone": "violet",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -3980,7 +4100,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "19216",
+    "id": "0121",
+    "sourceId": "19216",
     "time": "12:00–14:00",
     "windowStart": 720,
     "windowEnd": 840,
@@ -3988,7 +4109,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Луганская, д. 3 к 1",
     "kind": "Подключение и модернизация",
     "workType": "TVE/ENT. Замена приставки техником",
-    "tone": "violet",
+    "tone": "green",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -4013,7 +4134,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "11872",
+    "id": "0122",
+    "sourceId": "11872",
     "time": "14:00–16:00",
     "windowStart": 840,
     "windowEnd": 960,
@@ -4021,7 +4143,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Весёлая, д. 33 к 7",
     "kind": "Локальные работы",
     "workType": "Рост ошибок на порту",
-    "tone": "violet",
+    "tone": "amber",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -4046,7 +4168,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "54422",
+    "id": "0123",
+    "sourceId": "54422",
     "time": "16:00–18:00",
     "windowStart": 960,
     "windowEnd": 1080,
@@ -4054,7 +4177,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Луганская, д. 1",
     "kind": "Локальные работы",
     "workType": "IP-адрес 169...",
-    "tone": "violet",
+    "tone": "blue",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -4079,7 +4202,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "4724",
+    "id": "0124",
+    "sourceId": "4724",
     "time": "18:00–20:00",
     "windowStart": 1080,
     "windowEnd": 1200,
@@ -4087,7 +4211,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Кантемировская, д. 5 к 2",
     "kind": "Локальные работы",
     "workType": "Низкая скорость",
-    "tone": "amber",
+    "tone": "violet",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -4112,7 +4236,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "11899",
+    "id": "0125",
+    "sourceId": "11899",
     "time": "10:00–12:00",
     "windowStart": 600,
     "windowEnd": 720,
@@ -4145,7 +4270,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "60886",
+    "id": "0126",
+    "sourceId": "60886",
     "time": "16:00–18:00",
     "windowStart": 960,
     "windowEnd": 1080,
@@ -4153,7 +4279,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Маршала Захарова, д. 18 к 1",
     "kind": "Локальные работы",
     "workType": "Переключение на Гбит/с",
-    "tone": "green",
+    "tone": "amber",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -4178,7 +4304,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "32066",
+    "id": "0127",
+    "sourceId": "32066",
     "time": "14:00–16:00",
     "windowStart": 840,
     "windowEnd": 960,
@@ -4186,7 +4313,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Генерала Белова, д. 45 к 2",
     "kind": "Аварийно-восстановительные работы",
     "workType": "Нет линка",
-    "tone": "violet",
+    "tone": "blue",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -4212,7 +4339,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "63894",
+    "id": "0128",
+    "sourceId": "63894",
     "time": "12:00–14:00",
     "windowStart": 720,
     "windowEnd": 840,
@@ -4220,7 +4348,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Шипиловская, д. 38",
     "kind": "Локальные работы",
     "workType": "IP-адрес 169...",
-    "tone": "green",
+    "tone": "violet",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -4245,7 +4373,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "64168",
+    "id": "0129",
+    "sourceId": "64168",
     "time": "16:00–18:00",
     "windowStart": 960,
     "windowEnd": 1080,
@@ -4253,7 +4382,7 @@ export const csvJobs = [
     "address": "Город Москва, проезд.Гурьевский, д. 19 к 2",
     "kind": "Подключение и модернизация",
     "workType": "TVE/ENT. Замена приставки техником",
-    "tone": "violet",
+    "tone": "green",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -4278,7 +4407,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "40919",
+    "id": "0130",
+    "sourceId": "40919",
     "time": "10:00–12:00",
     "windowStart": 600,
     "windowEnd": 720,
@@ -4286,7 +4416,7 @@ export const csvJobs = [
     "address": "Город Москва, проезд.Борисовский, д. 44 к 3",
     "kind": "Локальные работы",
     "workType": "Рост ошибок на порту",
-    "tone": "amber",
+    "tone": "blue",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -4311,7 +4441,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "36961",
+    "id": "0131",
+    "sourceId": "36961",
     "time": "18:00–20:00",
     "windowStart": 1080,
     "windowEnd": 1200,
@@ -4345,7 +4476,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "12329",
+    "id": "0132",
+    "sourceId": "12329",
     "time": "12:00–14:00",
     "windowStart": 720,
     "windowEnd": 840,
@@ -4353,7 +4485,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Булатниковская, д. 4 к 1",
     "kind": "Локальные работы",
     "workType": "Разрывы",
-    "tone": "amber",
+    "tone": "green",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -4378,7 +4510,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "95692",
+    "id": "0133",
+    "sourceId": "95692",
     "time": "10:00–12:00",
     "windowStart": 600,
     "windowEnd": 720,
@@ -4412,7 +4545,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "13583",
+    "id": "0134",
+    "sourceId": "13583",
     "time": "14:00–16:00",
     "windowStart": 840,
     "windowEnd": 960,
@@ -4446,7 +4580,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "3151",
+    "id": "0135",
+    "sourceId": "3151",
     "time": "12:00–14:00",
     "windowStart": 720,
     "windowEnd": 840,
@@ -4454,7 +4589,7 @@ export const csvJobs = [
     "address": "Кашира, ул.Ленина, д. 11 к 3",
     "kind": "Аварийно-восстановительные работы",
     "workType": "Нет линка",
-    "tone": "green",
+    "tone": "amber",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -4480,7 +4615,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "45778",
+    "id": "0136",
+    "sourceId": "45778",
     "time": "14:00–16:00",
     "windowStart": 840,
     "windowEnd": 960,
@@ -4488,7 +4624,7 @@ export const csvJobs = [
     "address": "Кашира, ул.Металлургов, д. 5 к 3",
     "kind": "Локальные работы",
     "workType": "Рост ошибок на порту",
-    "tone": "violet",
+    "tone": "green",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -4513,7 +4649,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "20055",
+    "id": "0137",
+    "sourceId": "20055",
     "time": "12:00–14:00",
     "windowStart": 720,
     "windowEnd": 840,
@@ -4521,7 +4658,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Мусы Джалиля, д. 9 к 1",
     "kind": "Локальные работы",
     "workType": "IP-адрес 169...",
-    "tone": "green",
+    "tone": "violet",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -4546,7 +4683,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "7258",
+    "id": "0138",
+    "sourceId": "7258",
     "time": "20:00–22:00",
     "windowStart": 1200,
     "windowEnd": 1320,
@@ -4580,7 +4718,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "78673",
+    "id": "0139",
+    "sourceId": "78673",
     "time": "00:01–23:59",
     "windowStart": 1,
     "windowEnd": 1439,
@@ -4614,7 +4753,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "98998",
+    "id": "0140",
+    "sourceId": "98998",
     "time": "00:01–23:59",
     "windowStart": 1,
     "windowEnd": 1439,
@@ -4648,7 +4788,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "32589",
+    "id": "0141",
+    "sourceId": "32589",
     "time": "00:01–23:59",
     "windowStart": 1,
     "windowEnd": 1439,
@@ -4656,7 +4797,7 @@ export const csvJobs = [
     "address": "МО, г. Кашира Кржижановского ул. д. 7к2",
     "kind": "Аварийно-восстановительные работы",
     "workType": "Авария",
-    "tone": "violet",
+    "tone": "blue",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -4682,7 +4823,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "51774",
+    "id": "0142",
+    "sourceId": "51774",
     "time": "00:01–23:59",
     "windowStart": 1,
     "windowEnd": 1439,
@@ -4690,7 +4832,7 @@ export const csvJobs = [
     "address": "МО, г. Кашира Кржижановского ул. д. 5/3",
     "kind": "Аварийно-восстановительные работы",
     "workType": "Авария",
-    "tone": "green",
+    "tone": "violet",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -4716,7 +4858,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "90915",
+    "id": "0143",
+    "sourceId": "90915",
     "time": "00:01–23:59",
     "windowStart": 1,
     "windowEnd": 1439,
@@ -4724,7 +4867,7 @@ export const csvJobs = [
     "address": "МО, г. Кашира Кржижановского ул. д. 5/2",
     "kind": "Аварийно-восстановительные работы",
     "workType": "Авария",
-    "tone": "blue",
+    "tone": "green",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -4750,7 +4893,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "45243",
+    "id": "0144",
+    "sourceId": "45243",
     "time": "00:01–23:59",
     "windowStart": 1,
     "windowEnd": 1439,
@@ -4758,7 +4902,7 @@ export const csvJobs = [
     "address": "МО, г. Кашира Кржижановского ул. д. 5/1",
     "kind": "Аварийно-восстановительные работы",
     "workType": "Авария",
-    "tone": "blue",
+    "tone": "amber",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -4784,7 +4928,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "81698",
+    "id": "0145",
+    "sourceId": "81698",
     "time": "00:01–23:59",
     "windowStart": 1,
     "windowEnd": 1439,
@@ -4818,7 +4963,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "97168",
+    "id": "0146",
+    "sourceId": "97168",
     "time": "00:01–23:59",
     "windowStart": 1,
     "windowEnd": 1439,
@@ -4826,7 +4972,7 @@ export const csvJobs = [
     "address": "МО, г. Ступино Андропова ул. д. 33",
     "kind": "Аварийно-восстановительные работы",
     "workType": "Авария",
-    "tone": "amber",
+    "tone": "violet",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -4852,7 +4998,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "65034",
+    "id": "0147",
+    "sourceId": "65034",
     "time": "00:01–23:59",
     "windowStart": 1,
     "windowEnd": 1439,
@@ -4886,7 +5033,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "1287",
+    "id": "0148",
+    "sourceId": "1287",
     "time": "00:01–23:59",
     "windowStart": 1,
     "windowEnd": 1439,
@@ -4894,7 +5042,7 @@ export const csvJobs = [
     "address": "Москва Бирюлевская ул. д. 44",
     "kind": "Аварийно-восстановительные работы",
     "workType": "Авария",
-    "tone": "green",
+    "tone": "amber",
     "region": "Юго-восток",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -4920,7 +5068,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "31495",
+    "id": "0149",
+    "sourceId": "31495",
     "time": "00:01–23:59",
     "windowStart": 1,
     "windowEnd": 1439,
@@ -4954,7 +5103,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "32840",
+    "id": "0150",
+    "sourceId": "32840",
     "time": "18:00–20:00",
     "windowStart": 1080,
     "windowEnd": 1200,
@@ -4962,7 +5112,7 @@ export const csvJobs = [
     "address": "Город Москва, проезд.3-й Павелецкий, д. 9",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "violet",
+    "tone": "green",
     "region": "Югоцентр",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -4987,7 +5137,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "78540",
+    "id": "0151",
+    "sourceId": "78540",
     "time": "18:00–20:00",
     "windowStart": 1080,
     "windowEnd": 1200,
@@ -4995,7 +5146,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Восточная, д. 2 к 2",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "blue",
+    "tone": "violet",
     "region": "Югоцентр",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -5020,7 +5171,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "66376",
+    "id": "0152",
+    "sourceId": "66376",
     "time": "18:00–20:00",
     "windowStart": 1080,
     "windowEnd": 1200,
@@ -5028,7 +5180,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Дубининская, д. 59 к 2",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "green",
+    "tone": "blue",
     "region": "Югоцентр",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -5053,7 +5205,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "23637",
+    "id": "0153",
+    "sourceId": "23637",
     "time": "20:00–22:00",
     "windowStart": 1200,
     "windowEnd": 1320,
@@ -5086,7 +5239,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "97770",
+    "id": "0154",
+    "sourceId": "97770",
     "time": "20:00–22:00",
     "windowStart": 1200,
     "windowEnd": 1320,
@@ -5094,7 +5248,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Нагорная, д. 44 к 2",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "blue",
+    "tone": "green",
     "region": "Югоцентр",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -5119,7 +5273,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "55711",
+    "id": "0155",
+    "sourceId": "55711",
     "time": "12:00–14:00",
     "windowStart": 720,
     "windowEnd": 840,
@@ -5127,7 +5282,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Херсонская, д. 18",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "amber",
+    "tone": "violet",
     "region": "Югоцентр",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -5152,7 +5307,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "76944",
+    "id": "0156",
+    "sourceId": "76944",
     "time": "16:00–18:00",
     "windowStart": 960,
     "windowEnd": 1080,
@@ -5160,7 +5316,7 @@ export const csvJobs = [
     "address": "Город Москва, пр-кт.60-летия Октября, д. 18 к 2",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "green",
+    "tone": "blue",
     "region": "Югоцентр",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -5185,7 +5341,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "75881",
+    "id": "0157",
+    "sourceId": "75881",
     "time": "14:00–16:00",
     "windowStart": 840,
     "windowEnd": 960,
@@ -5193,7 +5350,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Дмитрия Ульянова, д. 27",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "violet",
+    "tone": "amber",
     "region": "Югоцентр",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -5218,7 +5375,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "85188",
+    "id": "0158",
+    "sourceId": "85188",
     "time": "16:00–18:00",
     "windowStart": 960,
     "windowEnd": 1080,
@@ -5226,7 +5384,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Усачёва, д. 29 к 1",
     "kind": "Подключение и модернизация",
     "workType": "Заказ подключения/Дозаказ оборудования",
-    "tone": "blue",
+    "tone": "green",
     "region": "Югоцентр",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -5251,7 +5409,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "19376",
+    "id": "0159",
+    "sourceId": "19376",
     "time": "16:00–18:00",
     "windowStart": 960,
     "windowEnd": 1080,
@@ -5259,7 +5418,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Винокурова, д. 12 к 4",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "blue",
+    "tone": "violet",
     "region": "Югоцентр",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -5284,7 +5443,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "6185",
+    "id": "0160",
+    "sourceId": "6185",
     "time": "18:00–20:00",
     "windowStart": 1080,
     "windowEnd": 1200,
@@ -5292,7 +5452,7 @@ export const csvJobs = [
     "address": "Город Москва, пр-кт.Балаклавский, д. 20 к 4",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "green",
+    "tone": "violet",
     "region": "Югоцентр",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -5317,7 +5477,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "80548",
+    "id": "0161",
+    "sourceId": "80548",
     "time": "16:00–18:00",
     "windowStart": 960,
     "windowEnd": 1080,
@@ -5325,7 +5486,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Садовники, д. 10 к 1",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "violet",
+    "tone": "green",
     "region": "Югоцентр",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -5350,7 +5511,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "76452",
+    "id": "0162",
+    "sourceId": "76452",
     "time": "12:00–14:00",
     "windowStart": 720,
     "windowEnd": 840,
@@ -5358,7 +5520,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Каховка, д. 7 к 1",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "green",
+    "tone": "amber",
     "region": "Югоцентр",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -5383,7 +5545,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "47560",
+    "id": "0163",
+    "sourceId": "47560",
     "time": "16:00–18:00",
     "windowStart": 960,
     "windowEnd": 1080,
@@ -5416,7 +5579,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "79707",
+    "id": "0164",
+    "sourceId": "79707",
     "time": "10:00–12:00",
     "windowStart": 600,
     "windowEnd": 720,
@@ -5424,7 +5588,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Плющиха, д. 42",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "green",
+    "tone": "violet",
     "region": "Югоцентр",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -5449,7 +5613,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "23142",
+    "id": "0165",
+    "sourceId": "23142",
     "time": "10:00–12:00",
     "windowStart": 600,
     "windowEnd": 720,
@@ -5482,7 +5647,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "10776",
+    "id": "0166",
+    "sourceId": "10776",
     "time": "12:00–14:00",
     "windowStart": 720,
     "windowEnd": 840,
@@ -5490,7 +5656,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Судостроительная, д. 36",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "violet",
+    "tone": "amber",
     "region": "Югоцентр",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -5515,7 +5681,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "94447",
+    "id": "0167",
+    "sourceId": "94447",
     "time": "10:00–12:00",
     "windowStart": 600,
     "windowEnd": 720,
@@ -5548,7 +5715,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "94575",
+    "id": "0168",
+    "sourceId": "94575",
     "time": "18:00–20:00",
     "windowStart": 1080,
     "windowEnd": 1200,
@@ -5556,7 +5724,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Автозаводская, д. 11",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "green",
+    "tone": "violet",
     "region": "Югоцентр",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -5581,7 +5749,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "94431",
+    "id": "0169",
+    "sourceId": "94431",
     "time": "10:00–12:00",
     "windowStart": 600,
     "windowEnd": 720,
@@ -5589,7 +5758,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Шверника, д. 12/2 к 3",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "violet",
+    "tone": "green",
     "region": "Югоцентр",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -5614,7 +5783,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "52576",
+    "id": "0170",
+    "sourceId": "52576",
     "time": "20:00–22:00",
     "windowStart": 1200,
     "windowEnd": 1320,
@@ -5622,7 +5792,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Судостроительная, д. 27 к 2",
     "kind": "Подключение и модернизация",
     "workType": "Заявка на подключение",
-    "tone": "violet",
+    "tone": "blue",
     "region": "Югоцентр",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -5647,7 +5817,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "66315",
+    "id": "0171",
+    "sourceId": "66315",
     "time": "16:00–18:00",
     "windowStart": 960,
     "windowEnd": 1080,
@@ -5655,7 +5826,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Шверника, д. 3",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "violet",
+    "tone": "amber",
     "region": "Югоцентр",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -5680,7 +5851,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "93544",
+    "id": "0172",
+    "sourceId": "93544",
     "time": "12:00–14:00",
     "windowStart": 720,
     "windowEnd": 840,
@@ -5688,7 +5860,7 @@ export const csvJobs = [
     "address": "Город Москва, б-р.Черноморский, д. 19 к 2",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "violet",
+    "tone": "green",
     "region": "Югоцентр",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -5713,7 +5885,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "19203",
+    "id": "0173",
+    "sourceId": "19203",
     "time": "12:00–14:00",
     "windowStart": 720,
     "windowEnd": 840,
@@ -5721,7 +5894,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Керченская, д. 6 к 2",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "amber",
+    "tone": "violet",
     "region": "Югоцентр",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -5746,7 +5919,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "16024",
+    "id": "0174",
+    "sourceId": "16024",
     "time": "10:00–12:00",
     "windowStart": 600,
     "windowEnd": 720,
@@ -5754,7 +5928,7 @@ export const csvJobs = [
     "address": "Город Москва, б-р.Кленовый, д. 10 к 1",
     "kind": "Подключение и модернизация",
     "workType": "Заявка на подключение",
-    "tone": "violet",
+    "tone": "blue",
     "region": "Югоцентр",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -5779,7 +5953,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "90373",
+    "id": "0175",
+    "sourceId": "90373",
     "time": "12:00–14:00",
     "windowStart": 720,
     "windowEnd": 840,
@@ -5787,7 +5962,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Коломенская, д. 5",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "green",
+    "tone": "amber",
     "region": "Югоцентр",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -5812,7 +5987,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "79719",
+    "id": "0176",
+    "sourceId": "79719",
     "time": "12:00–14:00",
     "windowStart": 720,
     "windowEnd": 840,
@@ -5820,7 +5996,7 @@ export const csvJobs = [
     "address": "Город Москва, б-р.Смоленский, д. 17 стр. 1",
     "kind": "Подключение и модернизация",
     "workType": "Заказ подключения/Дозаказ оборудования",
-    "tone": "violet",
+    "tone": "green",
     "region": "Югоцентр",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -5845,7 +6021,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "6957",
+    "id": "0177",
+    "sourceId": "6957",
     "time": "10:00–12:00",
     "windowStart": 600,
     "windowEnd": 720,
@@ -5878,7 +6055,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "78036",
+    "id": "0178",
+    "sourceId": "78036",
     "time": "20:00–22:00",
     "windowStart": 1200,
     "windowEnd": 1320,
@@ -5886,7 +6064,7 @@ export const csvJobs = [
     "address": "Город Москва, пр-кт.60-летия Октября, д. 17",
     "kind": "Подключение и модернизация",
     "workType": "Конвергенция абонента",
-    "tone": "green",
+    "tone": "blue",
     "region": "Югоцентр",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -5911,7 +6089,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "49105",
+    "id": "0179",
+    "sourceId": "49105",
     "time": "20:00–22:00",
     "windowStart": 1200,
     "windowEnd": 1320,
@@ -5944,7 +6123,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "27023",
+    "id": "0180",
+    "sourceId": "27023",
     "time": "18:00–20:00",
     "windowStart": 1080,
     "windowEnd": 1200,
@@ -5952,7 +6132,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Шверника, д. 5 к 2",
     "kind": "Аварийно-восстановительные работы",
     "workType": "Нет линка",
-    "tone": "blue",
+    "tone": "amber",
     "region": "Югоцентр",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -5978,7 +6158,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "26177",
+    "id": "0181",
+    "sourceId": "26177",
     "time": "20:00–22:00",
     "windowStart": 1200,
     "windowEnd": 1320,
@@ -5986,7 +6167,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Академика Миллионщикова, д. 13 к 1",
     "kind": "Аварийно-восстановительные работы",
     "workType": "Нет линка",
-    "tone": "amber",
+    "tone": "blue",
     "region": "Югоцентр",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -6012,7 +6193,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "77795",
+    "id": "0182",
+    "sourceId": "77795",
     "time": "18:00–20:00",
     "windowStart": 1080,
     "windowEnd": 1200,
@@ -6020,7 +6202,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Винокурова, д. 5/6 к 2",
     "kind": "Локальные работы",
     "workType": "TVE/ENT. Другие ошибки",
-    "tone": "amber",
+    "tone": "violet",
     "region": "Югоцентр",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -6045,7 +6227,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "24132",
+    "id": "0183",
+    "sourceId": "24132",
     "time": "20:00–22:00",
     "windowStart": 1200,
     "windowEnd": 1320,
@@ -6079,7 +6262,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "99841",
+    "id": "0184",
+    "sourceId": "99841",
     "time": "18:00–20:00",
     "windowStart": 1080,
     "windowEnd": 1200,
@@ -6113,7 +6297,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "20263",
+    "id": "0185",
+    "sourceId": "20263",
     "time": "10:00–12:00",
     "windowStart": 600,
     "windowEnd": 720,
@@ -6121,7 +6306,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Болотниковская, д. 9 к 2",
     "kind": "Аварийно-восстановительные работы",
     "workType": "Нет линка",
-    "tone": "violet",
+    "tone": "blue",
     "region": "Югоцентр",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -6147,7 +6332,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "51133",
+    "id": "0186",
+    "sourceId": "51133",
     "time": "12:00–14:00",
     "windowStart": 720,
     "windowEnd": 840,
@@ -6181,7 +6367,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "90709",
+    "id": "0187",
+    "sourceId": "90709",
     "time": "16:00–18:00",
     "windowStart": 960,
     "windowEnd": 1080,
@@ -6189,7 +6376,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Коломенская, д. 21",
     "kind": "Локальные работы",
     "workType": "Разрывы",
-    "tone": "amber",
+    "tone": "green",
     "region": "Югоцентр",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -6214,7 +6401,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "84074",
+    "id": "0188",
+    "sourceId": "84074",
     "time": "12:00–14:00",
     "windowStart": 720,
     "windowEnd": 840,
@@ -6222,7 +6410,7 @@ export const csvJobs = [
     "address": "Город Москва, наб.Нагатинская, д. 60 к 2",
     "kind": "Аварийно-восстановительные работы",
     "workType": "Нет линка",
-    "tone": "violet",
+    "tone": "amber",
     "region": "Югоцентр",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -6248,7 +6436,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "12263",
+    "id": "0189",
+    "sourceId": "12263",
     "time": "10:00–12:00",
     "windowStart": 600,
     "windowEnd": 720,
@@ -6256,7 +6445,7 @@ export const csvJobs = [
     "address": "Город Москва, проезд.Коломенский, д. 27 к 3",
     "kind": "Аварийно-восстановительные работы",
     "workType": "Нет линка",
-    "tone": "green",
+    "tone": "blue",
     "region": "Югоцентр",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -6282,7 +6471,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "95501",
+    "id": "0190",
+    "sourceId": "95501",
     "time": "20:00–22:00",
     "windowStart": 1200,
     "windowEnd": 1320,
@@ -6290,7 +6480,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Затонная, д. 12 к 1",
     "kind": "Аварийно-восстановительные работы",
     "workType": "Нет линка",
-    "tone": "blue",
+    "tone": "green",
     "region": "Югоцентр",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -6316,7 +6506,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "86002",
+    "id": "0191",
+    "sourceId": "86002",
     "time": "14:00–16:00",
     "windowStart": 840,
     "windowEnd": 960,
@@ -6324,7 +6515,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Городская, д. 9",
     "kind": "Аварийно-восстановительные работы",
     "workType": "Нет линка",
-    "tone": "green",
+    "tone": "violet",
     "region": "Югоцентр",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -6350,7 +6541,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "92618",
+    "id": "0192",
+    "sourceId": "92618",
     "time": "18:00–20:00",
     "windowStart": 1080,
     "windowEnd": 1200,
@@ -6383,7 +6575,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "26845",
+    "id": "0193",
+    "sourceId": "26845",
     "time": "12:00–14:00",
     "windowStart": 720,
     "windowEnd": 840,
@@ -6391,7 +6584,7 @@ export const csvJobs = [
     "address": "Город Москва, проезд.3-й Павелецкий, д. 7 к 2",
     "kind": "Подключение и модернизация",
     "workType": "Роутер. Замена техническим специалистом",
-    "tone": "violet",
+    "tone": "amber",
     "region": "Югоцентр",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -6416,7 +6609,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "80308",
+    "id": "0194",
+    "sourceId": "80308",
     "time": "10:00–12:00",
     "windowStart": 600,
     "windowEnd": 720,
@@ -6424,7 +6618,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Большая Серпуховская, д. 31 к 6",
     "kind": "Локальные работы",
     "workType": "IP-адрес 169...",
-    "tone": "amber",
+    "tone": "green",
     "region": "Югоцентр",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -6449,7 +6643,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "93276",
+    "id": "0195",
+    "sourceId": "93276",
     "time": "16:00–18:00",
     "windowStart": 960,
     "windowEnd": 1080,
@@ -6482,7 +6677,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "61311",
+    "id": "0196",
+    "sourceId": "61311",
     "time": "16:00–18:00",
     "windowStart": 960,
     "windowEnd": 1080,
@@ -6490,7 +6686,7 @@ export const csvJobs = [
     "address": "Город Москва, пер.Ослябинский, д. 3",
     "kind": "Подключение и модернизация",
     "workType": "ТВ. Замена приставки техником",
-    "tone": "green",
+    "tone": "blue",
     "region": "Югоцентр",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -6515,7 +6711,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "46513",
+    "id": "0197",
+    "sourceId": "46513",
     "time": "10:00–12:00",
     "windowStart": 600,
     "windowEnd": 720,
@@ -6548,7 +6745,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "35265",
+    "id": "0198",
+    "sourceId": "35265",
     "time": "16:00–18:00",
     "windowStart": 960,
     "windowEnd": 1080,
@@ -6556,7 +6754,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Профсоюзная, д. 8 к 2",
     "kind": "Локальные работы",
     "workType": "Работа с кабелем",
-    "tone": "violet",
+    "tone": "green",
     "region": "Югоцентр",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -6581,7 +6779,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "13203",
+    "id": "0199",
+    "sourceId": "13203",
     "time": "14:00–16:00",
     "windowStart": 840,
     "windowEnd": 960,
@@ -6614,7 +6813,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "26896",
+    "id": "0200",
+    "sourceId": "26896",
     "time": "18:00–20:00",
     "windowStart": 1080,
     "windowEnd": 1200,
@@ -6622,7 +6822,7 @@ export const csvJobs = [
     "address": "Город Москва, б-р.Чонгарский, д. 22 к 2",
     "kind": "Локальные работы",
     "workType": "Переключение на Гбит/с",
-    "tone": "violet",
+    "tone": "green",
     "region": "Югоцентр",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -6647,7 +6847,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "87819",
+    "id": "0201",
+    "sourceId": "87819",
     "time": "14:00–16:00",
     "windowStart": 840,
     "windowEnd": 960,
@@ -6655,7 +6856,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Люсиновская, д. 4",
     "kind": "Локальные работы",
     "workType": "Переключение на Гбит/с",
-    "tone": "amber",
+    "tone": "violet",
     "region": "Югоцентр",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -6680,7 +6881,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "5406",
+    "id": "0202",
+    "sourceId": "5406",
     "time": "10:00–12:00",
     "windowStart": 600,
     "windowEnd": 720,
@@ -6688,7 +6890,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Ремизова, д. 15 к 2",
     "kind": "Локальные работы",
     "workType": "Переключение на Гбит/с",
-    "tone": "amber",
+    "tone": "blue",
     "region": "Югоцентр",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -6713,7 +6915,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "86864",
+    "id": "0203",
+    "sourceId": "86864",
     "time": "16:00–18:00",
     "windowStart": 960,
     "windowEnd": 1080,
@@ -6721,7 +6924,7 @@ export const csvJobs = [
     "address": "Город Москва, б-р.Чонгарский, д. 1 к 4",
     "kind": "Локальные работы",
     "workType": "Работа с кабелем",
-    "tone": "green",
+    "tone": "amber",
     "region": "Югоцентр",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -6746,7 +6949,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "17896",
+    "id": "0204",
+    "sourceId": "17896",
     "time": "14:00–16:00",
     "windowStart": 840,
     "windowEnd": 960,
@@ -6754,7 +6958,7 @@ export const csvJobs = [
     "address": "Город Москва, ул.Керченская, д. 10 к 2",
     "kind": "Локальные работы",
     "workType": "IP-адрес 169...",
-    "tone": "violet",
+    "tone": "green",
     "region": "Югоцентр",
     "engineerId": null,
     "baselineEngineerId": null,
@@ -6779,7 +6983,8 @@ export const csvJobs = [
     "status": "Новая"
   },
   {
-    "id": "18023",
+    "id": "0205",
+    "sourceId": "18023",
     "time": "14:00–16:00",
     "windowStart": 840,
     "windowEnd": 960,
@@ -6787,7 +6992,7 @@ export const csvJobs = [
     "address": "г.Город Москва, пр-кт.Ленинский, д. 70/11",
     "kind": "Локальные работы",
     "workType": "Информация",
-    "tone": "green",
+    "tone": "violet",
     "region": "Югоцентр",
     "engineerId": null,
     "baselineEngineerId": null,

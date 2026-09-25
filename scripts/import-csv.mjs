@@ -116,17 +116,21 @@ for (const table of tables) {
 }
 
 const jobs = [];
+let jobIndex = 0;
 for (const table of tables) {
   const officeCoords = offices[table.region].coordinates;
   table.synthetic.forEach(row => {
+    jobIndex++;
+    const id = String(jobIndex).padStart(4, "0");
+    const rawNumber = String(row["Заявка"]);
     const workType = row["Тип заявки HD"] || row["Тип заявки BK"] || "Выездные работы";
     const kind = canonicalSkill(workType);
     const equipment = equipmentFor(`${workType} ${row["Гигабитное подключение"]}`, kind);
     const start = minutes(row["Начало"]);
     const end = minutes(row["Окончание"]);
-    const id = String(row["Заявка"]);
     const job = {
       id,
+      sourceId: rawNumber,
       time: `${String(Math.floor(start / 60)).padStart(2, "0")}:${String(start % 60).padStart(2, "0")}–${String(Math.floor(end / 60)).padStart(2, "0")}:${String(end % 60).padStart(2, "0")}`,
       windowStart: start,
       windowEnd: end,

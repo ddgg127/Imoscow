@@ -3,7 +3,7 @@ import { engineerSpeedKmh, transportTravelMinutes } from "./transport-speed.ts";
 
 export type Region = "Восток" | "Юго-восток" | "Югоцентр";
 export type Job = {
-  id: string; time: string; windowStart: number; windowEnd: number; area: string; address: string;
+  id: string; sourceId?: string; time: string; windowStart: number; windowEnd: number; area: string; address: string;
   kind: string; tone: string; region: Region; engineerId: string | null; baselineEngineerId: string | null;
   coordinates: Coordinate; risk: boolean; equipment: string; requiredTransport: string; allowedTransports?: string[]; priority: number;
   serviceMinutes: number; source: string; status: string; workType?: string; cancelled?: boolean;
@@ -260,7 +260,7 @@ export function scaleJobs(source: Job[], count: number): Job[] {
     const base = source[spreadIndex(i - source.length, source.length)];
     result.push({
       ...base,
-      id: `${base.id}-g${i}`,
+      id: String(i + 1).padStart(4, "0"),
       // A repeated visit at the same address must retain its verified location.
       coordinates: [...base.coordinates] as Coordinate,
       engineerId: null,

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type Ref } from "react";
 import type { Map as MapLibreMap, Marker } from "maplibre-gl";
-import { Layers3, Navigation } from "lucide-react";
+import { Navigation } from "lucide-react";
 import { BackendRoutingProvider, type Coordinate, type TravelMode } from "@/lib/map-providers";
 import { roadLegForJob, waypointIndices } from "@/lib/route-leg";
 import { engineerSpeedKmh } from "@/lib/transport-speed";
@@ -250,12 +250,11 @@ function captionText(status: RoutingState) {
   return "Оценочные маршруты";
 }
 
-function MapChrome({ caption, status, clockRef, onFit, onZoomIn, onZoomOut }: { caption: string; status: RoutingState; clockRef?: Ref<HTMLSpanElement>; onFit: () => void; onZoomIn: () => void; onZoomOut: () => void }) {
+function MapChrome({ caption, status, clockRef, onZoomIn, onZoomOut }: { caption: string; status: RoutingState; clockRef?: Ref<HTMLSpanElement>; onZoomIn: () => void; onZoomOut: () => void }) {
   return <>
     <div className="map-tools">
-      <button aria-label="Показать все маршруты" onClick={onFit}><Layers3 size={17} /></button>
-      <span />
       <button aria-label="Увеличить карту" onClick={onZoomIn}>+</button>
+      <span />
       <button aria-label="Уменьшить карту" onClick={onZoomOut}>−</button>
     </div>
     <div className={`map-caption ${status}`}><Navigation size={14} />{caption}<span ref={clockRef} className="playback-clock" /></div>
@@ -285,8 +284,14 @@ type CanvasProps = {
   onRoutingState: (state: RoutingState) => void;
 };
 
-function useVisibleMarkers(visibleJobs: Job[], engineers: Engineer[], routingEnabled: boolean, selectedEngineerId: string | null, selectedJobId: string | null) {
-  const markerJobs = useMemo(() => (selectedJobId ? visibleJobs.filter(job => job.id === selectedJobId) : selectedEngineerId ? visibleJobs.filter(job => job.engineerId === selectedEngineerId) : visibleJobs).slice(0, 220), [visibleJobs, selectedEngineerId, selectedJobId]);
+function useVisibleMarkers(visibleJobs: Job[], engineers: Engineer[], routingEnabled: boolean, selectedEngineerId: string | null) {
+  const markerJobs = useMemo(() => {
+    if (selectedEngineerId) {
+      return visibleJobs.filter(job => job.engineerId === selectedEngineerId).slice(0, 220);
+    }
+    return visibleJobs.slice(0, 220);
+  }, [visibleJobs, selectedEngineerId]);
+
   const visibleEngineerIds = useMemo(() => new Set(visibleJobs.map(job => job.engineerId).filter(Boolean)), [visibleJobs]);
   const visibleRegions = useMemo(() => new Set(visibleJobs.map(job => job.region)), [visibleJobs]);
   const visibleEngineers = useMemo(() => engineers.filter(engineer => visibleEngineerIds.has(engineer.id)), [engineers, visibleEngineerIds]);
@@ -311,6 +316,14 @@ export function engineerMarkerLabel(engineer: Pick<Engineer, "name" | "initials"
   return label || engineer.initials || "И";
 }
 
+export function formatJobMarkerId(id: string): string {
+  const num = parseInt(id, 10);
+  if (!Number.isNaN(num) && /^0*\d+$/.test(id)) {
+    return String(num);
+  }
+  return id;
+}
+
 export function MapCanvas(props: CanvasProps) {
   const { visibleJobs, baselineJobs, engineers, selectedEngineerId, selectedJobId, simTime, simPlaying, simSpeed, carSpeedKmh, simEnd, onSimTime, onSimPlaying, compare, routingEnabled, routes, baselineRoutes, onSelectEngineer, onSelectJob, onInspectJob, onRoutingState } = props;
   const containerRef = useRef<HTMLDivElement>(null);
@@ -325,7 +338,7 @@ export function MapCanvas(props: CanvasProps) {
   const loadedRef = useRef(false);
   const [mapReady, setMapReady] = useState(false);
   const simulating = simTime != null;
-  const { markerJobs, visibleEngineers, markerEngineers } = useVisibleMarkers(visibleJobs, engineers, routingEnabled, selectedEngineerId, selectedJobId);
+  const { markerJobs, visibleEngineers, markerEngineers } = useVisibleMarkers(visibleJobs, engineers, routingEnabled, selectedEngineerId);
   const baselineEngineers = useMemo(() => {
     const ids = new Set((baselineRoutes.length ? baselineRoutes.map(route => route.engineerId) : baselineJobs.map(job => job.baselineEngineerId)).filter((id): id is string => Boolean(id)));
     return engineers.filter(engineer => ids.has(engineer.id));
@@ -363,11 +376,6 @@ export function MapCanvas(props: CanvasProps) {
   }, [baselineRoads]);
   const routeData = useMemo<GeoJSON.FeatureCollection<GeoJSON.LineString>>(() => {
     if (!routingEnabled) return emptyLines;
-    if (selectedJobId) {
-      return selectedLeg?.coordinates.length && selectedRouteEngineer
-        ? { type: "FeatureCollection", features: [lineFeature({ ...selectedRouteEngineer, color: "#f43f5e" }, selectedLeg.coordinates, true)] }
-        : emptyLines;
-    }
     return {
       type: "FeatureCollection",
       features: visibleEngineers.filter(engineer => !selectedEngineerId || engineer.id === selectedEngineerId).map(engineer => {
@@ -377,7 +385,7 @@ export function MapCanvas(props: CanvasProps) {
         return lineFeature(engineer, coordinates, selected);
       }).filter((feature): feature is GeoJSON.Feature<GeoJSON.LineString> => Boolean(feature)),
     };
-  }, [routingEnabled, visibleEngineers, selectedEngineerId, selectedJobId, selectedLeg, selectedRouteEngineer, routeFor]);
+  }, [routingEnabled, visibleEngineers, selectedEngineerId, routeFor]);
   const baselineData = useMemo<GeoJSON.FeatureCollection<GeoJSON.LineString>>(() => {
     if (!routingEnabled || !compare || selectedEngineerId || selectedJobId) return emptyLines;
     return {
@@ -478,6 +486,23 @@ export function MapCanvas(props: CanvasProps) {
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !loadedRef.current) return;
+    const handleMapClick = (e: any) => {
+      const target = e.originalEvent?.target as HTMLElement | undefined;
+      if (!target?.closest(".job-map-marker") && !target?.closest(".engineer-map-marker")) {
+        if (selectedJobId) {
+          onSelectJob(selectedJobId);
+        }
+      }
+    };
+    map.on("click", handleMapClick);
+    return () => {
+      map.off("click", handleMapClick);
+    };
+  }, [selectedJobId, onSelectJob]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !loadedRef.current) return;
     markersRef.current.forEach(marker => marker.remove());
     markersRef.current.length = 0;
     void import("maplibre-gl").then(({ Marker }) => {
@@ -488,11 +513,17 @@ export function MapCanvas(props: CanvasProps) {
           markersRef.current.push(new Marker({ element: el }).setLngLat(engineer.start).addTo(mapRef.current!));
         });
       }
-      markerJobs.forEach((job, index) => {
-        if (!job.engineerId && routingEnabled && selectedJobId !== job.id) return;
+      markerJobs.forEach(job => {
         const engineer = engineers.find(item => item.id === job.engineerId);
         const color = engineer?.color ?? "#6b7280";
-        const el = markerButton(`job-map-marker${selectedJobId === job.id ? " selected" : ""}`, String(index + 1), color, `№ ${job.id} · ${job.address}`, () => onSelectJob(job.id));
+        const markerLabel = formatJobMarkerId(job.id);
+        const el = markerButton(
+          `job-map-marker${selectedJobId === job.id ? " selected" : ""}`,
+          markerLabel,
+          color,
+          `Заявка ${markerLabel} (${job.id}) · ${job.address}`,
+          () => onSelectJob(job.id)
+        );
         markersRef.current.push(new Marker({ element: el }).setLngLat(job.coordinates).addTo(mapRef.current!));
       });
       if (selectedLeg) {
@@ -510,7 +541,7 @@ export function MapCanvas(props: CanvasProps) {
       return;
     }
     if (job) {
-      map.flyTo({ center: job.coordinates, zoom: 16, duration: 500 });
+      map.flyTo({ center: job.coordinates, zoom: 14.5, duration: 500 });
       return;
     }
     const engineer = engineers.find(item => item.id === selectedEngineerId);
@@ -562,7 +593,7 @@ export function MapCanvas(props: CanvasProps) {
       if (action.jobId && action.phase !== "idle") {
         actionJobRef.current.hidden = false;
         actionJobRef.current.dataset.job = action.jobId;
-        actionJobRef.current.textContent = `№ ${action.jobId}`;
+        actionJobRef.current.textContent = `Заявка ${formatJobMarkerId(action.jobId)}`;
       } else {
         actionJobRef.current.hidden = true;
         actionJobRef.current.dataset.job = "";
@@ -652,8 +683,32 @@ export function MapCanvas(props: CanvasProps) {
   }, [simulating, mapReady]);
   return <div className="map-canvas real-map" aria-label="Интерактивная карта маршрутов инженеров">
     <div ref={containerRef} className="maplibre-host" />
-    {selectedRouteEngineer && <div className="selected-route-summary" style={{ ["--route-color" as string]: selectedLeg ? "#f43f5e" : selectedRouteEngineer.color }}><span>{selectedLeg ? "Участок к выбранной заявке" : "Маршрут инженера"}</span><strong>{selectedRouteEngineer.name}</strong>{selectedLeg ? <><small>{selectedLeg.originLabel} → {selectedLeg.destinationLabel}</small><small>Прибытие {minutesLabel(selectedLeg.stop.arrival)} · участок {selectedLeg.stop.distanceKm.toFixed(1).replace(".", ",")} км</small></> : <small>{selectedRoutePlan?.stops.length ?? 0} заявок · {selectedRoutePlan ? `${selectedRoutePlan.distanceKm.toFixed(1).replace(".", ",")} км` : "маршрут не построен"}</small>}<small>{selectedRouteEngineer.transport} · скорость {engineerSpeedKmh(selectedRouteEngineer.transport, selectedRouteEngineer.speedKmh, carSpeedKmh)} км/ч</small>{selectedRoadSource === "walking-estimate" ? <small>Нет точного маршрута ОТ: показан пеший путь как оценка, движение не интерполируется</small> : selectedRoadSource === "unavailable" ? <small>Дорожная линия недоступна · движение между точками скрыто</small> : selectedRoadSource && selectedRoadSource !== "none" ? <small>Геометрия по сети дорог · {selectedRoadSource}</small> : <small>Загружаем дорожную геометрию…</small>}<button type="button" onClick={() => onSelectEngineer(selectedRouteEngineer.id)}>Показать все маршруты</button></div>}
-    <MapChrome caption={captionText(routeStatus)} status={routeStatus} clockRef={clockRef} onFit={() => { if (selectedEngineerId) onSelectEngineer(selectedEngineerId); else void fitVisible(); }} onZoomIn={() => mapRef.current?.zoomIn()} onZoomOut={() => mapRef.current?.zoomOut()} />
+    {selectedRouteEngineer && selectedLeg && (
+      <div className="selected-route-summary" style={{ ["--route-color" as string]: "#f43f5e" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span>Участок к выбранной заявке</span>
+          <button
+            type="button"
+            className="selected-leg-close-btn"
+            onClick={() => { if (selectedJobId) onSelectJob(selectedJobId); }}
+            title="Снять выбор заявки"
+          >
+            ✕
+          </button>
+        </div>
+        <strong>{selectedRouteEngineer.name}</strong>
+        <small>{selectedLeg.originLabel} → {selectedLeg.destinationLabel}</small>
+        <small>Прибытие {minutesLabel(selectedLeg.stop.arrival)} · участок {selectedLeg.stop.distanceKm.toFixed(1).replace(".", ",")} км</small>
+        <button
+          type="button"
+          className="selected-leg-reset-link"
+          onClick={() => { if (selectedJobId) onSelectJob(selectedJobId); }}
+        >
+          Показать все заявки
+        </button>
+      </div>
+    )}
+    <MapChrome caption={captionText(routeStatus)} status={routeStatus} clockRef={clockRef} onZoomIn={() => mapRef.current?.zoomIn()} onZoomOut={() => mapRef.current?.zoomOut()} />
     <div ref={actionBoxRef} className="playback-action" hidden>
       <strong>Сейчас</strong>
       <p><span ref={actionTextRef} /><button type="button" className="playback-job-id" ref={actionJobRef} onClick={() => { const id = actionJobRef.current?.dataset.job; if (id) onInspectJob(id); }} /></p>

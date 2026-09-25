@@ -72,7 +72,8 @@
       "normSource": "экспертный норматив"
     },
     {
-      "id": "74198",
+      "id": "0001",
+      "sourceId": "74198",
       "time": "08:00–22:00",
       "windowStart": 480,
       "windowEnd": 1320,
@@ -80,7 +81,7 @@
       "address": "Город Москва, пр-кт.Волгоградский, д. 128 к 5",
       "kind": "Подключение и модернизация",
       "workType": "Конвергенция абонента",
-      "tone": "violet",
+      "tone": "amber",
       "region": "Восток",
       "engineerId": null,
       "baselineEngineerId": null,
@@ -105,7 +106,8 @@
       "status": "Новая"
     },
     {
-      "id": "86160",
+      "id": "0002",
+      "sourceId": "86160",
       "time": "08:00–22:00",
       "windowStart": 480,
       "windowEnd": 1320,
@@ -113,7 +115,7 @@
       "address": "Город Москва, пер.Маяковского, д. 2",
       "kind": "Подключение и модернизация",
       "workType": "Конвергенция абонента",
-      "tone": "violet",
+      "tone": "green",
       "region": "Восток",
       "engineerId": null,
       "baselineEngineerId": null,
@@ -138,7 +140,8 @@
       "status": "Новая"
     },
     {
-      "id": "50104",
+      "id": "0003",
+      "sourceId": "50104",
       "time": "08:00–22:00",
       "windowStart": 480,
       "windowEnd": 1320,
@@ -146,7 +149,7 @@
       "address": "Город Москва, ул.Грайвороновская, д. 10 к 2",
       "kind": "Подключение и модернизация",
       "workType": "Заявка на подключение",
-      "tone": "green",
+      "tone": "violet",
       "region": "Восток",
       "engineerId": null,
       "baselineEngineerId": null,
@@ -171,7 +174,8 @@
       "status": "Новая"
     },
     {
-      "id": "46393",
+      "id": "0004",
+      "sourceId": "46393",
       "time": "08:00–22:00",
       "windowStart": 480,
       "windowEnd": 1320,
@@ -179,7 +183,7 @@
       "address": "Город Москва, ул.Михайлова, д. 14",
       "kind": "Подключение и модернизация",
       "workType": "Конвергенция абонента",
-      "tone": "violet",
+      "tone": "blue",
       "region": "Восток",
       "engineerId": null,
       "baselineEngineerId": null,
@@ -204,7 +208,8 @@
       "status": "Новая"
     },
     {
-      "id": "10135",
+      "id": "0005",
+      "sourceId": "10135",
       "time": "08:00–22:00",
       "windowStart": 480,
       "windowEnd": 1320,
@@ -212,7 +217,7 @@
       "address": "Город Москва, ул.3-я Институтская, д. 5 к 2",
       "kind": "Подключение и модернизация",
       "workType": "Конвергенция абонента",
-      "tone": "green",
+      "tone": "amber",
       "region": "Восток",
       "engineerId": null,
       "baselineEngineerId": null,
@@ -237,7 +242,8 @@
       "status": "Новая"
     },
     {
-      "id": "18754",
+      "id": "0006",
+      "sourceId": "18754",
       "time": "08:00–22:00",
       "windowStart": 480,
       "windowEnd": 1320,
@@ -245,7 +251,7 @@
       "address": "Город Москва, ул.1-я Новокузьминская, д. 16 к 1",
       "kind": "Подключение и модернизация",
       "workType": "Конвергенция абонента",
-      "tone": "violet",
+      "tone": "green",
       "region": "Восток",
       "engineerId": null,
       "baselineEngineerId": null,
@@ -270,7 +276,8 @@
       "status": "Новая"
     },
     {
-      "id": "84627",
+      "id": "0007",
+      "sourceId": "84627",
       "time": "08:00–22:00",
       "windowStart": 480,
       "windowEnd": 1320,
@@ -278,7 +285,7 @@
       "address": "Город Москва, ул.Окская, д. 32",
       "kind": "Подключение и модернизация",
       "workType": "Конвергенция абонента",
-      "tone": "amber",
+      "tone": "violet",
       "region": "Восток",
       "engineerId": null,
       "baselineEngineerId": null,
@@ -303,7 +310,8 @@
       "status": "Новая"
     },
     {
-      "id": "61540",
+      "id": "0008",
+      "sourceId": "61540",
       "time": "08:00–22:00",
       "windowStart": 480,
       "windowEnd": 1320,
@@ -311,7 +319,7 @@
       "address": "Город Москва, ул.Юных Ленинцев, д. 84",
       "kind": "Подключение и модернизация",
       "workType": "Конвергенция абонента",
-      "tone": "green",
+      "tone": "blue",
       "region": "Восток",
       "engineerId": null,
       "baselineEngineerId": null,
@@ -336,7 +344,8 @@
       "status": "Новая"
     },
     {
-      "id": "74949",
+      "id": "0009",
+      "sourceId": "74949",
       "time": "08:00–22:00",
       "windowStart": 480,
       "windowEnd": 1320,
@@ -369,7 +378,8 @@
       "status": "Новая"
     },
     {
-      "id": "41077",
+      "id": "0010",
+      "sourceId": "41077",
       "time": "08:00–22:00",
       "windowStart": 480,
       "windowEnd": 1320,
@@ -402,7 +412,8 @@
       "status": "Новая"
     },
     {
-      "id": "87693",
+      "id": "0011",
+      "sourceId": "87693",
       "time": "08:00–22:00",
       "windowStart": 480,
       "windowEnd": 1320,
@@ -410,7 +421,7 @@
       "address": "Город Москва, ул.Чистова, д. 12",
       "kind": "Подключение и модернизация",
       "workType": "Конвергенция абонента",
-      "tone": "amber",
+      "tone": "green",
       "region": "Восток",
       "engineerId": null,
       "baselineEngineerId": null,
@@ -435,7 +446,8 @@
       "status": "Новая"
     },
     {
-      "id": "93086",
+      "id": "0012",
+      "sourceId": "93086",
       "time": "08:00–22:00",
       "windowStart": 480,
       "windowEnd": 1320,
@@ -443,7 +455,7 @@
       "address": "Город Москва, ул.Паперника, д. 19",
       "kind": "Подключение и модернизация",
       "workType": "Конвергенция абонента",
-      "tone": "blue",
+      "tone": "amber",
       "region": "Восток",
       "engineerId": null,
       "baselineEngineerId": null,
@@ -468,7 +480,8 @@
       "status": "Новая"
     },
     {
-      "id": "57866",
+      "id": "0013",
+      "sourceId": "57866",
       "time": "08:00–22:00",
       "windowStart": 480,
       "windowEnd": 1320,
@@ -476,7 +489,7 @@
       "address": "Город Москва, ул.Окская, д. 48/2",
       "kind": "Подключение и модернизация",
       "workType": "Конвергенция абонента",
-      "tone": "green",
+      "tone": "blue",
       "region": "Восток",
       "engineerId": null,
       "baselineEngineerId": null,
@@ -501,7 +514,8 @@
       "status": "Новая"
     },
     {
-      "id": "35675",
+      "id": "0014",
+      "sourceId": "35675",
       "time": "08:00–22:00",
       "windowStart": 480,
       "windowEnd": 1320,
@@ -509,7 +523,7 @@
       "address": "Город Москва, ул.Трофимова, д. 24 к 2",
       "kind": "Подключение и модернизация",
       "workType": "Конвергенция абонента",
-      "tone": "blue",
+      "tone": "violet",
       "region": "Восток",
       "engineerId": null,
       "baselineEngineerId": null,
@@ -534,7 +548,8 @@
       "status": "Новая"
     },
     {
-      "id": "82388",
+      "id": "0015",
+      "sourceId": "82388",
       "time": "08:00–22:00",
       "windowStart": 480,
       "windowEnd": 1320,
@@ -542,7 +557,7 @@
       "address": "Город Москва, ул.1-я Дубровская, д. 6",
       "kind": "Подключение и модернизация",
       "workType": "Конвергенция абонента",
-      "tone": "violet",
+      "tone": "green",
       "region": "Восток",
       "engineerId": null,
       "baselineEngineerId": null,
@@ -567,7 +582,8 @@
       "status": "Новая"
     },
     {
-      "id": "23380",
+      "id": "0016",
+      "sourceId": "23380",
       "time": "08:00–22:00",
       "windowStart": 480,
       "windowEnd": 1320,
@@ -575,7 +591,7 @@
       "address": "Город Москва, ул.Рогожский Вал, д. 2/50",
       "kind": "Подключение и модернизация",
       "workType": "Конвергенция абонента",
-      "tone": "green",
+      "tone": "amber",
       "region": "Восток",
       "engineerId": null,
       "baselineEngineerId": null,
@@ -600,7 +616,8 @@
       "status": "Новая"
     },
     {
-      "id": "67472",
+      "id": "0067",
+      "sourceId": "67472",
       "time": "08:00–22:00",
       "windowStart": 480,
       "windowEnd": 1320,
@@ -608,7 +625,7 @@
       "address": "Домодедово, проезд.Советский 1-й, д. 1А",
       "kind": "Подключение и модернизация",
       "workType": "Заказ подключения/Дозаказ оборудования",
-      "tone": "green",
+      "tone": "amber",
       "region": "Юго-восток",
       "engineerId": null,
       "baselineEngineerId": null,
@@ -633,7 +650,8 @@
       "status": "Новая"
     },
     {
-      "id": "84466",
+      "id": "0068",
+      "sourceId": "84466",
       "time": "08:00–22:00",
       "windowStart": 480,
       "windowEnd": 1320,
@@ -666,7 +684,8 @@
       "status": "Новая"
     },
     {
-      "id": "14416",
+      "id": "0069",
+      "sourceId": "14416",
       "time": "08:00–22:00",
       "windowStart": 480,
       "windowEnd": 1320,
@@ -674,7 +693,7 @@
       "address": "Город Москва, ул.Кустанайская, д. 8 к 1",
       "kind": "Подключение и модернизация",
       "workType": "Заказ подключения/Дозаказ оборудования",
-      "tone": "green",
+      "tone": "violet",
       "region": "Юго-восток",
       "engineerId": null,
       "baselineEngineerId": null,
@@ -699,7 +718,8 @@
       "status": "Новая"
     },
     {
-      "id": "68359",
+      "id": "0070",
+      "sourceId": "68359",
       "time": "08:00–22:00",
       "windowStart": 480,
       "windowEnd": 1320,
@@ -732,7 +752,8 @@
       "status": "Новая"
     },
     {
-      "id": "66944",
+      "id": "0071",
+      "sourceId": "66944",
       "time": "08:00–22:00",
       "windowStart": 480,
       "windowEnd": 1320,
@@ -740,7 +761,7 @@
       "address": "Домодедово, ул.Зеленая, д. 85",
       "kind": "Подключение и модернизация",
       "workType": "Конвергенция абонента",
-      "tone": "violet",
+      "tone": "blue",
       "region": "Юго-восток",
       "engineerId": null,
       "baselineEngineerId": null,
@@ -765,7 +786,8 @@
       "status": "Новая"
     },
     {
-      "id": "52041",
+      "id": "0072",
+      "sourceId": "52041",
       "time": "08:00–22:00",
       "windowStart": 480,
       "windowEnd": 1320,
@@ -773,7 +795,7 @@
       "address": "Город Москва, ул.Москворечье, д. 4 к 6",
       "kind": "Подключение и модернизация",
       "workType": "Конвергенция абонента",
-      "tone": "blue",
+      "tone": "violet",
       "region": "Юго-восток",
       "engineerId": null,
       "baselineEngineerId": null,
@@ -798,7 +820,8 @@
       "status": "Новая"
     },
     {
-      "id": "23807",
+      "id": "0073",
+      "sourceId": "23807",
       "time": "08:00–22:00",
       "windowStart": 480,
       "windowEnd": 1320,
@@ -831,7 +854,8 @@
       "status": "Новая"
     },
     {
-      "id": "60484",
+      "id": "0074",
+      "sourceId": "60484",
       "time": "08:00–22:00",
       "windowStart": 480,
       "windowEnd": 1320,
@@ -839,7 +863,7 @@
       "address": "Город Москва, ул.6-я Радиальная, д. 5 к 3",
       "kind": "Подключение и модернизация",
       "workType": "Конвергенция абонента",
-      "tone": "blue",
+      "tone": "amber",
       "region": "Юго-восток",
       "engineerId": null,
       "baselineEngineerId": null,
@@ -864,7 +888,8 @@
       "status": "Новая"
     },
     {
-      "id": "63591",
+      "id": "0075",
+      "sourceId": "63591",
       "time": "08:00–22:00",
       "windowStart": 480,
       "windowEnd": 1320,
@@ -872,7 +897,7 @@
       "address": "Город Москва, ул.Бирюлёвская, д. 39",
       "kind": "Подключение и модернизация",
       "workType": "Конвергенция абонента",
-      "tone": "green",
+      "tone": "blue",
       "region": "Юго-восток",
       "engineerId": null,
       "baselineEngineerId": null,
@@ -897,7 +922,8 @@
       "status": "Новая"
     },
     {
-      "id": "53552",
+      "id": "0076",
+      "sourceId": "53552",
       "time": "08:00–22:00",
       "windowStart": 480,
       "windowEnd": 1320,
@@ -905,7 +931,7 @@
       "address": "Кашира, ул.Победы, д. 9",
       "kind": "Подключение и модернизация",
       "workType": "Заказ подключения/Дозаказ оборудования",
-      "tone": "green",
+      "tone": "violet",
       "region": "Юго-восток",
       "engineerId": null,
       "baselineEngineerId": null,
@@ -930,7 +956,8 @@
       "status": "Новая"
     },
     {
-      "id": "58066",
+      "id": "0077",
+      "sourceId": "58066",
       "time": "08:00–22:00",
       "windowStart": 480,
       "windowEnd": 1320,
@@ -938,7 +965,7 @@
       "address": "Город Москва, ул.Братеевская, д. 18 к 1",
       "kind": "Подключение и модернизация",
       "workType": "Конвергенция абонента",
-      "tone": "violet",
+      "tone": "green",
       "region": "Юго-восток",
       "engineerId": null,
       "baselineEngineerId": null,
@@ -963,7 +990,8 @@
       "status": "Новая"
     },
     {
-      "id": "2915",
+      "id": "0078",
+      "sourceId": "2915",
       "time": "08:00–22:00",
       "windowStart": 480,
       "windowEnd": 1320,
@@ -996,7 +1024,8 @@
       "status": "Новая"
     },
     {
-      "id": "3566",
+      "id": "0079",
+      "sourceId": "3566",
       "time": "08:00–22:00",
       "windowStart": 480,
       "windowEnd": 1320,
@@ -1029,7 +1058,8 @@
       "status": "Новая"
     },
     {
-      "id": "68946",
+      "id": "0080",
+      "sourceId": "68946",
       "time": "08:00–22:00",
       "windowStart": 480,
       "windowEnd": 1320,
@@ -1037,7 +1067,7 @@
       "address": "Город Москва, пр-кт.Пролетарский, д. 14А",
       "kind": "Подключение и модернизация",
       "workType": "Конвергенция абонента",
-      "tone": "violet",
+      "tone": "blue",
       "region": "Юго-восток",
       "engineerId": null,
       "baselineEngineerId": null,
@@ -1062,7 +1092,8 @@
       "status": "Новая"
     },
     {
-      "id": "55454",
+      "id": "0081",
+      "sourceId": "55454",
       "time": "08:00–22:00",
       "windowStart": 480,
       "windowEnd": 1320,
@@ -1070,7 +1101,7 @@
       "address": "Домодедово, ул.Корнеева, д. 50",
       "kind": "Подключение и модернизация",
       "workType": "Конвергенция абонента",
-      "tone": "violet",
+      "tone": "amber",
       "region": "Юго-восток",
       "engineerId": null,
       "baselineEngineerId": null,
@@ -1095,7 +1126,8 @@
       "status": "Новая"
     },
     {
-      "id": "35057",
+      "id": "0082",
+      "sourceId": "35057",
       "time": "08:00–22:00",
       "windowStart": 480,
       "windowEnd": 1320,
@@ -1128,7 +1160,8 @@
       "status": "Новая"
     },
     {
-      "id": "32840",
+      "id": "0150",
+      "sourceId": "32840",
       "time": "08:00–22:00",
       "windowStart": 480,
       "windowEnd": 1320,
@@ -1136,7 +1169,7 @@
       "address": "Город Москва, проезд.3-й Павелецкий, д. 9",
       "kind": "Подключение и модернизация",
       "workType": "Конвергенция абонента",
-      "tone": "violet",
+      "tone": "green",
       "region": "Югоцентр",
       "engineerId": null,
       "baselineEngineerId": null,
@@ -1161,7 +1194,8 @@
       "status": "Новая"
     },
     {
-      "id": "78540",
+      "id": "0151",
+      "sourceId": "78540",
       "time": "08:00–22:00",
       "windowStart": 480,
       "windowEnd": 1320,
@@ -1169,7 +1203,7 @@
       "address": "Город Москва, ул.Восточная, д. 2 к 2",
       "kind": "Подключение и модернизация",
       "workType": "Конвергенция абонента",
-      "tone": "blue",
+      "tone": "violet",
       "region": "Югоцентр",
       "engineerId": null,
       "baselineEngineerId": null,
@@ -1194,7 +1228,8 @@
       "status": "Новая"
     },
     {
-      "id": "66376",
+      "id": "0152",
+      "sourceId": "66376",
       "time": "08:00–22:00",
       "windowStart": 480,
       "windowEnd": 1320,
@@ -1202,7 +1237,7 @@
       "address": "Город Москва, ул.Дубининская, д. 59 к 2",
       "kind": "Подключение и модернизация",
       "workType": "Конвергенция абонента",
-      "tone": "green",
+      "tone": "blue",
       "region": "Югоцентр",
       "engineerId": null,
       "baselineEngineerId": null,
@@ -1227,7 +1262,8 @@
       "status": "Новая"
     },
     {
-      "id": "23637",
+      "id": "0153",
+      "sourceId": "23637",
       "time": "08:00–22:00",
       "windowStart": 480,
       "windowEnd": 1320,
@@ -1260,7 +1296,8 @@
       "status": "Новая"
     },
     {
-      "id": "97770",
+      "id": "0154",
+      "sourceId": "97770",
       "time": "08:00–22:00",
       "windowStart": 480,
       "windowEnd": 1320,
@@ -1268,7 +1305,7 @@
       "address": "Город Москва, ул.Нагорная, д. 44 к 2",
       "kind": "Подключение и модернизация",
       "workType": "Конвергенция абонента",
-      "tone": "blue",
+      "tone": "green",
       "region": "Югоцентр",
       "engineerId": null,
       "baselineEngineerId": null,
@@ -1293,7 +1330,8 @@
       "status": "Новая"
     },
     {
-      "id": "55711",
+      "id": "0155",
+      "sourceId": "55711",
       "time": "08:00–22:00",
       "windowStart": 480,
       "windowEnd": 1320,
@@ -1301,7 +1339,7 @@
       "address": "Город Москва, ул.Херсонская, д. 18",
       "kind": "Подключение и модернизация",
       "workType": "Конвергенция абонента",
-      "tone": "amber",
+      "tone": "violet",
       "region": "Югоцентр",
       "engineerId": null,
       "baselineEngineerId": null,
@@ -1326,7 +1364,8 @@
       "status": "Новая"
     },
     {
-      "id": "76944",
+      "id": "0156",
+      "sourceId": "76944",
       "time": "08:00–22:00",
       "windowStart": 480,
       "windowEnd": 1320,
@@ -1334,7 +1373,7 @@
       "address": "Город Москва, пр-кт.60-летия Октября, д. 18 к 2",
       "kind": "Подключение и модернизация",
       "workType": "Конвергенция абонента",
-      "tone": "green",
+      "tone": "blue",
       "region": "Югоцентр",
       "engineerId": null,
       "baselineEngineerId": null,
@@ -1359,7 +1398,8 @@
       "status": "Новая"
     },
     {
-      "id": "75881",
+      "id": "0157",
+      "sourceId": "75881",
       "time": "08:00–22:00",
       "windowStart": 480,
       "windowEnd": 1320,
@@ -1367,7 +1407,7 @@
       "address": "Город Москва, ул.Дмитрия Ульянова, д. 27",
       "kind": "Подключение и модернизация",
       "workType": "Конвергенция абонента",
-      "tone": "violet",
+      "tone": "amber",
       "region": "Югоцентр",
       "engineerId": null,
       "baselineEngineerId": null,
@@ -1392,7 +1432,8 @@
       "status": "Новая"
     },
     {
-      "id": "85188",
+      "id": "0158",
+      "sourceId": "85188",
       "time": "08:00–22:00",
       "windowStart": 480,
       "windowEnd": 1320,
@@ -1400,7 +1441,7 @@
       "address": "Город Москва, ул.Усачёва, д. 29 к 1",
       "kind": "Подключение и модернизация",
       "workType": "Заказ подключения/Дозаказ оборудования",
-      "tone": "blue",
+      "tone": "green",
       "region": "Югоцентр",
       "engineerId": null,
       "baselineEngineerId": null,
@@ -1425,7 +1466,8 @@
       "status": "Новая"
     },
     {
-      "id": "19376",
+      "id": "0159",
+      "sourceId": "19376",
       "time": "08:00–22:00",
       "windowStart": 480,
       "windowEnd": 1320,
@@ -1433,7 +1475,7 @@
       "address": "Город Москва, ул.Винокурова, д. 12 к 4",
       "kind": "Подключение и модернизация",
       "workType": "Конвергенция абонента",
-      "tone": "blue",
+      "tone": "violet",
       "region": "Югоцентр",
       "engineerId": null,
       "baselineEngineerId": null,
@@ -1458,7 +1500,8 @@
       "status": "Новая"
     },
     {
-      "id": "6185",
+      "id": "0160",
+      "sourceId": "6185",
       "time": "08:00–22:00",
       "windowStart": 480,
       "windowEnd": 1320,
@@ -1466,7 +1509,7 @@
       "address": "Город Москва, пр-кт.Балаклавский, д. 20 к 4",
       "kind": "Подключение и модернизация",
       "workType": "Конвергенция абонента",
-      "tone": "green",
+      "tone": "violet",
       "region": "Югоцентр",
       "engineerId": null,
       "baselineEngineerId": null,
@@ -1491,7 +1534,8 @@
       "status": "Новая"
     },
     {
-      "id": "80548",
+      "id": "0161",
+      "sourceId": "80548",
       "time": "08:00–22:00",
       "windowStart": 480,
       "windowEnd": 1320,
@@ -1499,7 +1543,7 @@
       "address": "Город Москва, ул.Садовники, д. 10 к 1",
       "kind": "Подключение и модернизация",
       "workType": "Конвергенция абонента",
-      "tone": "violet",
+      "tone": "green",
       "region": "Югоцентр",
       "engineerId": null,
       "baselineEngineerId": null,
@@ -1524,7 +1568,8 @@
       "status": "Новая"
     },
     {
-      "id": "76452",
+      "id": "0162",
+      "sourceId": "76452",
       "time": "08:00–22:00",
       "windowStart": 480,
       "windowEnd": 1320,
@@ -1532,7 +1577,7 @@
       "address": "Город Москва, ул.Каховка, д. 7 к 1",
       "kind": "Подключение и модернизация",
       "workType": "Конвергенция абонента",
-      "tone": "green",
+      "tone": "amber",
       "region": "Югоцентр",
       "engineerId": null,
       "baselineEngineerId": null,
@@ -1557,7 +1602,8 @@
       "status": "Новая"
     },
     {
-      "id": "47560",
+      "id": "0163",
+      "sourceId": "47560",
       "time": "08:00–22:00",
       "windowStart": 480,
       "windowEnd": 1320,
@@ -1590,7 +1636,8 @@
       "status": "Новая"
     },
     {
-      "id": "79707",
+      "id": "0164",
+      "sourceId": "79707",
       "time": "08:00–22:00",
       "windowStart": 480,
       "windowEnd": 1320,
@@ -1598,7 +1645,7 @@
       "address": "Город Москва, ул.Плющиха, д. 42",
       "kind": "Подключение и модернизация",
       "workType": "Конвергенция абонента",
-      "tone": "green",
+      "tone": "violet",
       "region": "Югоцентр",
       "engineerId": null,
       "baselineEngineerId": null,
@@ -1623,7 +1670,8 @@
       "status": "Новая"
     },
     {
-      "id": "23142",
+      "id": "0165",
+      "sourceId": "23142",
       "time": "08:00–22:00",
       "windowStart": 480,
       "windowEnd": 1320,
