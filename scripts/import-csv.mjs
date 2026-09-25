@@ -166,7 +166,17 @@ for (const table of tables) {
 // is joined to a synthetic request.
 const engineers = tables.flatMap(table => {
   const count = new Set(table.control.map(row => row["Бригада"]).filter(Boolean)).size;
-  return Array.from({ length: count }, (_, slot) => ({
+  // Explicit, reproducible demonstration assumption: three SE engineers start
+  // from a verified address in a service city with their kit already issued.
+  // These are NOT historical employee homes or control-file assignments.
+  const localCities = ["Кашира", "Домодедово", "Ступино"];
+  const localStarts = table.region === "Юго-восток" ? localCities.map(city =>
+    table.synthetic.map(row => row["Адрес"]).filter(address => address.includes(city) && geocodeCache[address]?.verified).sort((a, b) => a.localeCompare(b, "ru"))[0]
+  ) : [];
+  return Array.from({ length: count }, (_, slot) => {
+  const localAddress = table.region === "Юго-восток" && slot >= 7 && slot < 10 ? localStarts[slot - 7] : undefined;
+  const startAddress = localAddress || table.office;
+  return ({
   id: `${table.key}-demo-${String(slot + 1).padStart(2, "0")}`,
   initials: `${table.region[0]}${slot + 1}`,
   name: `Инженер ${table.region} ${String(slot + 1).padStart(2, "0")}`,
@@ -176,15 +186,31 @@ const engineers = tables.flatMap(table => {
   load: 0,
   color: colors[slot % colors.length],
   region: table.region,
-  start: offices[table.region].coordinates,
+  start: geocoded.get(startAddress) ?? offices[table.region].coordinates,
+  startAddress,
+  startMode: localAddress ? "local" : "office",
+  officeAddress: table.office,
+  equipmentIssue: localAddress ? "preissued" : "office_before_shift",
   skills: skillPatterns[slot % skillPatterns.length],
   equipment: skillPatterns[slot % skillPatterns.length].flatMap(skill => skill === skillCatalog[2] ? ["Рефлектометр"] : skill === skillCatalog[1] ? ["ONT", "Комплект GPON"] : ["Диагностический комплект"]),
   transport: transportCycle[slot % transportCycle.length],
   shiftStart: 480,
   shiftEnd: 1320,
-  }));
+  }); });
 });
 engineers.forEach((engineer, index) => { engineer.route = `Маршрут ${String(index + 1).padStart(2, "0")}`; });
+for (const table of tables) {
+  const local = engineers.filter(engineer => engineer.region === table.region && engineer.startMode === "local");
+  const office = engineers.filter(engineer => engineer.region === table.region && engineer.startMode === "office");
+  const counts = crew => crew.flatMap(engineer => [...new Set(engineer.equipment)]).reduce((stock, item) => {
+    stock[item] = (stock[item] ?? 0) + 1;
+    return stock;
+  }, {});
+  offices[table.region].officeEngineers = office.length;
+  offices[table.region].localEngineers = local.length;
+  offices[table.region].issuedEquipmentCounts = counts(office);
+  offices[table.region].preissuedEquipmentCounts = counts(local);
+}
 
 const output = `/* Generated from data/csv by scripts/import-csv.mjs. Coordinates are cached geocodes or explicitly counted fallbacks. */\nexport const csvJobs = ${JSON.stringify(jobs, null, 2)};\nexport const csvEngineers = ${JSON.stringify(engineers, null, 2)};\nexport const csvMeta = ${JSON.stringify({ rows: jobs.length, regions: specs.map(item => item.region), generatedAt: new Date().toISOString().slice(0, 10), geocoding, offices }, null, 2)};\n`;
 fs.writeFileSync(path.join(root, "lib", "csv-data.generated.ts"), output, "utf8");

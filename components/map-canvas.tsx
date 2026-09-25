@@ -4,9 +4,10 @@ import { useCallback, useEffect, useMemo, useRef, useState, type Ref } from "rea
 import type { Map as MapLibreMap, Marker } from "maplibre-gl";
 import { Layers3, Navigation } from "lucide-react";
 import { BackendRoutingProvider, type Coordinate, type TravelMode } from "@/lib/map-providers";
-import { roadLegForJob, waypointIndices } from "@/lib/route-leg";
+import { roadLegForJob } from "@/lib/route-leg";
+import { positionAtSimTime, roadLineFeatures } from "@/lib/route-playback";
 import { engineerSpeedKmh } from "@/lib/transport-speed";
-import { distanceKm, minutesLabel, type Engineer, type Job, type RoutePlan } from "@/lib/vrptw";
+import { minutesLabel, type Engineer, type Job, type RoutePlan } from "@/lib/vrptw";
 
 export type RoutingState = "idle" | "loading" | "ready" | "fallback";
 
@@ -28,64 +29,6 @@ export function routeCoordinates(engineer: Engineer, list: Job[], baseline = fal
     .filter(job => (baseline ? job.baselineEngineerId : job.engineerId) === engineer.id)
     .sort((a, b) => a.windowStart - b.windowStart || a.windowEnd - b.windowEnd);
   return [engineer.start, ...assigned.map(job => job.coordinates)];
-}
-
-function lineLengthKm(coords: Coordinate[]) {
-  let sum = 0;
-  for (let i = 1; i < coords.length; i++) sum += distanceKm(coords[i - 1], coords[i]);
-  return sum;
-}
-
-function interpolatePoint(a: Coordinate, b: Coordinate, t: number): Coordinate {
-  return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
-}
-
-function sliceByFraction(coords: Coordinate[], fraction: number) {
-  if (coords.length < 2) return { line: coords, point: coords[0] ?? [37.67, 55.67] as Coordinate };
-  if (fraction >= 1) return { line: coords, point: coords[coords.length - 1] };
-  const target = lineLengthKm(coords) * Math.max(0, fraction);
-  const line: Coordinate[] = [coords[0]];
-  let acc = 0;
-  for (let i = 1; i < coords.length; i++) {
-    const segment = distanceKm(coords[i - 1], coords[i]);
-    if (acc + segment >= target) {
-      const t = segment === 0 ? 1 : (target - acc) / segment;
-      const point = interpolatePoint(coords[i - 1], coords[i], t);
-      line.push(point);
-      return { line, point };
-    }
-    acc += segment;
-    line.push(coords[i]);
-  }
-  return { line: coords, point: coords[coords.length - 1] };
-}
-
-function positionAtSimTime(engineer: Engineer, plan: RoutePlan, jobs: Job[], coords: Coordinate[], simTime: number) {
-  const byId = new Map(jobs.map(job => [job.id, job]));
-  const waypoints: Coordinate[] = [engineer.start];
-  for (const stop of plan.stops) {
-    const job = byId.get(stop.jobId);
-    if (job) waypoints.push(job.coordinates);
-  }
-  const indices = waypointIndices(coords, waypoints);
-  const startPoint = coords[0] ?? engineer.start;
-  if (simTime <= engineer.shiftStart || coords.length < 2) return { line: [startPoint], point: startPoint, done: false };
-  let prevTime = engineer.shiftStart;
-  let prevIndex = indices[0] ?? 0;
-  for (let i = 0; i < plan.stops.length; i++) {
-    const stop = plan.stops[i];
-    const destIndex = indices[i + 1] ?? coords.length - 1;
-    if (simTime <= stop.arrival) {
-      const leg = coords.slice(prevIndex, destIndex + 1);
-      const path = leg.length >= 2 ? leg : [coords[prevIndex], coords[destIndex]];
-      const sliced = sliceByFraction(path, (simTime - prevTime) / Math.max(1e-6, stop.arrival - prevTime));
-      return { line: prevIndex > 0 ? [...coords.slice(0, prevIndex + 1), ...sliced.line.slice(1)] : sliced.line, point: sliced.point, done: false };
-    }
-    if (simTime <= stop.end) return { line: coords.slice(0, destIndex + 1), point: coords[destIndex], done: false };
-    prevTime = stop.end;
-    prevIndex = destIndex;
-  }
-  return { line: coords, point: coords[coords.length - 1], done: true };
 }
 
 function remainingLabel(mins: number) {
@@ -181,7 +124,6 @@ function useRoadRoutes(
   baselineEngineers: Engineer[],
   baselineJobs: Job[],
   baselineRoutes: RoutePlan[],
-  selectedEngineerId: string | null,
   providerId: "osrm" | "yandex",
   apiKey: string,
   onRoutingState: (state: RoutingState) => void,
@@ -209,8 +151,7 @@ function useRoadRoutes(
     onRoutingState("loading");
     const provider = new BackendRoutingProvider(providerId, "/api/routing", apiKey);
     void (async () => {
-      const prioritized = [...visibleEngineers].sort((a, b) => Number(b.id === selectedEngineerId) - Number(a.id === selectedEngineerId));
-      const results = await fetchRoadLines(prioritized, visibleJobs, planByEngineer, false, provider, () => cancelled, batch => {
+      const results = await fetchRoadLines(visibleEngineers, visibleJobs, planByEngineer, false, provider, () => cancelled, batch => {
         setRoadRoutes(current => ({ ...current, ...Object.fromEntries(batch.map(([id, coords]) => [id, coords])) }));
         setRouteSources(current => ({ ...current, ...Object.fromEntries(batch.map(([id, , , source]) => [id, source])) }));
       });
@@ -222,7 +163,7 @@ function useRoadRoutes(
       onRoutingState(state);
     })();
     return () => { cancelled = true; };
-  }, [routingEnabled, visibleEngineers, visibleJobs, planByEngineer, selectedEngineerId, providerId, apiKey, onRoutingState]);
+  }, [routingEnabled, visibleEngineers, visibleJobs, planByEngineer, providerId, apiKey, onRoutingState]);
   useEffect(() => {
     if (!routingEnabled || !compare) {
       // The comparison layer must disappear immediately when its toggle closes.
@@ -330,7 +271,7 @@ export function MapCanvas(props: CanvasProps) {
     const ids = new Set((baselineRoutes.length ? baselineRoutes.map(route => route.engineerId) : baselineJobs.map(job => job.baselineEngineerId)).filter((id): id is string => Boolean(id)));
     return engineers.filter(engineer => ids.has(engineer.id));
   }, [engineers, baselineRoutes, baselineJobs]);
-  const { roadRoutes, routeSources, baselineRoads, routeStatus } = useRoadRoutes(routingEnabled, compare, visibleEngineers, visibleJobs, routes, baselineEngineers, baselineJobs, baselineRoutes, selectedEngineerId ?? engineers.find(item => item.id === visibleJobs.find(job => job.id === selectedJobId)?.engineerId)?.id ?? null, "osrm", "", onRoutingState);
+  const { roadRoutes, routeSources, baselineRoads, routeStatus } = useRoadRoutes(routingEnabled, compare, visibleEngineers, visibleJobs, routes, baselineEngineers, baselineJobs, baselineRoutes, "osrm", "", onRoutingState);
   const latestRef = useRef({ visibleJobs, visibleEngineers, compare, routingEnabled });
   useEffect(() => { latestRef.current = { visibleJobs, visibleEngineers, compare, routingEnabled }; }, [visibleJobs, visibleEngineers, compare, routingEnabled]);
   const planByEngineer = useMemo(() => new Map(routes.map(route => [route.engineerId, route])), [routes]);
@@ -368,16 +309,8 @@ export function MapCanvas(props: CanvasProps) {
         ? { type: "FeatureCollection", features: [lineFeature({ ...selectedRouteEngineer, color: "#f43f5e" }, selectedLeg.coordinates, true)] }
         : emptyLines;
     }
-    return {
-      type: "FeatureCollection",
-      features: visibleEngineers.filter(engineer => !selectedEngineerId || engineer.id === selectedEngineerId).map(engineer => {
-        const coordinates = routeFor(engineer);
-        if (coordinates.length < 2) return null;
-        const selected = selectedEngineerId === engineer.id;
-        return lineFeature(engineer, coordinates, selected);
-      }).filter((feature): feature is GeoJSON.Feature<GeoJSON.LineString> => Boolean(feature)),
-    };
-  }, [routingEnabled, visibleEngineers, selectedEngineerId, selectedJobId, selectedLeg, selectedRouteEngineer, routeFor]);
+    return roadLineFeatures(visibleEngineers, roadRoutes, selectedEngineerId);
+  }, [routingEnabled, visibleEngineers, selectedEngineerId, selectedJobId, selectedLeg, selectedRouteEngineer, roadRoutes]);
   const baselineData = useMemo<GeoJSON.FeatureCollection<GeoJSON.LineString>>(() => {
     if (!routingEnabled || !compare || selectedEngineerId || selectedJobId) return emptyLines;
     return {
@@ -589,30 +522,40 @@ export function MapCanvas(props: CanvasProps) {
       for (const engineer of movers) {
         const coords = coordsOf(engineer);
         const plan = plans.get(engineer.id) ?? null;
-        const hasRoad = coords.length >= 2 && fleetRef.current.routeSources[engineer.id] !== "walking-estimate";
-        const pose = plan && hasRoad
-          ? positionAtSimTime(engineer, plan, jobs, coords, time)
-          : { line: [] as Coordinate[], point: positionAtKnownStop(engineer, plan!, jobs, time), done: time >= (plan?.stops.at(-1)?.end ?? engineer.shiftEnd) };
+        const hasRoad = coords.length >= 2;
+        const estimated = fleetRef.current.routeSources[engineer.id] === "walking-estimate";
+        const action = actionAtSimTime(engineer, plan, time);
+        const pose = plan && hasRoad ? positionAtSimTime(engineer, plan, jobs, coords, time) : null;
+        // With no road graph, do not fake a straight trip or visibly teleport:
+        // hide the position during travel and show only verified stop locations.
+        if (!pose && action.phase === "travel") {
+          vehiclesRef.current.get(engineer.id)?.remove();
+          vehiclesRef.current.delete(engineer.id);
+          continue;
+        }
+        const point = pose?.point ?? positionAtKnownStop(engineer, plan!, jobs, time);
         const label = engineerMarkerLabel(engineer);
         let marker = vehiclesRef.current.get(engineer.id);
         if (!marker) {
           const el = document.createElement("button");
           el.type = "button";
-          el.className = `route-vehicle-marker${hasRoad ? "" : " estimated"}`;
+          el.className = `route-vehicle-marker${hasRoad && !estimated ? "" : " estimated"}`;
           el.style.setProperty("--marker", engineer.color);
           el.textContent = label;
-          el.title = `${engineer.name} · ${hasRoad ? "положение на дорожном маршруте" : "последняя известная точка; дорога недоступна"}`;
+          el.title = `${engineer.name} · ${estimated ? "оценочное положение по пешеходному графу; не маршрут ОТ" : hasRoad ? "положение на дорожном маршруте" : "последняя известная точка; дорога недоступна"}`;
           el.setAttribute("aria-label", el.title);
+          el.dataset.engineerId = engineer.id;
           el.onclick = () => select(engineer.id);
-          marker = new Marker({ element: el, anchor: "center" }).setLngLat(pose.point).addTo(host);
+          marker = new Marker({ element: el, anchor: "center" }).setLngLat(point).addTo(host);
           vehiclesRef.current.set(engineer.id, marker);
         } else {
-          marker.setLngLat(pose.point);
-          marker.getElement().classList.toggle("estimated", !hasRoad);
+          marker.setLngLat(point);
+          marker.getElement().classList.toggle("estimated", !hasRoad || estimated);
           marker.getElement().textContent = label;
-          marker.getElement().title = `${engineer.name} · ${hasRoad ? "положение на дорожном маршруте" : "последняя известная точка; дорога недоступна"}`;
+          marker.getElement().title = `${engineer.name} · ${estimated ? "оценочное положение по пешеходному графу; не маршрут ОТ" : hasRoad ? "положение на дорожном маршруте" : "последняя известная точка; дорога недоступна"}`;
           marker.getElement().setAttribute("aria-label", marker.getElement().title);
         }
+        marker.getElement().dataset.position = point.join(",");
       }
       writeHud(time, movers);
     };
@@ -651,8 +594,8 @@ export function MapCanvas(props: CanvasProps) {
     };
   }, [simulating, mapReady]);
   return <div className="map-canvas real-map" aria-label="Интерактивная карта маршрутов инженеров">
-    <div ref={containerRef} className="maplibre-host" />
-    {selectedRouteEngineer && <div className="selected-route-summary" style={{ ["--route-color" as string]: selectedLeg ? "#f43f5e" : selectedRouteEngineer.color }}><span>{selectedLeg ? "Участок к выбранной заявке" : "Маршрут инженера"}</span><strong>{selectedRouteEngineer.name}</strong>{selectedLeg ? <><small>{selectedLeg.originLabel} → {selectedLeg.destinationLabel}</small><small>Прибытие {minutesLabel(selectedLeg.stop.arrival)} · участок {selectedLeg.stop.distanceKm.toFixed(1).replace(".", ",")} км</small></> : <small>{selectedRoutePlan?.stops.length ?? 0} заявок · {selectedRoutePlan ? `${selectedRoutePlan.distanceKm.toFixed(1).replace(".", ",")} км` : "маршрут не построен"}</small>}<small>{selectedRouteEngineer.transport} · скорость {engineerSpeedKmh(selectedRouteEngineer.transport, selectedRouteEngineer.speedKmh, carSpeedKmh)} км/ч</small>{selectedRoadSource === "walking-estimate" ? <small>Нет точного маршрута ОТ: показан пеший путь как оценка, движение не интерполируется</small> : selectedRoadSource === "unavailable" ? <small>Дорожная линия недоступна · движение между точками скрыто</small> : selectedRoadSource && selectedRoadSource !== "none" ? <small>Геометрия по сети дорог · {selectedRoadSource}</small> : <small>Загружаем дорожную геометрию…</small>}<button type="button" onClick={() => onSelectEngineer(selectedRouteEngineer.id)}>Показать все маршруты</button></div>}
+    <div ref={containerRef} className="maplibre-host" data-route-features={routeData.features.length} data-route-points={routeData.features.reduce((sum, feature) => sum + feature.geometry.coordinates.length, 0)} data-road-status={routeStatus} />
+    {selectedRouteEngineer && <div className="selected-route-summary" style={{ ["--route-color" as string]: selectedLeg ? "#f43f5e" : selectedRouteEngineer.color }}><span>{selectedLeg ? "Участок к выбранной заявке" : "Маршрут инженера"}</span><strong>{selectedRouteEngineer.name}</strong>{selectedLeg ? <><small>{selectedLeg.originLabel} → {selectedLeg.destinationLabel}</small><small>Прибытие {minutesLabel(selectedLeg.stop.arrival)} · участок {selectedLeg.stop.distanceKm.toFixed(1).replace(".", ",")} км</small></> : <small>{selectedRoutePlan?.stops.length ?? 0} заявок · {selectedRoutePlan ? `${selectedRoutePlan.distanceKm.toFixed(1).replace(".", ",")} км` : "маршрут не построен"}</small>}<small>{selectedRouteEngineer.transport} · скорость {engineerSpeedKmh(selectedRouteEngineer.transport, selectedRouteEngineer.speedKmh, carSpeedKmh)} км/ч</small>{selectedRoadSource === "walking-estimate" ? <small>Для ОТ показан пешеходный путь как оценка; движение и линия не являются фактическим маршрутом транспорта</small> : selectedRoadSource === "unavailable" ? <small>Дорожная линия недоступна · движение между точками скрыто</small> : selectedRoadSource && selectedRoadSource !== "none" ? <small>Геометрия по сети дорог · {selectedRoadSource}</small> : <small>Загружаем дорожную геометрию…</small>}<button type="button" onClick={() => onSelectEngineer(selectedRouteEngineer.id)}>Показать все маршруты</button></div>}
     <MapChrome caption={captionText(routeStatus)} status={routeStatus} clockRef={clockRef} onFit={() => { if (selectedEngineerId) onSelectEngineer(selectedEngineerId); else void fitVisible(); }} onZoomIn={() => mapRef.current?.zoomIn()} onZoomOut={() => mapRef.current?.zoomOut()} />
     <div ref={actionBoxRef} className="playback-action" hidden>
       <strong>Сейчас</strong>

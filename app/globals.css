@@ -135,3 +135,14 @@ html,body,.workspace{transition:background-color .22s ease,color .22s ease}.side
 .window-experiment-comparison small{color:var(--muted-foreground)}
 @media(max-width:760px){.window-scenario-control{align-items:flex-start}.window-scenario-control .event-time-control{width:100%}.event-time-control small{max-width:none}}
 .replan-list p[data-kind="event"] i{background:#718092}
+.region-select{display:flex;align-items:center;flex-wrap:wrap;gap:5px;margin:0;padding:6px;border:1px solid color-mix(in srgb,var(--primary) 34%,var(--border));border-radius:13px;background:color-mix(in srgb,var(--primary) 7%,var(--card));box-shadow:0 3px 14px color-mix(in srgb,var(--primary) 11%,transparent)}
+.region-select-label{padding:0 9px;color:var(--foreground);font-size:12px;font-weight:800;white-space:nowrap}
+.region-select button{min-height:34px;padding:7px 12px;border:1px solid transparent;border-radius:9px;color:var(--foreground);font-size:12px;font-weight:700;white-space:nowrap}
+.region-select button:hover{border-color:var(--primary);background:var(--card)}
+.region-select button.selected{border-color:var(--primary);background:var(--primary);color:var(--primary-foreground);box-shadow:0 3px 10px color-mix(in srgb,var(--primary) 26%,transparent)}
+.region-select button:focus-visible{outline:3px solid var(--ring);outline-offset:2px}
+.filter-row{flex-wrap:wrap}.filter-row .region-select{flex:1 1 100%;width:100%}.filter-row .plan-state{margin-left:0}
+.generator-priority-option{display:flex;align-items:flex-start;gap:11px;padding:13px;border:1px solid var(--border);border-radius:11px;background:color-mix(in srgb,var(--primary) 5%,var(--card));cursor:pointer}
+.generator-priority-option input{width:18px;height:18px;margin:1px 0 0;accent-color:var(--primary);flex:none}
+.generator-priority-option span{display:grid;gap:4px}.generator-priority-option strong{font-size:13px}.generator-priority-option small{color:var(--muted-foreground);font-size:11px;line-height:1.4}
+@media(max-width:760px){.filter-row .region-select{display:flex;flex:1 1 100%;width:100%;overflow-x:auto;flex-wrap:nowrap;scrollbar-width:thin}.region-select-label{position:sticky;left:0;z-index:1;padding:8px;background:var(--card);border-radius:7px}.region-select button{min-height:38px}}

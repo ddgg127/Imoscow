@@ -19,6 +19,9 @@ export type Engineer = {
   id: string; initials: string; name: string; route: string; jobs: number; distance: string; load: number;
   color: string; region: Region; start: Coordinate; skills: string[]; equipment: string[]; transport: string;
   shiftStart: number; shiftEnd: number; speedKmh?: number;
+  /** A day's fixed departure point; office kits are issued before shift, local kits beforehand. */
+  startAddress?: string; startMode?: "office" | "local"; officeAddress?: string;
+  equipmentIssue?: "office_before_shift" | "preissued";
 };
 export type RouteStop = { jobId: string; arrival: number; start: number; end: number; distanceKm: number; travelMinutes?: number; onTime: boolean };
 export type RoutePlan = { engineerId: string; stops: RouteStop[]; distanceKm: number; durationMinutes: number; load: number };
@@ -230,7 +233,9 @@ export function scaleEngineers(source: Engineer[], count: number, jobs: Job[] = 
       name: `${base.name} · ${wave + 1}`,
       route: `Маршрут ${String(i + 1).padStart(2, "0")}`,
       color: SCALE_COLORS[i % SCALE_COLORS.length],
-      start: [Number((base.start[0] + Math.cos(angle) * radius).toFixed(5)), Number((base.start[1] + Math.sin(angle) * radius).toFixed(5))],
+      // A named, geocoded daily departure point must not be jittered into a
+      // building or field when the generator scales the demonstration crew.
+      start: base.startAddress ? [...base.start] as Coordinate : [Number((base.start[0] + Math.cos(angle) * radius).toFixed(5)), Number((base.start[1] + Math.sin(angle) * radius).toFixed(5))],
       skills: [...base.skills],
       equipment: [...base.equipment],
     });

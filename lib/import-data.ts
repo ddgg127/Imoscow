@@ -203,7 +203,8 @@ function rowsToEngineers(rows: Record<string, unknown>[], centers: Record<Region
     if (lon == null || lat == null || lon < 30 || lon > 50 || lat < 50 || lat > 60 || !skillsValue.some(Boolean) || shiftStart < 0 || shiftEnd <= shiftStart) {
       throw new Error(`Инженер ${index + 1}: проверьте имя, регион, координаты, навыки и смену`);
     }
-    return { id, name, initials: value(row, ["initials"]) || initialsOf(name, id), route: value(row, ["route"]) || `Маршрут ${index + 1}`, jobs: 0, distance: "0 км", load: 0, color: value(row, ["color"]) || engineerColors[index % engineerColors.length], region, start: [lon, lat], skills: skillsValue.filter(Boolean), equipment: equipmentValue.filter(Boolean), transport: canonicalTransport(value(row, ["transport", "транспорт", "vehicle"]), "Автомобиль"), shiftStart, shiftEnd, speedKmh: numberValue(row, ["speedKmh", "speed_kmh", "скорость"]) ?? undefined };
+    const startMode = value(row, ["startMode", "start_mode"]) === "local" ? "local" : "office";
+    return { id, name, initials: value(row, ["initials"]) || initialsOf(name, id), route: value(row, ["route"]) || `Маршрут ${index + 1}`, jobs: 0, distance: "0 км", load: 0, color: value(row, ["color"]) || engineerColors[index % engineerColors.length], region, start: [lon, lat], startAddress: value(row, ["startAddress", "start_address", "адрес старта"]), startMode, officeAddress: value(row, ["officeAddress", "office_address", "адрес офиса"]), equipmentIssue: startMode === "local" ? "preissued" : "office_before_shift", skills: skillsValue.filter(Boolean), equipment: equipmentValue.filter(Boolean), transport: canonicalTransport(value(row, ["transport", "транспорт", "vehicle"]), "Автомобиль"), shiftStart, shiftEnd, speedKmh: numberValue(row, ["speedKmh", "speed_kmh", "скорость"]) ?? undefined };
   });
   if (new Set(engineers.map(item => item.id)).size !== engineers.length) throw new Error("Повторяются номера инженеров");
   return engineers;

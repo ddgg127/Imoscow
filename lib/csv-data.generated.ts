@@ -6827,6 +6827,10 @@ export const csvEngineers = [
       37.7739593,
       55.7022013
     ],
+    "startAddress": "г. Москва, ул Юных Ленинцев, д 83с 4",
+    "startMode": "office",
+    "officeAddress": "г. Москва, ул Юных Ленинцев, д 83с 4",
+    "equipmentIssue": "office_before_shift",
     "skills": [
       "Локальные работы",
       "Подключение и модернизация",
@@ -6856,6 +6860,10 @@ export const csvEngineers = [
       37.7739593,
       55.7022013
     ],
+    "startAddress": "г. Москва, ул Юных Ленинцев, д 83с 4",
+    "startMode": "office",
+    "officeAddress": "г. Москва, ул Юных Ленинцев, д 83с 4",
+    "equipmentIssue": "office_before_shift",
     "skills": [
       "Локальные работы",
       "Подключение и модернизация"
@@ -6883,6 +6891,10 @@ export const csvEngineers = [
       37.7739593,
       55.7022013
     ],
+    "startAddress": "г. Москва, ул Юных Ленинцев, д 83с 4",
+    "startMode": "office",
+    "officeAddress": "г. Москва, ул Юных Ленинцев, д 83с 4",
+    "equipmentIssue": "office_before_shift",
     "skills": [
       "Локальные работы",
       "Аварийно-восстановительные работы"
@@ -6909,6 +6921,10 @@ export const csvEngineers = [
       37.7739593,
       55.7022013
     ],
+    "startAddress": "г. Москва, ул Юных Ленинцев, д 83с 4",
+    "startMode": "office",
+    "officeAddress": "г. Москва, ул Юных Ленинцев, д 83с 4",
+    "equipmentIssue": "office_before_shift",
     "skills": [
       "Подключение и модернизация",
       "Аварийно-восстановительные работы"
@@ -6936,6 +6952,10 @@ export const csvEngineers = [
       37.7739593,
       55.7022013
     ],
+    "startAddress": "г. Москва, ул Юных Ленинцев, д 83с 4",
+    "startMode": "office",
+    "officeAddress": "г. Москва, ул Юных Ленинцев, д 83с 4",
+    "equipmentIssue": "office_before_shift",
     "skills": [
       "Локальные работы"
     ],
@@ -6960,6 +6980,10 @@ export const csvEngineers = [
       37.7739593,
       55.7022013
     ],
+    "startAddress": "г. Москва, ул Юных Ленинцев, д 83с 4",
+    "startMode": "office",
+    "officeAddress": "г. Москва, ул Юных Ленинцев, д 83с 4",
+    "equipmentIssue": "office_before_shift",
     "skills": [
       "Подключение и модернизация"
     ],
@@ -6985,6 +7009,10 @@ export const csvEngineers = [
       37.7739593,
       55.7022013
     ],
+    "startAddress": "г. Москва, ул Юных Ленинцев, д 83с 4",
+    "startMode": "office",
+    "officeAddress": "г. Москва, ул Юных Ленинцев, д 83с 4",
+    "equipmentIssue": "office_before_shift",
     "skills": [
       "Аварийно-восстановительные работы"
     ],
@@ -7009,6 +7037,10 @@ export const csvEngineers = [
       37.7739593,
       55.7022013
     ],
+    "startAddress": "г. Москва, ул Юных Ленинцев, д 83с 4",
+    "startMode": "office",
+    "officeAddress": "г. Москва, ул Юных Ленинцев, д 83с 4",
+    "equipmentIssue": "office_before_shift",
     "skills": [
       "Локальные работы",
       "Подключение и модернизация",
@@ -7038,6 +7070,10 @@ export const csvEngineers = [
       37.7739593,
       55.7022013
     ],
+    "startAddress": "г. Москва, ул Юных Ленинцев, д 83с 4",
+    "startMode": "office",
+    "officeAddress": "г. Москва, ул Юных Ленинцев, д 83с 4",
+    "equipmentIssue": "office_before_shift",
     "skills": [
       "Локальные работы",
       "Подключение и модернизация"
@@ -7065,6 +7101,10 @@ export const csvEngineers = [
       37.7739593,
       55.7022013
     ],
+    "startAddress": "г. Москва, ул Юных Ленинцев, д 83с 4",
+    "startMode": "office",
+    "officeAddress": "г. Москва, ул Юных Ленинцев, д 83с 4",
+    "equipmentIssue": "office_before_shift",
     "skills": [
       "Локальные работы",
       "Аварийно-восстановительные работы"
@@ -7091,6 +7131,10 @@ export const csvEngineers = [
       37.7739593,
       55.7022013
     ],
+    "startAddress": "г. Москва, ул Юных Ленинцев, д 83с 4",
+    "startMode": "office",
+    "officeAddress": "г. Москва, ул Юных Ленинцев, д 83с 4",
+    "equipmentIssue": "office_before_shift",
     "skills": [
       "Подключение и модернизация",
       "Аварийно-восстановительные работы"
@@ -7118,6 +7162,10 @@ export const csvEngineers = [
       37.7739593,
       55.7022013
     ],
+    "startAddress": "г. Москва, ул Юных Ленинцев, д 83с 4",
+    "startMode": "office",
+    "officeAddress": "г. Москва, ул Юных Ленинцев, д 83с 4",
+    "equipmentIssue": "office_before_shift",
     "skills": [
       "Локальные работы"
     ],
@@ -7142,6 +7190,10 @@ export const csvEngineers = [
       37.6653422,
       55.6020854
     ],
+    "startAddress": "г. Москва, ул Бирюлёвская, д 1с1",
+    "startMode": "office",
+    "officeAddress": "г. Москва, ул Бирюлёвская, д 1с1",
+    "equipmentIssue": "office_before_shift",
     "skills": [
       "Локальные работы",
       "Подключение и модернизация",
@@ -7171,6 +7223,10 @@ export const csvEngineers = [
       37.6653422,
       55.6020854
     ],
+    "startAddress": "г. Москва, ул Бирюлёвская, д 1с1",
+    "startMode": "office",
+    "officeAddress": "г. Москва, ул Бирюлёвская, д 1с1",
+    "equipmentIssue": "office_before_shift",
     "skills": [
       "Локальные работы",
       "Подключение и модернизация"
@@ -7198,6 +7254,10 @@ export const csvEngineers = [
       37.6653422,
       55.6020854
     ],
+    "startAddress": "г. Москва, ул Бирюлёвская, д 1с1",
+    "startMode": "office",
+    "officeAddress": "г. Москва, ул Бирюлёвская, д 1с1",
+    "equipmentIssue": "office_before_shift",
     "skills": [
       "Локальные работы",
       "Аварийно-восстановительные работы"
@@ -7224,6 +7284,10 @@ export const csvEngineers = [
       37.6653422,
       55.6020854
     ],
+    "startAddress": "г. Москва, ул Бирюлёвская, д 1с1",
+    "startMode": "office",
+    "officeAddress": "г. Москва, ул Бирюлёвская, д 1с1",
+    "equipmentIssue": "office_before_shift",
     "skills": [
       "Подключение и модернизация",
       "Аварийно-восстановительные работы"
@@ -7251,6 +7315,10 @@ export const csvEngineers = [
       37.6653422,
       55.6020854
     ],
+    "startAddress": "г. Москва, ул Бирюлёвская, д 1с1",
+    "startMode": "office",
+    "officeAddress": "г. Москва, ул Бирюлёвская, д 1с1",
+    "equipmentIssue": "office_before_shift",
     "skills": [
       "Локальные работы"
     ],
@@ -7275,6 +7343,10 @@ export const csvEngineers = [
       37.6653422,
       55.6020854
     ],
+    "startAddress": "г. Москва, ул Бирюлёвская, д 1с1",
+    "startMode": "office",
+    "officeAddress": "г. Москва, ул Бирюлёвская, д 1с1",
+    "equipmentIssue": "office_before_shift",
     "skills": [
       "Подключение и модернизация"
     ],
@@ -7300,6 +7372,10 @@ export const csvEngineers = [
       37.6653422,
       55.6020854
     ],
+    "startAddress": "г. Москва, ул Бирюлёвская, д 1с1",
+    "startMode": "office",
+    "officeAddress": "г. Москва, ул Бирюлёвская, д 1с1",
+    "equipmentIssue": "office_before_shift",
     "skills": [
       "Аварийно-восстановительные работы"
     ],
@@ -7321,9 +7397,13 @@ export const csvEngineers = [
     "color": "#d35f45",
     "region": "Юго-восток",
     "start": [
-      37.6653422,
-      55.6020854
+      38.2768274,
+      54.8041762
     ],
+    "startAddress": "Кашира, ул.8 Марта, д. 22",
+    "startMode": "local",
+    "officeAddress": "г. Москва, ул Бирюлёвская, д 1с1",
+    "equipmentIssue": "preissued",
     "skills": [
       "Локальные работы",
       "Подключение и модернизация",
@@ -7350,9 +7430,13 @@ export const csvEngineers = [
     "color": "#5367c9",
     "region": "Юго-восток",
     "start": [
-      37.6653422,
-      55.6020854
+      37.7619456,
+      55.4371874
     ],
+    "startAddress": "Домодедово, проезд.Кутузовский, д. 16",
+    "startMode": "local",
+    "officeAddress": "г. Москва, ул Бирюлёвская, д 1с1",
+    "equipmentIssue": "preissued",
     "skills": [
       "Локальные работы",
       "Подключение и модернизация"
@@ -7377,9 +7461,13 @@ export const csvEngineers = [
     "color": "#a04fa4",
     "region": "Юго-восток",
     "start": [
-      37.6653422,
-      55.6020854
+      38.082999,
+      54.8857555
     ],
+    "startAddress": "МО, г. Ступино Андропова ул. д. 33",
+    "startMode": "local",
+    "officeAddress": "г. Москва, ул Бирюлёвская, д 1с1",
+    "equipmentIssue": "preissued",
     "skills": [
       "Локальные работы",
       "Аварийно-восстановительные работы"
@@ -7406,6 +7494,10 @@ export const csvEngineers = [
       37.6653422,
       55.6020854
     ],
+    "startAddress": "г. Москва, ул Бирюлёвская, д 1с1",
+    "startMode": "office",
+    "officeAddress": "г. Москва, ул Бирюлёвская, д 1с1",
+    "equipmentIssue": "office_before_shift",
     "skills": [
       "Подключение и модернизация",
       "Аварийно-восстановительные работы"
@@ -7433,6 +7525,10 @@ export const csvEngineers = [
       37.6653422,
       55.6020854
     ],
+    "startAddress": "г. Москва, ул Бирюлёвская, д 1с1",
+    "startMode": "office",
+    "officeAddress": "г. Москва, ул Бирюлёвская, д 1с1",
+    "equipmentIssue": "office_before_shift",
     "skills": [
       "Локальные работы"
     ],
@@ -7457,6 +7553,10 @@ export const csvEngineers = [
       37.6158385,
       55.6647568
     ],
+    "startAddress": "г.Москва проезд Симферопольский, д.7",
+    "startMode": "office",
+    "officeAddress": "г.Москва проезд Симферопольский, д.7",
+    "equipmentIssue": "office_before_shift",
     "skills": [
       "Локальные работы",
       "Подключение и модернизация",
@@ -7486,6 +7586,10 @@ export const csvEngineers = [
       37.6158385,
       55.6647568
     ],
+    "startAddress": "г.Москва проезд Симферопольский, д.7",
+    "startMode": "office",
+    "officeAddress": "г.Москва проезд Симферопольский, д.7",
+    "equipmentIssue": "office_before_shift",
     "skills": [
       "Локальные работы",
       "Подключение и модернизация"
@@ -7513,6 +7617,10 @@ export const csvEngineers = [
       37.6158385,
       55.6647568
     ],
+    "startAddress": "г.Москва проезд Симферопольский, д.7",
+    "startMode": "office",
+    "officeAddress": "г.Москва проезд Симферопольский, д.7",
+    "equipmentIssue": "office_before_shift",
     "skills": [
       "Локальные работы",
       "Аварийно-восстановительные работы"
@@ -7539,6 +7647,10 @@ export const csvEngineers = [
       37.6158385,
       55.6647568
     ],
+    "startAddress": "г.Москва проезд Симферопольский, д.7",
+    "startMode": "office",
+    "officeAddress": "г.Москва проезд Симферопольский, д.7",
+    "equipmentIssue": "office_before_shift",
     "skills": [
       "Подключение и модернизация",
       "Аварийно-восстановительные работы"
@@ -7566,6 +7678,10 @@ export const csvEngineers = [
       37.6158385,
       55.6647568
     ],
+    "startAddress": "г.Москва проезд Симферопольский, д.7",
+    "startMode": "office",
+    "officeAddress": "г.Москва проезд Симферопольский, д.7",
+    "equipmentIssue": "office_before_shift",
     "skills": [
       "Локальные работы"
     ],
@@ -7590,6 +7706,10 @@ export const csvEngineers = [
       37.6158385,
       55.6647568
     ],
+    "startAddress": "г.Москва проезд Симферопольский, д.7",
+    "startMode": "office",
+    "officeAddress": "г.Москва проезд Симферопольский, д.7",
+    "equipmentIssue": "office_before_shift",
     "skills": [
       "Подключение и модернизация"
     ],
@@ -7615,6 +7735,10 @@ export const csvEngineers = [
       37.6158385,
       55.6647568
     ],
+    "startAddress": "г.Москва проезд Симферопольский, д.7",
+    "startMode": "office",
+    "officeAddress": "г.Москва проезд Симферопольский, д.7",
+    "equipmentIssue": "office_before_shift",
     "skills": [
       "Аварийно-восстановительные работы"
     ],
@@ -7639,6 +7763,10 @@ export const csvEngineers = [
       37.6158385,
       55.6647568
     ],
+    "startAddress": "г.Москва проезд Симферопольский, д.7",
+    "startMode": "office",
+    "officeAddress": "г.Москва проезд Симферопольский, д.7",
+    "equipmentIssue": "office_before_shift",
     "skills": [
       "Локальные работы",
       "Подключение и модернизация",
@@ -7668,6 +7796,10 @@ export const csvEngineers = [
       37.6158385,
       55.6647568
     ],
+    "startAddress": "г.Москва проезд Симферопольский, д.7",
+    "startMode": "office",
+    "officeAddress": "г.Москва проезд Симферопольский, д.7",
+    "equipmentIssue": "office_before_shift",
     "skills": [
       "Локальные работы",
       "Подключение и модернизация"
@@ -7695,6 +7827,10 @@ export const csvEngineers = [
       37.6158385,
       55.6647568
     ],
+    "startAddress": "г.Москва проезд Симферопольский, д.7",
+    "startMode": "office",
+    "officeAddress": "г.Москва проезд Симферопольский, д.7",
+    "equipmentIssue": "office_before_shift",
     "skills": [
       "Локальные работы",
       "Аварийно-восстановительные работы"
@@ -7721,6 +7857,10 @@ export const csvEngineers = [
       37.6158385,
       55.6647568
     ],
+    "startAddress": "г.Москва проезд Симферопольский, д.7",
+    "startMode": "office",
+    "officeAddress": "г.Москва проезд Симферопольский, д.7",
+    "equipmentIssue": "office_before_shift",
     "skills": [
       "Подключение и модернизация",
       "Аварийно-восстановительные работы"
@@ -7759,21 +7899,53 @@ export const csvMeta = {
       "coordinates": [
         37.7739593,
         55.7022013
-      ]
+      ],
+      "officeEngineers": 12,
+      "localEngineers": 0,
+      "issuedEquipmentCounts": {
+        "Диагностический комплект": 8,
+        "ONT": 7,
+        "Комплект GPON": 7,
+        "Рефлектометр": 7
+      },
+      "preissuedEquipmentCounts": {}
     },
     "Юго-восток": {
       "address": "г. Москва, ул Бирюлёвская, д 1с1",
       "coordinates": [
         37.6653422,
         55.6020854
-      ]
+      ],
+      "officeEngineers": 9,
+      "localEngineers": 3,
+      "issuedEquipmentCounts": {
+        "Диагностический комплект": 5,
+        "ONT": 5,
+        "Комплект GPON": 5,
+        "Рефлектометр": 5
+      },
+      "preissuedEquipmentCounts": {
+        "Диагностический комплект": 3,
+        "ONT": 2,
+        "Комплект GPON": 2,
+        "Рефлектометр": 2
+      }
     },
     "Югоцентр": {
       "address": "г.Москва проезд Симферопольский, д.7",
       "coordinates": [
         37.6158385,
         55.6647568
-      ]
+      ],
+      "officeEngineers": 11,
+      "localEngineers": 0,
+      "issuedEquipmentCounts": {
+        "Диагностический комплект": 7,
+        "ONT": 7,
+        "Комплект GPON": 7,
+        "Рефлектометр": 7
+      },
+      "preissuedEquipmentCounts": {}
     }
   }
 };
