@@ -1,6 +1,6 @@
 # FieldFlow OR-Tools solver
 
-The solver is a separate FastAPI service. Data-dependent integer bounds make the objective strictly lexicographic: it maximizes the number of served jobs, keeps the highest-priority jobs, minimizes the number of active engineers, then road distance. Time windows, shifts, skills, equipment, transport and regions are hard constraints.
+The solver is a separate FastAPI service. Data-dependent integer bounds make the objective strictly lexicographic: it first maximizes served elevated-priority jobs, then all served jobs, then minimizes active engineers and route distance. Time windows, shifts, skills, equipment, transport and regions are hard constraints.
 
 ```powershell
 python -m venv .venv

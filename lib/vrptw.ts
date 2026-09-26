@@ -285,7 +285,7 @@ export function applyAverageWindows(jobs: Job[], averageMinutes: number): Job[] 
   const dayStart = 480;
   const dayEnd = 1320;
   const daySpan = dayEnd - dayStart;
-  const mean = Math.min(daySpan, Math.max(60, Math.round(averageMinutes / 15) * 15));
+  const mean = Math.min(daySpan, Math.max(60, Math.round(averageMinutes)));
   const bandCount = Math.max(1, Math.round(daySpan / mean));
   const pitch = bandCount === 1 ? 0 : (daySpan - mean) / (bandCount - 1);
   const amplitude = Math.max(0, Math.min(60, mean - 30, daySpan - mean));

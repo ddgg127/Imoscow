@@ -349,6 +349,10 @@ html,body,.workspace{transition:background-color .22s ease,color .22s ease}.side
 .filter-btn.btn-unassigned.active{background:#991b1b;color:#fff;border-color:#991b1b}
 .filter-btn.btn-unassigned b{background:#fee2e2;color:#991b1b}
 .filter-btn.btn-unassigned.active b{background:#ffffff33;color:#fff}
+.filter-btn.btn-cancelled{border:1px solid var(--border);background:var(--muted);color:var(--muted-foreground)}
+.filter-btn.btn-cancelled.active{background:#64748b;color:#fff;border-color:#64748b}
+.filter-btn.btn-cancelled b{background:#e2e8f0;color:#475569}
+.filter-btn.btn-cancelled.active b{background:#ffffff33;color:#fff}
 
 /* Single Column Cards List: 5 cards visible, 6th peeking */
 .task-cards-column{height:480px;max-height:480px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding-right:4px}
@@ -369,6 +373,7 @@ html,body,.workspace{transition:background-color .22s ease,color .22s ease}.side
 .card-state-pill.waiting{background:#fef9c3;color:#854d0e}
 .card-state-pill.completed{background:#f3f4f6;color:#4b5563}
 .card-state-pill.unassigned{background:#fee2e2;color:#991b1b}
+.card-state-pill.cancelled{background:#e2e8f0;color:#475569}
 
 .card-row-mid{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-size:11px}
 .card-window{display:inline-flex;align-items:center;gap:4px;font-weight:700;color:var(--foreground);font-variant-numeric:tabular-nums}
