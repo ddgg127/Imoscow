@@ -67,6 +67,27 @@ def test_solver_minimizes_active_fleet_after_served_count():
     assert len(result.routes) == 1
 
 
+def test_temporal_replan_prefers_existing_appointment_when_feasible():
+    data = payload()
+    data["jobs"] = data["jobs"][:1]
+    without_history = solve_vrptw(SolveRequest.model_validate(data))
+    assert without_history.routes[0].engineerId == "e1"
+    data["previousAppointments"] = {"a": {"engineerId": "e2", "start": 510}}
+    with_history = solve_vrptw(SolveRequest.model_validate(data))
+    assert with_history.routes[0].engineerId == "e2"
+    assert not with_history.droppedJobIds
+
+
+def test_temporal_replan_can_move_job_when_old_engineer_is_unavailable():
+    data = payload()
+    data["jobs"] = data["jobs"][:1]
+    data["engineers"][1]["skills"] = ["Недоступен"]
+    data["previousAppointments"] = {"a": {"engineerId": "e2", "start": 510}}
+    result = solve_vrptw(SolveRequest.model_validate(data))
+    assert result.routes[0].engineerId == "e1"
+    assert not result.droppedJobIds
+
+
 def test_incompatible_job_is_dropped_not_assigned():
     data = payload()
     data["jobs"][0]["kind"] = "Сварка"

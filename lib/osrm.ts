@@ -20,10 +20,16 @@ function profileOf(mode: unknown) {
   return mode === "walking" ? "foot" : mode === "cycling" ? "bike" : "driving";
 }
 
+function configuredBase(mode: unknown) {
+  const name = mode === "walking" ? "OSRM_FOOT_URL" : mode === "cycling" ? "OSRM_BIKE_URL" : "OSRM_CAR_URL";
+  return process.env[name]?.trim().replace(/\/+$/, "") || null;
+}
+
 function routeBases(mode: unknown) {
-  if (mode === "walking") return [`${FOSSGIS}/routed-foot`];
-  if (mode === "cycling") return [`${FOSSGIS}/routed-bike`];
-  return [OSRM, `${FOSSGIS}/routed-car`];
+  const publicBases = mode === "walking" ? [`${FOSSGIS}/routed-foot`]
+    : mode === "cycling" ? [`${FOSSGIS}/routed-bike`]
+    : [OSRM, `${FOSSGIS}/routed-car`];
+  return [...new Set([configuredBase(mode), ...publicBases].filter((base): base is string => Boolean(base)))];
 }
 
 export function decodePolyline6(shape: string): Point[] {
@@ -89,7 +95,7 @@ async function fetchRoute(path: string, mode: unknown) {
 }
 
 async function fetchOsrm(url: string, attempt = 0): Promise<Response> {
-  const response = await fetch(url, { headers: UA, cf: { cacheTtl: 3600, cacheEverything: true } } as RequestInit);
+  const response = await fetch(url, { headers: UA, signal: AbortSignal.timeout(8000), cf: { cacheTtl: 3600, cacheEverything: true } } as RequestInit);
   if ((response.status === 429 || response.status >= 500) && attempt < 2) {
     await new Promise(resolve => setTimeout(resolve, 450 * (attempt + 1)));
     return fetchOsrm(url, attempt + 1);

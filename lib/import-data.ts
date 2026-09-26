@@ -171,7 +171,7 @@ function rowsToJobs(rows: Record<string, unknown>[], centers: Record<Region, Coo
       windowStart: start, windowEnd: end, area: value(row, ["area", "район"]) || resolvedRegion, address,
       kind, workType: rawWork, tone: ["violet", "blue", "amber", "green"][index % 4], region: resolvedRegion,
       engineerId: null, baselineEngineerId: null, coordinates: point, geocodeVerified: verified,
-      geocodeQuality: verified ? (value(row, ["geocodeQuality"]) === "street" ? "street" : "house") : "fallback", risk: false, equipment, requiredTransport: transport, allowedTransports: allowed.length ? allowed : undefined, priority,
+      geocodeQuality: verified ? (["street", "manual"].includes(value(row, ["geocodeQuality"])) ? value(row, ["geocodeQuality"]) as "street" | "manual" : "house") : "fallback", risk: false, equipment, requiredTransport: transport, allowedTransports: allowed.length ? allowed : undefined, priority,
       serviceMinutes, normativeMinutes: explicitNorm ?? (kind === skills[2] ? 100 : undefined), travelReserveMinutes: reserve,
       estimatedTravelMinutes: numberValue(row, ["estimatedTravelMinutes", "estimated_travel_minutes"]) ?? reserve,
       normSource: explicitService || explicitNorm != null ? "введено пользователем" : kind === skills[2] ? "экспертный норматив" : "демонстрационное допущение",

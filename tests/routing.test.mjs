@@ -105,6 +105,29 @@ test("walking matrix uses pedestrian graph rather than driving demo", async () =
   } finally { globalThis.fetch = originalFetch; }
 });
 
+test("configured OSRM server is preferred for route and matrix", async () => {
+  const originalFetch = globalThis.fetch;
+  const previous = process.env.OSRM_CAR_URL;
+  process.env.OSRM_CAR_URL = "https://routing.internal.example/";
+  const calls = [];
+  globalThis.fetch = async url => {
+    calls.push(String(url));
+    return new Response(JSON.stringify(String(url).includes("/table/")
+      ? { distances: [[0, 1200], [1200, 0]], durations: [[0, 360], [360, 0]] }
+      : { routes: [{ geometry: { coordinates: [[37.901, 55.901], [37.902, 55.902]] }, distance: 1200, duration: 360 }] }), { status: 200 });
+  };
+  try {
+    await osrmRouteLegs([[37.901, 55.901], [37.902, 55.902]]);
+    await osrmTable([[37.901, 55.901], [37.902, 55.902]]);
+    assert.equal(calls.length, 2);
+    assert.ok(calls.every(url => url.startsWith("https://routing.internal.example/")));
+  } finally {
+    globalThis.fetch = originalFetch;
+    if (previous === undefined) delete process.env.OSRM_CAR_URL;
+    else process.env.OSRM_CAR_URL = previous;
+  }
+});
+
 test("unavailable road matrix uses conservative urban travel time", () => {
   const a = [37.6, 55.7], b = [37.7, 55.7];
   const fallback = fallbackTravel(24);

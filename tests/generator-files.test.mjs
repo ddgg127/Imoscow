@@ -54,6 +54,13 @@ test("generator CSV is importable and routable without losing planning fields", 
   verifyRoundTrip("generated.csv", generatedCsv(sample));
 });
 
+test("dispatcher coordinates remain marked as manual after CSV and JSON import", () => {
+  const dataset = { ...sample, jobs: [{ ...sample.jobs[0], geocodeQuality: "manual", geocodeVerified: true }] };
+  for (const [file, text] of [["manual.csv", generatedCsv(dataset)], ["manual.json", generatedJson(dataset)]]) {
+    assert.equal(importPlanText(text, file, centers).jobs[0].geocodeQuality, "manual");
+  }
+});
+
 test("average window is a mean, not a uniform duration", () => {
   for (const average of [60, 240, 480]) {
     for (const count of [1, 2, 25, 250, 300, 350]) {

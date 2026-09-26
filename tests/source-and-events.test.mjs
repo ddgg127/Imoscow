@@ -97,6 +97,7 @@ test("cancellation and engineer outage preserve past work and only change future
   const afterCancellation = mergeTemporalResult(previous, cancelledSuffix, cancelled, [engineer, colleague], cancelledJobs, 24, travel);
   assert.deepEqual(afterCancellation.routes[0].stops[0], previous.routes[0].stops[0]);
   assert.ok(compareReplannedPlans(previous, afterCancellation, [engineer, colleague], time).every(change => !change.key.endsWith("-A")));
+  assert.equal(compareReplannedPlans(previous, afterCancellation, [engineer, colleague], time, { type: "cancel_job", id: "B" }).find(change => change.key === "assignment-B")?.necessity, "required");
 
   const outage = prepareTemporalReplan(previous, [engineer, colleague], jobs, ["e"], { type: "engineer_unavailable", time, id: "e" });
   assert.deepEqual(outage.continuationEngineers.map(item => item.id), ["e2"]);
@@ -104,6 +105,9 @@ test("cancellation and engineer outage preserve past work and only change future
   const afterOutage = mergeTemporalResult(previous, outageSuffix, outage, [engineer, colleague], jobs, 24, travel);
   assert.deepEqual(afterOutage.routes.find(route => route.engineerId === "e").stops, previous.routes[0].stops.slice(0, 1));
   assert.equal(afterOutage.jobs.find(item => item.id === "B").engineerId, "e2");
+  const outageChanges = compareReplannedPlans(previous, afterOutage, [engineer, colleague], time, { type: "engineer_unavailable", id: "e" });
+  assert.equal(outageChanges.find(change => change.key === "assignment-B")?.necessity, "required");
+  assert.ok(outageChanges.filter(change => change.kind === "time").every(change => !change.necessity));
 });
 
 test("cancelling a doubly unassigned request is a genuine no-op for routes", () => {

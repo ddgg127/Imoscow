@@ -52,6 +52,39 @@ export interface MatrixResult {
   provider: string;
 }
 
+/** Browser fallback for deployments whose server cannot reach public OSRM. */
+export async function publicOsmMatrix(points: Coordinate[], mode: TravelMode): Promise<MatrixResult> {
+  const bases = mode === "walking" ? ["https://routing.openstreetmap.de/routed-foot"]
+    : mode === "cycling" ? ["https://routing.openstreetmap.de/routed-bike"]
+    : ["https://router.project-osrm.org", "https://routing.openstreetmap.de/routed-car"];
+  const size = points.length;
+  const blockSize = size <= 90 ? size : 40;
+  for (const base of bases) {
+    try {
+      const distances = Array.from({ length: size }, () => Array<number | null>(size).fill(null));
+      const durations = Array.from({ length: size }, () => Array<number | null>(size).fill(null));
+      const coordinates = points.map(point => point.join(",")).join(";");
+      for (let from = 0; from < size; from += blockSize) {
+        const sources = Array.from({ length: Math.min(blockSize, size - from) }, (_, index) => from + index);
+        for (let to = 0; to < size; to += blockSize) {
+          const destinations = Array.from({ length: Math.min(blockSize, size - to) }, (_, index) => to + index);
+          const url = `${base}/table/v1/driving/${coordinates}?annotations=duration,distance&sources=${sources.join(";")}&destinations=${destinations.join(";")}`;
+          const response = await fetch(url, { signal: AbortSignal.timeout(8000) });
+          if (!response.ok) throw new Error(`OSRM table ${response.status}`);
+          const table = await response.json() as { code?: string; distances?: Array<Array<number | null>>; durations?: Array<Array<number | null>> };
+          if (table.code !== "Ok" || !table.distances || !table.durations) throw new Error("Некорректная дорожная матрица");
+          sources.forEach((row, i) => destinations.forEach((col, j) => {
+            distances[row][col] = table.distances?.[i]?.[j] ?? null;
+            durations[row][col] = table.durations?.[i]?.[j] ?? null;
+          }));
+        }
+      }
+      return { distances, durations, provider: "browser-osrm" };
+    } catch { /* Try the next public road graph. */ }
+  }
+  throw new Error("Публичные дорожные матрицы недоступны из браузера");
+}
+
 export interface RoutingProvider {
   readonly id: "osrm" | "yandex";
   buildRoute(request: RouteRequest): Promise<RouteResult>;
@@ -93,13 +126,16 @@ export class BackendRoutingProvider implements RoutingProvider {
   }
 
   async buildMatrix(points: Coordinate[], mode: TravelMode): Promise<MatrixResult> {
-    const response = await fetch(`${this.baseUrl}/matrix`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ provider: this.id, points, mode }),
-    });
-    if (!response.ok) throw new Error("Не удалось получить матрицу времени");
-    return response.json() as Promise<MatrixResult>;
+    try {
+      const response = await fetch(`${this.baseUrl}/matrix`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ provider: this.id, points, mode }),
+        signal: AbortSignal.timeout(18000),
+      });
+      if (response.ok) return response.json() as Promise<MatrixResult>;
+    } catch { /* Browser may reach public OSRM when the server cannot. */ }
+    return publicOsmMatrix(points, mode);
   }
 }
 

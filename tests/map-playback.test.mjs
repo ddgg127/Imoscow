@@ -48,6 +48,22 @@ test("browser routing retries public OSM graph after app proxy failure", async (
   } finally { globalThis.fetch = originalFetch; }
 });
 
+test("browser requests a road matrix when the app proxy is unavailable", async () => {
+  const originalFetch = globalThis.fetch;
+  const urls = [];
+  globalThis.fetch = async url => {
+    urls.push(String(url));
+    if (String(url) === "/api/routing/matrix") return new Response("proxy offline", { status: 502 });
+    return new Response(JSON.stringify({ code: "Ok", distances: [[0, 1200], [1300, 0]], durations: [[0, 420], [450, 0]] }), { status: 200 });
+  };
+  try {
+    const matrix = await new BackendRoutingProvider("osrm").buildMatrix([[37.1, 55.1], [37.2, 55.1]], "driving");
+    assert.equal(matrix.provider, "browser-osrm");
+    assert.equal(matrix.distances[1][0], 1300);
+    assert.ok(urls.some(url => url.includes("router.project-osrm.org/table")));
+  } finally { globalThis.fetch = originalFetch; }
+});
+
 test("transit outage uses a visibly labelled walkable estimate instead of an invented transit line", async () => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async url => String(url) === "/api/routing"

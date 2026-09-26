@@ -38,6 +38,12 @@ test("solver payload carries a forced assignment for counterfactual runs", () =>
   assert.equal(payload.timeLimitSeconds, 8);
 });
 
+test("temporal solver payload carries only remaining agreed appointments", () => {
+  const previous = { routes: [{ engineerId: "e1", stops: [{ jobId: "a", start: 500 }, { jobId: "completed", start: 480 }] }] };
+  const payload = createSolverPayload([engineer], [job], 24, travel, undefined, undefined, { type: "recalculate", time: 490, id: "plan" }, previous);
+  assert.deepEqual(payload.previousAppointments, { a: { engineerId: "e1", start: 500 } });
+});
+
 test("server fallback response is complete and reconstructable", () => {
   const response = heuristicServerResponse(createSolverPayload([engineer], [job], 24, travel));
   assert.equal(response.engine, "heuristic-server");

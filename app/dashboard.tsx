@@ -266,11 +266,14 @@ function ReplanImpactPanel({ changes }: { changes: ReplanChange[] }) {
   if (!changes.length) return null;
   const counts = changes.reduce<Record<ReplanChange["kind"], number>>((acc, item) => { acc[item.kind] += 1; return acc; }, { assignment: 0, order: 0, route: 0, fleet: 0, time: 0, event: 0 });
   const labels: Record<ReplanChange["kind"], string> = { assignment: "Назначения", order: "Порядок", route: "Маршруты", fleet: "Инженеры", time: "Время клиента", event: "События" };
+  const required = changes.filter(change => change.necessity === "required");
+  const other = changes.filter(change => change.necessity !== "required");
+  const ordered = [...required, ...other];
   return <section className="panel replan-impact" aria-label="Изменения после перепланирования">
-    <div className="panel-header"><div><h2>Что изменилось после перепланирования</h2><p>Сравнение последнего плана с предыдущим результатом OR-Tools</p></div><Badge>{changes.length} изменений</Badge></div>
+    <div className="panel-header"><div><h2>Что изменилось после перепланирования</h2><p>Подтверждённо вынужденных событием: {required.length}. Остальные {other.length} изменений требуют проверки диспетчером; их необходимость не доказана.</p></div><Badge>{changes.length} изменений</Badge></div>
     <div className="replan-counters">{(Object.keys(labels) as ReplanChange["kind"][]).map(kind => <span key={kind}><b>{counts[kind]}</b>{labels[kind]}</span>)}</div>
-    <div className="replan-list">{changes.slice(0, 12).map(item => <p key={item.key} data-kind={item.kind}><i />{item.message}</p>)}</div>
-    {changes.length > 12 && <details><summary>Показать ещё {changes.length - 12}</summary><div className="replan-list extra">{changes.slice(12).map(item => <p key={item.key} data-kind={item.kind}><i />{item.message}</p>)}</div></details>}
+    <div className="replan-list">{ordered.slice(0, 12).map(item => <p key={item.key} data-kind={item.kind}><i />{item.necessity === "required" ? "Вынуждено событием: " : ""}{item.message}</p>)}</div>
+    {ordered.length > 12 && <details><summary>Показать ещё {ordered.length - 12}</summary><div className="replan-list extra">{ordered.slice(12).map(item => <p key={item.key} data-kind={item.kind}><i />{item.necessity === "required" ? "Вынуждено событием: " : ""}{item.message}</p>)}</div></details>}
   </section>;
 }
 
@@ -371,7 +374,7 @@ function JobDetailsDialog({ job, executionStatus, engineer, plan, baselineEngine
           <label><span>Оборудование</span><b>{job.equipment}</b></label>
           <label><span>Транспорт</span><b>{job.allowedTransports?.length ? `Допустимы: ${job.allowedTransports.join(", ")}` : job.requiredTransport || "Не ограничен"}</b></label>
           <label><span>Источник</span><b>{job.source}</b></label>
-          <label><span>Геокодирование</span><b>{job.geocodeQuality === "house" ? "Дом подтверждён" : job.geocodeQuality === "street" ? "Уровень улицы" : "Требует проверки"}</b></label>
+          <label><span>Геокодирование</span><b>{job.geocodeQuality === "house" ? "Дом подтверждён" : job.geocodeQuality === "street" ? "Уровень улицы" : job.geocodeQuality === "manual" ? "Координаты диспетчера" : "Требует проверки"}</b></label>
         </div>
         <div className="job-baseline"><b>Baseline по ТЗ · первый допустимый инженер</b><span>{baselineEngineer && baselinePlan ? `${baselineEngineer.name} · ${baselinePlan.stops.findIndex(stop => stop.jobId === job.id) + 1}-я остановка · ${formatDistance(baselinePlan.distanceKm)} за маршрут` : job.baselineUnassignedReason ?? "Без назначения"}</span></div>
         {engineer && plan ? <>
@@ -405,7 +408,7 @@ export default function Dashboard() {
   const [view, setView] = useState<ViewId>("plan"); const [region, setRegion] = useState<"Все зоны" | Region>("Все зоны"); const [compare, setCompare] = useState(false); const [replanned, setReplanned] = useState(false); const [urgentOpen, setUrgentOpen] = useState(false); const [mobileNavOpen, setMobileNavOpen] = useState(false); const [selectedJobId, setSelectedJobId] = useState<string | null>(null); const [detailsJobId, setDetailsJobId] = useState<string | null>(null); const [selectedEngineerId, setSelectedEngineerId] = useState<string | null>(null); const [selectedEngineerDetailsId, setSelectedEngineerDetailsId] = useState<string | null>(null); const [simTime, setSimTime] = useState(480); const [simPlaying, setSimPlaying] = useState(false); const [playbackMinutesPerSecond, setPlaybackMinutesPerSecond] = useState(1); const [theme, setTheme] = useState<ThemeId>("light"); const [themeOpen, setThemeOpen] = useState(false); const [routingState, setRoutingState] = useState<RoutingState>("idle"); const [extraJobs, setExtraJobs] = useState<Job[]>([]); const [importedJobs, setImportedJobs] = useState<Job[] | null>(null); const [importedEngineers, setImportedEngineers] = useState<Engineer[] | null>(null); const [unavailableEngineerIds, setUnavailableEngineerIds] = useState<string[]>([]); const [cancelledJobIds, setCancelledJobIds] = useState<string[]>([]); const [importStatus, setImportStatus] = useState(""); const [optimizing, setOptimizing] = useState(false); const [formError, setFormError] = useState(""); const [solverError, setSolverError] = useState(""); const [planResult, setPlanResult] = useState<OptimizationResult | null>(null); const [travel, setTravel] = useState<TravelMatrix | undefined>(undefined); const [matrixFallback, setMatrixFallback] = useState(false);
   const [draft, setDraft] = useState<PlanConfig>(defaultConfig); const [applied, setApplied] = useState<PlanConfig | null>(null); const [generated, setGenerated] = useState<GeneratedDataset | null>(null); const [generatedFrom, setGeneratedFrom] = useState<PlanConfig | null>(null);
   const [editorJobs, setEditorJobs] = useState<Job[]>(sourceJobs); const [editorEngineers, setEditorEngineers] = useState<Engineer[]>(sourceEngineers); const [editorUnavailableIds, setEditorUnavailableIds] = useState<string[]>([]); const [editorDirty, setEditorDirty] = useState(false); const [editorError, setEditorError] = useState("");
-  const [urgentForm, setUrgentForm] = useState({ address: "", region: "Юго-восток" as Region, start: "13:00", end: "14:30", kind: "Аварийно-восстановительные работы", equipment: "Рефлектометр", transport: "", urgency: "urgent" as "normal" | "urgent" });
+  const [urgentForm, setUrgentForm] = useState({ address: "", longitude: "", latitude: "", region: "Юго-восток" as Region, start: "13:00", end: "14:30", kind: "Аварийно-восстановительные работы", equipment: "Рефлектометр", transport: "", urgency: "urgent" as "normal" | "urgent" });
   const [eventTimeText, setEventTimeText] = useState("13:10");
   const [lastEventTime, setLastEventTime] = useState<number | null>(null);
   const [lastCalculationMethod, setLastCalculationMethod] = useState<"ortools" | "insert" | "no_change">("ortools");
@@ -487,7 +490,7 @@ export default function Dashboard() {
     if (cancelled && !cancelled.engineerId && !cancelled.baselineEngineerId && jobs.some(job => job.id === event.id && job.cancelled)) {
       const unchanged = cancelUnassignedJob(planResult, event.id);
       setPlanResult(unchanged); setSourcePlanResult(unchanged); setExperimentPlanResult(null);
-      setReplanChanges([{ kind: "event", key: `event-${event.id}`, message: `№${event.id} отменена в ${minutesLabel(event.time)}: заявка не была назначена ни в одном плане, поэтому маршруты и согласованное время клиентов не изменились.` }]);
+      setReplanChanges([{ kind: "event", key: `event-${event.id}`, message: `№${event.id} отменена в ${minutesLabel(event.time)}: заявка не была назначена ни в одном плане, поэтому маршруты и согласованное время клиентов не изменились.`, necessity: "required" }]);
       setLastCalculationMethod("no_change"); setLastEventTime(event.time); setSimTime(event.time); setSimPlaying(false); setReplanned(true); setSolverError("");
       return true;
     }
@@ -508,12 +511,12 @@ export default function Dashboard() {
       } else if (!available.length) {
         suffix = resultFromRouteOrder([], prepared.remainingJobs, [], { speedKmh: applied.speedKmh, travel: nextTravel });
       } else {
-        const solved = await solveVrptwServer(available, prepared.remainingJobs, applied.speedKmh, nextTravel, newJob?.workClass === "emergency" ? newJob.id : undefined, event);
+        const solved = await solveVrptwServer(available, prepared.remainingJobs, applied.speedKmh, nextTravel, newJob?.workClass === "emergency" ? newJob.id : undefined, event, planResult);
         suffix = solved.result;
       }
       const merged = mergeTemporalResult(planResult, suffix, prepared, fullEngineers, jobs, applied.speedKmh, nextTravel);
       if (ordinaryInserted === false) merged.jobs = merged.jobs.map(job => job.id === event.id ? { ...job, unassignedCategory: "cannot_insert", unassignedReason: "Не найден свободный интервал без изменения уже согласованных работ. Обычная заявка оставлена без маршрута; полный пересчёт не выполнялся." } : job);
-      setReplanChanges(compareReplannedPlans(planResult, merged, fullEngineers, event.time));
+      setReplanChanges(compareReplannedPlans(planResult, merged, fullEngineers, event.time, event));
       setPlanResult(merged); setSourcePlanResult(merged); setExperimentPlanResult(null);
       setLastCalculationMethod(ordinaryInserted != null ? "insert" : "ortools"); setLastEventTime(event.time);
       setTravel(nextTravel); setMatrixFallback(loaded.provider === "fallback");
@@ -551,7 +554,7 @@ export default function Dashboard() {
       jobs.push({ ...next, time: `${minutesLabel(job.windowStart)}–${minutesLabel(job.windowEnd)}`, engineerId: null, baselineEngineerId: null, unassignedReason: undefined });
     }
     const engineers = editorEngineers.map(engineer => ({ ...engineer, skills: [...engineer.skills], equipment: [...engineer.equipment] }));
-    setPlanResult(null); setSourcePlanResult(null); setExperimentPlanResult(null); setWindowExperiment(false); setImportedJobs(jobs); setImportedEngineers(engineers); setEditorJobs(jobs); setExtraJobs([]); setCancelledJobIds([]); setUnavailableEngineerIds(editorUnavailableIds);
+    setPlanResult(null); setSourcePlanResult(null); setExperimentPlanResult(null); setWindowExperiment(false); setLastEventTime(null); setImportedJobs(jobs); setImportedEngineers(engineers); setEditorJobs(jobs); setExtraJobs([]); setCancelledJobIds([]); setUnavailableEngineerIds(editorUnavailableIds);
     setGenerated(null); setGeneratedFrom(null); setEditorDirty(false); setEditorError("");
     setSelectedJobId(null); setDetailsJobId(null); setSelectedEngineerId(null); setRegion("Все зоны");
     const config = { ...draft, jobs: jobs.length, engineers: engineers.length };
@@ -560,7 +563,7 @@ export default function Dashboard() {
   }, [editorJobs, editorEngineers, editorUnavailableIds, draft, runOptimize, activeJobs]);
   const startPlanning = useCallback(() => {
     if (editorDirty) { setEditorError("В таблице есть несохранённые изменения. Примените их или сбросьте перед новым расчётом."); setView("editor"); return; }
-    if (lastEventTime != null) { void runTemporalEvent({ type: "recalculate", time: Math.max(lastEventTime, parseTime(eventTimeText) || lastEventTime), id: "plan" }, activeJobs, unavailableEngineerIds); return; }
+    if (lastEventTime != null && applied && planResult) { void runTemporalEvent({ type: "recalculate", time: Math.max(lastEventTime, parseTime(eventTimeText) || lastEventTime), id: "plan" }, activeJobs, unavailableEngineerIds); return; }
     const config = { ...draft };
     setApplied(config);
     setLastEventTime(null);
@@ -568,7 +571,7 @@ export default function Dashboard() {
     const engineers = scaleEngineers(baseEngineers, config.engineers, jobs).filter(engineer => !unavailableEngineerIds.includes(engineer.id));
     setEditorJobs(jobs); setEditorEngineers(scaleEngineers(baseEngineers, config.engineers, jobs)); setEditorUnavailableIds(unavailableEngineerIds); setEditorError("");
     void runOptimize(engineers, jobs, config.speedKmh, undefined, windowExperiment ? "experiment" : "source");
-  }, [draft, extraJobs, runOptimize, runTemporalEvent, baseEngineers, baseJobs, unavailableEngineerIds, cancelledJobIds, editorDirty, windowExperiment, lastEventTime, eventTimeText, activeJobs]);
+  }, [draft, extraJobs, runOptimize, runTemporalEvent, baseEngineers, baseJobs, unavailableEngineerIds, cancelledJobIds, editorDirty, windowExperiment, lastEventTime, eventTimeText, activeJobs, applied, planResult]);
   const toggleWindowExperiment = useCallback((enabled: boolean) => {
     if (!applied || !sourcePlanResult) return;
     setWindowExperiment(enabled);
@@ -584,7 +587,7 @@ export default function Dashboard() {
     setGenerated(dataset); setGeneratedFrom({ ...draft });
     setImportedJobs(dataset.jobs); setImportedEngineers(dataset.engineers);
     setEditorJobs(dataset.jobs); setEditorEngineers(dataset.engineers); setEditorUnavailableIds([]); setEditorDirty(false); setEditorError("");
-    setExtraJobs([]); setCancelledJobIds([]); setUnavailableEngineerIds([]); setApplied(null); setPlanResult(null); setSourcePlanResult(null); setExperimentPlanResult(null); setWindowExperiment(false); setTravel(undefined); setMatrixFallback(false); setReplanChanges([]); setSelectedJobId(null); setSelectedEngineerId(null); setSolverError("");
+    setExtraJobs([]); setCancelledJobIds([]); setUnavailableEngineerIds([]); setApplied(null); setPlanResult(null); setSourcePlanResult(null); setExperimentPlanResult(null); setWindowExperiment(false); setLastEventTime(null); setTravel(undefined); setMatrixFallback(false); setReplanChanges([]); setSelectedJobId(null); setSelectedEngineerId(null); setRegion("Все зоны"); setSolverError("");
     setImportStatus(`Создано ${dataset.jobs.length} заявок и ${dataset.engineers.length} инженеров. Данные готовы к расчёту.`);
   }, [draft]);
   const addUrgent = useCallback(async () => {
@@ -593,14 +596,25 @@ export default function Dashboard() {
     const start = parseTime(urgentForm.start), end = parseTime(urgentForm.end), eventTime = parseTime(eventTimeText);
     if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) { setFormError("Проверьте временное окно"); return; }
     if (!Number.isFinite(eventTime) || end <= eventTime) { setFormError("Окно новой заявки должно заканчиваться после события"); return; }
-    let coordinates = regionCenters[urgentForm.region]; let geocodeVerified = false;
-    try { const resolved = await new BackendGeocodingProvider("nominatim").geocode(urgentForm.address); if (resolved) { coordinates = resolved; geocodeVerified = true; } } catch { /* Explicit fallback quality remains visible. */ }
+    const manualLongitude = urgentForm.longitude.trim(), manualLatitude = urgentForm.latitude.trim();
+    if (Boolean(manualLongitude) !== Boolean(manualLatitude)) { setFormError("Укажите обе координаты: долготу и широту."); return; }
+    let coordinates: Coordinate | null = null;
+    let geocodeQuality: Job["geocodeQuality"] = "street";
+    if (manualLongitude && manualLatitude) {
+      const longitude = Number(manualLongitude.replace(",", ".")), latitude = Number(manualLatitude.replace(",", "."));
+      if (!Number.isFinite(longitude) || !Number.isFinite(latitude) || longitude < 36 || longitude > 39 || latitude < 54 || latitude > 57) { setFormError("Координаты должны находиться в зоне обслуживания: долгота 36–39, широта 54–57."); return; }
+      coordinates = [longitude, latitude];
+      geocodeQuality = "manual";
+    } else {
+      try { coordinates = await new BackendGeocodingProvider("nominatim").geocode(urgentForm.address); } catch { /* Keep the form open for a correction or manual coordinates. */ }
+      if (!coordinates) { setFormError("Адрес не удалось определить. Уточните его или задайте координаты вручную; заявка пока не добавлена в план."); return; }
+    }
     const id = `URG-${Date.now().toString().slice(-6)}`;
     const emergency = urgentForm.kind === "Аварийно-восстановительные работы";
     const serviceMinutes = emergency ? 80 : urgentForm.kind === "Подключение и модернизация" ? 60 : 30;
     const job: Job = { id, time: `${urgentForm.start}–${urgentForm.end}`, windowStart: start, windowEnd: end, area: urgentForm.region,
       address: urgentForm.address, kind: urgentForm.kind, workType: urgentForm.kind, tone: "amber", region: urgentForm.region,
-      engineerId: null, baselineEngineerId: null, coordinates, geocodeVerified, geocodeQuality: geocodeVerified ? "street" : "fallback",
+      engineerId: null, baselineEngineerId: null, coordinates, geocodeVerified: true, geocodeQuality,
       risk: false, equipment: urgentForm.equipment, requiredTransport: urgentForm.transport, priority: emergency ? 5 : 2, serviceMinutes,
       normativeMinutes: emergency ? 100 : undefined, travelReserveMinutes: emergency ? 20 : 0, estimatedTravelMinutes: emergency ? 20 : 0,
       normSource: emergency ? "экспертный норматив" : "демонстрационное допущение", urgency: urgentForm.urgency,
@@ -612,7 +626,7 @@ export default function Dashboard() {
       if (!await runTemporalEvent({ type: "new_job", time: eventTime, id }, jobs, unavailableEngineerIds)) return;
     }
     setExtraJobs(nextExtras); setEditorJobs(current => [...current, job]); setUrgentOpen(false);
-    setSelectedJobId(id); setDetailsJobId(id); setUrgentForm(current => ({ ...current, address: "" }));
+    setSelectedJobId(id); setDetailsJobId(id); setUrgentForm(current => ({ ...current, address: "", longitude: "", latitude: "" }));
   }, [urgentForm, eventTimeText, applied, extraJobs, planResult, runTemporalEvent, baseJobs, unavailableEngineerIds, cancelledJobIds]);
   const handleImport = useCallback(async (file: File) => {
     setImportStatus(`Читаем ${file.name}…`);
@@ -636,7 +650,7 @@ export default function Dashboard() {
       setEditorUnavailableIds([]); setEditorDirty(false); setEditorError("");
       setGenerated(null); setGeneratedFrom(null);
       if (jobs.length) { setExtraJobs([]); setCancelledJobIds([]); setUnavailableEngineerIds([]); }
-      setApplied(null); setPlanResult(null); setSourcePlanResult(null); setExperimentPlanResult(null); setWindowExperiment(false); setTravel(undefined); setMatrixFallback(false); setReplanChanges([]); setSelectedJobId(null); setSelectedEngineerId(null);
+      setApplied(null); setPlanResult(null); setSourcePlanResult(null); setExperimentPlanResult(null); setWindowExperiment(false); setLastEventTime(null); setTravel(undefined); setMatrixFallback(false); setReplanChanges([]); setSelectedJobId(null); setSelectedEngineerId(null); setRegion("Все зоны");
       setDraft(current => ({ ...current, jobs: jobs.length || current.jobs, engineers: imported.engineers?.length || current.engineers, speedKmh: imported.speedKmh ?? current.speedKmh }));
       setImportStatus(`${file.name}: ${jobs.length ? `${jobs.length} заявок, координаты подтверждены ${verified}/${jobs.length}` : `${imported.engineers?.length ?? 0} инженеров`}${imported.warnings.length ? "; " + imported.warnings[0] : ""}.`);
     } catch (error) {
@@ -689,6 +703,8 @@ const titles = { plan: ["План работ", started ? "VRPTW по трём р
     {view === "demo" && <AlgorithmDemoView />}</section>
   <Dialog open={urgentOpen} onOpenChange={setUrgentOpen}><DialogContent className="urgent-dialog"><DialogHeader><DialogTitle>Новая заявка</DialogTitle><DialogDescription>Событие в {eventTimeText}: выполненные и начатые работы останутся на своих местах.</DialogDescription></DialogHeader><div className="urgent-form">
     <label className="wide"><span>Адрес</span><Input value={urgentForm.address} onChange={event => setUrgentForm(value => ({ ...value, address: event.target.value }))} placeholder="Москва, ул. Люблинская, 72" /></label>
+    <label><span>Долгота, если адрес не найден</span><Input inputMode="decimal" value={urgentForm.longitude} onChange={event => setUrgentForm(value => ({ ...value, longitude: event.target.value }))} placeholder="37.62" /></label>
+    <label><span>Широта, если адрес не найден</span><Input inputMode="decimal" value={urgentForm.latitude} onChange={event => setUrgentForm(value => ({ ...value, latitude: event.target.value }))} placeholder="55.75" /></label>
     <label><span>Регион</span><select value={urgentForm.region} onChange={event => setUrgentForm(value => ({ ...value, region: event.target.value as Region }))}><option>Восток</option><option>Юго-восток</option><option>Югоцентр</option></select></label>
     <label><span>Навык из справочника</span><select value={urgentForm.kind} onChange={event => setUrgentForm(value => ({ ...value, kind: event.target.value }))}><option>Локальные работы</option><option>Подключение и модернизация</option><option>Аварийно-восстановительные работы</option></select></label>
     <label><span>Начало окна</span><Input type="time" value={urgentForm.start} onChange={event => setUrgentForm(value => ({ ...value, start: event.target.value }))} /></label><label><span>Окончание окна</span><Input type="time" value={urgentForm.end} onChange={event => setUrgentForm(value => ({ ...value, end: event.target.value }))} /></label>
