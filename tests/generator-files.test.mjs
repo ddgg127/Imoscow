@@ -100,9 +100,11 @@ test("priority checkbox produces a reproducible urgent minority in both upload f
   const mixed = generateDataset(csvJobs, csvEngineers, { jobs: 70, engineers: 15, windowMinutes: 240, speedKmh: 24, highPriority: true });
   assert.equal(ordinary.jobs.filter(job => job.urgency === "urgent").length, 0);
   assert.equal(mixed.jobs.filter(job => job.urgency === "urgent").length, 10);
-  assert.ok(mixed.jobs.filter(job => job.urgency === "urgent").every(job => job.priority >= 10));
+  assert.ok(ordinary.jobs.every(job => job.priority === 1));
+  assert.ok(mixed.jobs.every(job => job.priority === (job.urgency === "urgent" ? 2 : 1)));
   for (const [file, text] of [["urgent.csv", generatedCsv(mixed)], ["urgent.json", generatedJson(mixed)]]) {
     const imported = importPlanText(text, file, centers);
     assert.equal(imported.jobs.filter(job => job.urgency === "urgent").length, 10);
+    assert.ok(imported.jobs.every(job => job.priority === (job.urgency === "urgent" ? 2 : 1)));
   }
 });

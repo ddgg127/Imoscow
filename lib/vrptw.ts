@@ -15,6 +15,9 @@ export type Job = {
   unassignedReason?: string;
   unassignedCategory?: "no_executor" | "cannot_insert" | "alternative_plan" | "not_applicable";
 };
+export function jobPriorityLevel(job: Pick<Job, "priority" | "urgency">): 1 | 2 {
+  return job.urgency === "urgent" || job.priority === 2 ? 2 : 1;
+}
 export type Engineer = {
   id: string; initials: string; name: string; route: string; jobs: number; distance: string; load: number;
   color: string; region: Region; start: Coordinate; skills: string[]; equipment: string[]; transport: string;
@@ -834,7 +837,7 @@ function recoverUnassigned(engineers: Engineer[], jobs: Job[], assignments: Map<
   const pending = jobs.filter(job => !assigned.has(job.id)).sort((a, b) => {
     const aChoices = engineers.filter(engineer => compatible(engineer, a)).length;
     const bChoices = engineers.filter(engineer => compatible(engineer, b)).length;
-    return aChoices - bChoices || a.windowEnd - b.windowEnd || b.priority - a.priority;
+    return jobPriorityLevel(b) - jobPriorityLevel(a) || aChoices - bChoices || a.windowEnd - b.windowEnd;
   });
   for (const job of pending) {
     let direct: { engineer: Engineer; route: Job[]; score: number } | null = null;
@@ -1107,7 +1110,7 @@ export function optimizeVrptw(engineers: Engineer[], inputJobs: Job[], options: 
   activeTrace = options.trace ?? null;
   const jobs: Job[] = inputJobs.map(job => ({ ...job, engineerId: null, risk: false }));
   const assignments = new Map(engineers.map(engineer => [engineer.id, [] as Job[]]));
-  const ordered = [...jobs].sort((a, b) => b.priority - a.priority || a.windowEnd - b.windowEnd || a.windowStart - b.windowStart);
+  const ordered = [...jobs].sort((a, b) => jobPriorityLevel(b) - jobPriorityLevel(a) || a.windowEnd - b.windowEnd || a.windowStart - b.windowStart);
   const random = rng.bind(null, { value: options.seed ?? hashSeed(inputJobs, engineers) });
   const innerBudget = options.innerBudget ?? 120;
   const zoneBudget = options.zoneBudget ?? 900;

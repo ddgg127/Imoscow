@@ -61,8 +61,8 @@ export function actionCopy(phase: PlaybackPhase) {
   return "Выезжает с базы";
 }
 
-function lineFeature(engineer: Engineer, coordinates: Coordinate[], selected: boolean, opacity = 1): GeoJSON.Feature<GeoJSON.LineString> {
-  return { type: "Feature", properties: { id: engineer.id, color: engineer.color, selected: selected ? 1 : 0, opacity }, geometry: { type: "LineString", coordinates: coordinates.length >= 2 ? coordinates : [engineer.start, engineer.start] } };
+function lineFeature(engineer: Engineer, coordinates: Coordinate[], selected: boolean, opacity = 1, estimated = false): GeoJSON.Feature<GeoJSON.LineString> {
+  return { type: "Feature", properties: { id: engineer.id, color: engineer.color, selected: selected ? 1 : 0, opacity, estimated: estimated ? 1 : 0 }, geometry: { type: "LineString", coordinates: coordinates.length >= 2 ? coordinates : [engineer.start, engineer.start] } };
 }
 
 function setLineSource(map: MapLibreMap, id: string, data: GeoJSON.FeatureCollection<GeoJSON.LineString>) {
@@ -106,7 +106,7 @@ async function fetchRoadLines(engineers: Engineer[], jobs: Job[], plans: Map<str
       const waypoints = routeCoordinates(engineer, jobs, baseline, plans.get(engineer.id));
       if (waypoints.length < 2) return [engineer.id, waypoints, false, "none"] as const;
       const [line, failed, source] = await roadLine(waypoints, provider, roadMode(engineer.transport));
-      return [engineer.id, line, failed, source] as const;
+      return [engineer.id, failed && line.length < 2 ? waypoints : line, failed, failed && line.length < 2 ? "direct-estimate" : source] as const;
     }));
     results.push(...batch);
     if (cancelled()) break;
@@ -146,12 +146,13 @@ function useRoadRoutes(
     }
     let cancelled = false;
     setRouteStatus("loading");
-    setRoadRoutes({});
-    setRouteSources({});
+    setRoadRoutes(Object.fromEntries(visibleEngineers.map(engineer => [engineer.id, routeCoordinates(engineer, visibleJobs, false, planByEngineer.get(engineer.id))])));
+    setRouteSources(Object.fromEntries(visibleEngineers.map(engineer => [engineer.id, "direct-estimate"])));
     onRoutingState("loading");
     const provider = new BackendRoutingProvider(providerId, "/api/routing", apiKey);
     void (async () => {
       const results = await fetchRoadLines(visibleEngineers, visibleJobs, planByEngineer, false, provider, () => cancelled, batch => {
+        if (cancelled) return;
         setRoadRoutes(current => ({ ...current, ...Object.fromEntries(batch.map(([id, coords]) => [id, coords])) }));
         setRouteSources(current => ({ ...current, ...Object.fromEntries(batch.map(([id, , , source]) => [id, source])) }));
       });
@@ -172,7 +173,7 @@ function useRoadRoutes(
       return;
     }
     let cancelled = false;
-    setBaselineRoads({});
+    setBaselineRoads(Object.fromEntries(baselineEngineers.map(engineer => [engineer.id, routeCoordinates(engineer, baselineJobs, true, baselineByEngineer.get(engineer.id))])));
     const provider = new BackendRoutingProvider(providerId, "/api/routing", apiKey);
     void (async () => {
       const results = await fetchRoadLines(baselineEngineers, baselineJobs, baselineByEngineer, true, provider, () => cancelled);
@@ -186,9 +187,9 @@ function useRoadRoutes(
 
 function captionText(status: RoutingState) {
   if (status === "idle") return "OpenStreetMap · точки по адресам зданий";
-  if (status === "loading") return "OpenStreetMap · загружаем линии по дорогам";
+  if (status === "loading") return "Пунктир — оценка · загружаем дорожные линии";
   if (status === "ready") return "OpenStreetMap · маршруты по дорожному графу";
-  return "Часть линий оценочная или недоступна · прямые скрыты";
+  return "Часть путей оценочная · пунктир не повторяет дороги";
 }
 
 function MapChrome({ caption, status, clockRef, onFit, onZoomIn, onZoomOut }: { caption: string; status: RoutingState; clockRef?: Ref<HTMLSpanElement>; onFit: () => void; onZoomIn: () => void; onZoomOut: () => void }) {
@@ -306,11 +307,11 @@ export function MapCanvas(props: CanvasProps) {
     if (!routingEnabled) return emptyLines;
     if (selectedJobId) {
       return selectedLeg?.coordinates.length && selectedRouteEngineer
-        ? { type: "FeatureCollection", features: [lineFeature({ ...selectedRouteEngineer, color: "#f43f5e" }, selectedLeg.coordinates, true)] }
+        ? { type: "FeatureCollection", features: [lineFeature({ ...selectedRouteEngineer, color: "#f43f5e" }, selectedLeg.coordinates, true, 1, selectedRoadSource === "direct-estimate")] }
         : emptyLines;
     }
-    return roadLineFeatures(visibleEngineers, roadRoutes, selectedEngineerId);
-  }, [routingEnabled, visibleEngineers, selectedEngineerId, selectedJobId, selectedLeg, selectedRouteEngineer, roadRoutes]);
+    return roadLineFeatures(visibleEngineers, roadRoutes, selectedEngineerId, routeSources);
+  }, [routingEnabled, visibleEngineers, selectedEngineerId, selectedJobId, selectedLeg, selectedRouteEngineer, selectedRoadSource, roadRoutes, routeSources]);
   const baselineData = useMemo<GeoJSON.FeatureCollection<GeoJSON.LineString>>(() => {
     if (!routingEnabled || !compare || selectedEngineerId || selectedJobId) return emptyLines;
     return {
@@ -378,12 +379,13 @@ export function MapCanvas(props: CanvasProps) {
         const initial = emptyLines;
         if (!map.getSource("baseline-routes")) {
           map.addSource("baseline-routes", { type: "geojson", data: emptyLines });
-          map.addLayer({ id: "baseline-routes", type: "line", source: "baseline-routes", layout: { visibility: current.compare ? "visible" : "none" }, paint: { "line-color": ["get", "color"], "line-width": 3, "line-opacity": .38 } });
+          map.addLayer({ id: "baseline-routes", type: "line", source: "baseline-routes", layout: { visibility: current.compare ? "visible" : "none" }, paint: { "line-color": ["get", "color"], "line-width": 3, "line-opacity": .38, "line-dasharray": [2, 2] } });
         }
         if (!map.getSource("routes")) {
           map.addSource("routes", { type: "geojson", data: initial });
-          map.addLayer({ id: "route-shadow", type: "line", source: "routes", paint: { "line-color": "#fff", "line-width": ["case", ["==", ["get", "selected"], 1], 10, 7], "line-opacity": ["*", 0.8, ["coalesce", ["get", "opacity"], 1]] } });
-          map.addLayer({ id: "routes", type: "line", source: "routes", paint: { "line-color": ["get", "color"], "line-width": ["case", ["==", ["get", "selected"], 1], 6, 3.5], "line-opacity": ["*", ["case", ["==", ["get", "selected"], 1], 1, .72], ["coalesce", ["get", "opacity"], 1]] } });
+          map.addLayer({ id: "route-shadow", type: "line", source: "routes", filter: ["==", ["get", "estimated"], 0], paint: { "line-color": "#fff", "line-width": ["case", ["==", ["get", "selected"], 1], 10, 7], "line-opacity": ["*", 0.8, ["coalesce", ["get", "opacity"], 1]] } });
+          map.addLayer({ id: "routes", type: "line", source: "routes", filter: ["==", ["get", "estimated"], 0], paint: { "line-color": ["get", "color"], "line-width": ["case", ["==", ["get", "selected"], 1], 6, 3.5], "line-opacity": ["*", ["case", ["==", ["get", "selected"], 1], 1, .72], ["coalesce", ["get", "opacity"], 1]] } });
+          map.addLayer({ id: "estimated-routes", type: "line", source: "routes", filter: ["==", ["get", "estimated"], 1], paint: { "line-color": ["get", "color"], "line-width": ["case", ["==", ["get", "selected"], 1], 6, 3.5], "line-opacity": .85, "line-dasharray": [2, 2] } });
         }
         setMapReady(true);
         requestAnimationFrame(() => map.resize());
@@ -501,7 +503,7 @@ export function MapCanvas(props: CanvasProps) {
         actionJobRef.current.dataset.job = "";
         actionJobRef.current.textContent = "";
       }
-      if (action.phase === "travel") actionMetaRef.current.textContent = `До прибытия ${remainingLabel(action.remaining)} · заявка ${action.index} из ${action.total}${fleetRef.current.routeFor(focus).length < 2 ? " · дорога недоступна, показана последняя известная точка" : ""}`;
+      if (action.phase === "travel") actionMetaRef.current.textContent = `До прибытия ${remainingLabel(action.remaining)} · заявка ${action.index} из ${action.total}${fleetRef.current.routeSources[focus.id] === "direct-estimate" ? " · движение по оценочной прямой" : ""}`;
       else if (action.phase === "wait") actionMetaRef.current.textContent = `До начала окна ${remainingLabel(action.remaining)}`;
       else if (action.phase === "service") actionMetaRef.current.textContent = `Осталось ${remainingLabel(action.remaining)}`;
       else if (action.phase === "done") actionMetaRef.current.textContent = "Маршрут инженера закрыт";
@@ -511,7 +513,7 @@ export function MapCanvas(props: CanvasProps) {
       const host = mapRef.current;
       if (!host) return;
       const { visibleEngineers: moversSource, visibleJobs: jobs, selectedEngineerId: selected, planByEngineer: plans, routeFor: coordsOf, onSelectEngineer: select } = fleetRef.current;
-      const movers = moversSource.filter(engineer => (!selected || engineer.id === selected) && Boolean(plans.get(engineer.id)?.stops.length)).slice(0, 24);
+      const movers = moversSource.filter(engineer => (!selected || engineer.id === selected) && Boolean(plans.get(engineer.id)?.stops.length));
       const keep = new Set(movers.map(engineer => engineer.id));
       for (const [id, marker] of vehiclesRef.current) {
         if (!keep.has(id)) {
@@ -523,16 +525,9 @@ export function MapCanvas(props: CanvasProps) {
         const coords = coordsOf(engineer);
         const plan = plans.get(engineer.id) ?? null;
         const hasRoad = coords.length >= 2;
-        const estimated = fleetRef.current.routeSources[engineer.id] === "walking-estimate";
-        const action = actionAtSimTime(engineer, plan, time);
+        const estimated = ["walking-estimate", "direct-estimate"].includes(fleetRef.current.routeSources[engineer.id]);
         const pose = plan && hasRoad ? positionAtSimTime(engineer, plan, jobs, coords, time) : null;
-        // With no road graph, do not fake a straight trip or visibly teleport:
-        // hide the position during travel and show only verified stop locations.
-        if (!pose && action.phase === "travel") {
-          vehiclesRef.current.get(engineer.id)?.remove();
-          vehiclesRef.current.delete(engineer.id);
-          continue;
-        }
+        // Direct estimates remain dashed and visibly distinct from road routes.
         const point = pose?.point ?? positionAtKnownStop(engineer, plan!, jobs, time);
         const label = engineerMarkerLabel(engineer);
         let marker = vehiclesRef.current.get(engineer.id);
@@ -595,7 +590,7 @@ export function MapCanvas(props: CanvasProps) {
   }, [simulating, mapReady]);
   return <div className="map-canvas real-map" aria-label="Интерактивная карта маршрутов инженеров">
     <div ref={containerRef} className="maplibre-host" data-route-features={routeData.features.length} data-route-points={routeData.features.reduce((sum, feature) => sum + feature.geometry.coordinates.length, 0)} data-road-status={routeStatus} />
-    {selectedRouteEngineer && <div className="selected-route-summary" style={{ ["--route-color" as string]: selectedLeg ? "#f43f5e" : selectedRouteEngineer.color }}><span>{selectedLeg ? "Участок к выбранной заявке" : "Маршрут инженера"}</span><strong>{selectedRouteEngineer.name}</strong>{selectedLeg ? <><small>{selectedLeg.originLabel} → {selectedLeg.destinationLabel}</small><small>Прибытие {minutesLabel(selectedLeg.stop.arrival)} · участок {selectedLeg.stop.distanceKm.toFixed(1).replace(".", ",")} км</small></> : <small>{selectedRoutePlan?.stops.length ?? 0} заявок · {selectedRoutePlan ? `${selectedRoutePlan.distanceKm.toFixed(1).replace(".", ",")} км` : "маршрут не построен"}</small>}<small>{selectedRouteEngineer.transport} · скорость {engineerSpeedKmh(selectedRouteEngineer.transport, selectedRouteEngineer.speedKmh, carSpeedKmh)} км/ч</small>{selectedRoadSource === "walking-estimate" ? <small>Для ОТ показан пешеходный путь как оценка; движение и линия не являются фактическим маршрутом транспорта</small> : selectedRoadSource === "unavailable" ? <small>Дорожная линия недоступна · движение между точками скрыто</small> : selectedRoadSource && selectedRoadSource !== "none" ? <small>Геометрия по сети дорог · {selectedRoadSource}</small> : <small>Загружаем дорожную геометрию…</small>}<button type="button" onClick={() => onSelectEngineer(selectedRouteEngineer.id)}>Показать все маршруты</button></div>}
+    {selectedRouteEngineer && <div className="selected-route-summary" style={{ ["--route-color" as string]: selectedLeg ? "#f43f5e" : selectedRouteEngineer.color }}><span>{selectedLeg ? "Участок к выбранной заявке" : "Маршрут инженера"}</span><strong>{selectedRouteEngineer.name}</strong>{selectedLeg ? <><small>{selectedLeg.originLabel} → {selectedLeg.destinationLabel}</small><small>Прибытие {minutesLabel(selectedLeg.stop.arrival)} · участок {selectedLeg.stop.distanceKm.toFixed(1).replace(".", ",")} км</small></> : <small>{selectedRoutePlan?.stops.length ?? 0} заявок · {selectedRoutePlan ? `${selectedRoutePlan.distanceKm.toFixed(1).replace(".", ",")} км` : "маршрут не построен"}</small>}<small>{selectedRouteEngineer.transport} · скорость {engineerSpeedKmh(selectedRouteEngineer.transport, selectedRouteEngineer.speedKmh, carSpeedKmh)} км/ч</small>{selectedRoadSource === "walking-estimate" ? <small>Для ОТ показан пешеходный путь как оценка; движение и линия не являются фактическим маршрутом транспорта</small> : selectedRoadSource === "direct-estimate" ? <small>Дорожный сервис недоступен: пунктир соединяет точки напрямую, движение приблизительное</small> : selectedRoadSource && selectedRoadSource !== "none" ? <small>Геометрия по сети дорог · {selectedRoadSource}</small> : <small>Загружаем дорожную геометрию…</small>}<button type="button" onClick={() => onSelectEngineer(selectedRouteEngineer.id)}>Показать все маршруты</button></div>}
     <MapChrome caption={captionText(routeStatus)} status={routeStatus} clockRef={clockRef} onFit={() => { if (selectedEngineerId) onSelectEngineer(selectedEngineerId); else void fitVisible(); }} onZoomIn={() => mapRef.current?.zoomIn()} onZoomOut={() => mapRef.current?.zoomOut()} />
     <div ref={actionBoxRef} className="playback-action" hidden>
       <strong>Сейчас</strong>

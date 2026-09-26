@@ -76,11 +76,12 @@ function serviceFor(raw: string, skill: string) {
   return 30;
 }
 
-function priorityFor(raw: string, skill: string) {
-  if (/срочн/i.test(raw)) return 10;
+function priorityFor(raw: string, rawUrgency: string) {
+  if (/^(urgent|срочн|повыш)/i.test(rawUrgency)) return 2;
+  if (rawUrgency) return 1;
+  if (/срочн|повыш/i.test(raw)) return 2;
   const parsed = Number(raw.replace(",", "."));
-  if (Number.isFinite(parsed)) return Math.min(100, Math.max(1, Math.round(parsed)));
-  return skill === skills[2] ? 5 : 2;
+  return parsed === 2 || parsed >= 10 ? 2 : 1;
 }
 
 function normalizeRegion(raw: string, address: string): Region {
@@ -159,13 +160,14 @@ function rowsToJobs(rows: Record<string, unknown>[], centers: Record<Region, Coo
     const allowedRaw = row.allowedTransports;
     const allowed = (Array.isArray(allowedRaw) ? allowedRaw.map(String) : value(row, ["allowedTransports", "allowed_transports"]).split(/[|,]/)).map(item => canonicalTransport(item)).filter(Boolean);
     const equipment = equipmentFor(value(row, ["equipment", "оборудование"]), kind);
-    const priority = priorityFor(value(row, ["priority", "приоритет"]), kind);
+    const rawUrgency = value(row, ["urgency", "срочность", "приоритет срочности"]);
+    const priority = priorityFor(value(row, ["priority", "приоритет"]), rawUrgency);
     const explicitService = value(row, ["serviceminutes", "service_minutes", "время работы", "длительность", "durationmin"]);
     const explicitNorm = numberValue(row, ["normativeMinutes", "normative_minutes", "норматив"]);
     const reserve = numberValue(row, ["travelReserveMinutes", "travel_reserve_minutes"]) ?? (kind === skills[2] ? 20 : 0);
     const serviceMinutes = explicitService ? serviceFor(explicitService, kind) : explicitNorm != null ? Math.max(5, Math.round(explicitNorm - reserve)) : serviceFor("", kind);
     const workClass = value(row, ["workClass", "work_class"]) || (kind === skills[2] ? "emergency" : kind === skills[1] ? "connection" : "repair");
-    const urgency = /^(urgent|срочн)/i.test(value(row, ["urgency", "срочность", "приоритет срочности"])) ? "urgent" : "normal";
+    const urgency = priority === 2 ? "urgent" : "normal";
     return {
       id, time: `${String(Math.floor(start / 60)).padStart(2, "0")}:${String(start % 60).padStart(2, "0")}–${String(Math.floor(end / 60)).padStart(2, "0")}:${String(end % 60).padStart(2, "0")}`,
       windowStart: start, windowEnd: end, area: value(row, ["area", "район"]) || resolvedRegion, address,

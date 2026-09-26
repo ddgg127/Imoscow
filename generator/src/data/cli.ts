@@ -51,7 +51,7 @@ async function promptParams(base: GenerateParams): Promise<GenerateParams> {
     novice: await ask("Доля новичков", base.novice),
     specialist: await ask("Доля специалистов", base.specialist),
     pro: await ask("Доля профи", base.pro),
-    urgentShare: await ask("% срочных заявок", base.urgentShare),
+    urgentShare: await ask("% заявок повышенного приоритета", base.urgentShare),
     vehicleConstraintShare: await ask("% заявок с требованием ТС", base.vehicleConstraintShare),
     seed: await ask("Seed", base.seed),
   };

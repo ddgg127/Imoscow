@@ -6,7 +6,7 @@ export function generateDataset(sourceJobs: Job[], sourceEngineers: Engineer[], 
   const jobs = applyAverageWindows(scaleJobs(sourceJobs, options.jobs), options.windowMinutes).map((job, index) => {
     const elevated = Boolean(options.highPriority) && index % 7 === 2;
     return { ...job, engineerId: null, baselineEngineerId: null, status: job.cancelled ? "Отменена" : "Новая", executionStatus: "not_started" as const,
-      urgency: elevated ? "urgent" as const : "normal" as const, priority: elevated ? Math.max(10, job.priority) : job.priority };
+      urgency: elevated ? "urgent" as const : "normal" as const, priority: elevated ? 2 : 1 };
   });
   return { jobs, engineers: scaleEngineers(sourceEngineers, options.engineers, jobs), speedKmh: options.speedKmh };
 }

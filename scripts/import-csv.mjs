@@ -53,12 +53,6 @@ function serviceMinutes(workType, skill) {
   return /информ|консультац|монитор|настрой|диагност/i.test(workType) ? 30 : 45;
 }
 
-function jobPriority(workType, skill) {
-  if (skill === skillCatalog[2]) return 5;
-  if (/подключ|монтаж|дозаказ/i.test(workType)) return 3;
-  return 2;
-}
-
 function equipmentFor(workType, skill) {
   if (skill === skillCatalog[2]) return "Рефлектометр";
   if (/гигабит|gpon/i.test(workType)) return "Комплект GPON";
@@ -146,7 +140,7 @@ for (const table of tables) {
       equipment,
       requiredTransport: "",
       allowedTransports: undefined,
-      priority: jobPriority(workType, kind),
+      priority: 1,
       serviceMinutes: serviceMinutes(`${workType} ${row["Гигабитное подключение"] ?? ""}`, kind),
       normativeMinutes: kind === skillCatalog[2] ? 100 : undefined,
       travelReserveMinutes: kind === skillCatalog[2] ? 20 : 0,

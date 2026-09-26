@@ -1,5 +1,5 @@
 import type { SolverEngine } from "./server-solver.ts";
-import { minutesLabel, type Engineer, type OptimizationResult } from "./vrptw.ts";
+import { jobPriorityLevel, minutesLabel, type Engineer, type OptimizationResult } from "./vrptw.ts";
 
 export type ExportMetadata = {
   solver: SolverEngine;
@@ -11,7 +11,7 @@ const csvColumns = [
   "Заявка", "Статус", "Регион", "Адрес", "Тип работы", "Окно SLA", "Инженер",
   "Порядок", "Прибытие", "Начало работ", "Окончание", "Пробег участка, км",
   "Навык", "Оборудование", "Транспорт", "Источник", "Причина отсутствия маршрута",
-  "Baseline инженер", "Выполнение", "Срочность", "Класс работ",
+  "Baseline инженер", "Выполнение", "Приоритет", "Класс работ",
   "Работа, мин", "Норматив, мин", "Резерв дороги, мин", "Расчётная дорога, мин", "Источник норматива",
 ] as const;
 
@@ -49,7 +49,7 @@ export function buildPlanRows(result: OptimizationResult, engineers: Engineer[])
       job.unassignedReason ?? "",
       baseline?.name ?? "",
       job.executionStatus ?? "not_started",
-      job.urgency ?? "normal",
+      jobPriorityLevel(job) === 2 ? "Повышенный" : "Обычный",
       job.workClass ?? "repair",
       job.serviceMinutes,
       job.normativeMinutes ?? "",

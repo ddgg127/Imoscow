@@ -214,26 +214,18 @@ def solve_vrptw(data: SolveRequest) -> SolveResponse:
     for vehicle, distance_index in enumerate(distance_indices):
         routing.SetArcCostEvaluatorOfVehicle(distance_index, vehicle)
 
-    # Lexicographic: emergencies -> urgent jobs -> total served -> work class
-    # and business priority. Stability, active fleet, and distance share the
-    # secondary cost level after coverage and priority.
+    # Lexicographic: elevated jobs -> total served -> stability, active fleet,
+    # and distance. Work class specifies the skill, not an extra priority tier.
     max_total_distance = max(1, max_arc_cost * len(data.jobs))
     vehicle_weight = max_total_distance + 1
     max_fleet_and_distance = len(data.engineers) * vehicle_weight + max_total_distance
     max_stability_cost = len(data.previousAppointments) * (assignment_change_cost + (max(engineer.shiftEnd for engineer in data.engineers) + 1440) * time_shift_cost)
     secondary_cost = max_fleet_and_distance + max_stability_cost
-    priority_weight = secondary_cost + 1
-    class_rank = {"repair": 0, "connection": 1, "emergency": 2}
-    effective_priority = {job.id: class_rank[job.workClass] * 101 + job.priority for job in data.jobs}
-    priority_sum = sum(effective_priority.values())
-    dropped_job_weight = priority_sum * priority_weight + secondary_cost + 1
-    urgent_weight = len(data.jobs) * dropped_job_weight + priority_sum * priority_weight + secondary_cost + 1
-    emergency_weight = len(data.jobs) * urgent_weight + len(data.jobs) * dropped_job_weight + priority_sum * priority_weight + secondary_cost + 1
+    dropped_job_weight = secondary_cost + 1
+    elevated_weight = len(data.jobs) * dropped_job_weight + secondary_cost + 1
     def drop_penalty(job: Job) -> int:
-        urgent = job.urgency == "urgent" or job.id == data.urgentId
-        return (dropped_job_weight + effective_priority[job.id] * priority_weight
-                + (urgent_weight if urgent else 0)
-                + (emergency_weight if job.workClass == "emergency" else 0))
+        elevated = job.urgency == "urgent" or job.priority == 2 or job.id == data.urgentId
+        return dropped_job_weight + (elevated_weight if elevated else 0)
     max_objective = sum(drop_penalty(job) for job in data.jobs) + secondary_cost
     if max_objective >= 8_000_000_000_000_000_000:
         raise HTTPException(status_code=422, detail="matrix costs are too large for a safe integer objective")

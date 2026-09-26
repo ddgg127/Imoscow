@@ -15,6 +15,8 @@ test("map source contains the actual road polyline and selected engineer only", 
   const selected = roadLineFeatures([first, second], roads, second.id);
   assert.deepEqual(selected.features.map(feature => feature.properties.id), [second.id]);
   assert.equal(roadLineFeatures([first], {}, first.id).features.length, 0, "never draw a fake straight line");
+  const estimated = roadLineFeatures([first], { [first.id]: [first.start, csvJobs[0].coordinates] }, first.id, { [first.id]: "direct-estimate" });
+  assert.equal(estimated.features[0].properties.estimated, 1, "direct estimate is explicitly marked for dashed display");
 });
 
 test("engineer moves continuously along bends, not a straight chord or teleport", () => {
@@ -31,6 +33,9 @@ test("engineer moves continuously along bends, not a straight chord or teleport"
     assert.ok(Math.hypot(after[0] - before[0], after[1] - before[1]) < 0.061, "no frame jumps across the city");
   }
   assert.equal(positionAtSimTime(engineer, plan, [job], [], 490), null, "missing road must not synthesize motion");
+  const estimate = [engineer.start, job.coordinates];
+  const midway = positionAtSimTime(engineer, plan, [job], estimate, 490)?.point;
+  assert.ok(midway && Math.abs(midway[0] - 37.15) < 1e-8 && midway[1] === 55.1);
 });
 
 test("browser routing retries public OSM graph after app proxy failure", async () => {

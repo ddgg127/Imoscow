@@ -163,7 +163,7 @@ export function generateDataset(raw: Partial<GenerateParams> = {}): Dataset {
       durationMin,
       windowStart: window.start,
       windowEnd: window.end,
-      priority: (urgent ? "Срочная" : "Обычная") satisfies Priority,
+      priority: (urgent ? "Повышенная" : "Обычная") satisfies Priority,
       skills: [...template.skills],
       skillCount,
     };
@@ -229,7 +229,7 @@ export function datasetSummary(data: Dataset): string {
     `справочник: ${data.meta.catalog.tasks} задач, ${data.meta.catalog.skills} навыков`,
     `инженеры ${engineers.length}: новички ${engC.новичок ?? 0}, специалисты ${engC.специалист ?? 0}, профи ${engC.профи ?? 0}`,
     `заявки ${jobs.length}: 1 навык ${byCount[1]}, 2 навыка ${byCount[2]}, 3 навыка ${byCount[3]}`,
-    `срочных ${jobs.filter((j) => j.priority === "Срочная").length}, с требованием ТС ${jobs.filter((j) => j.vehicle).length}`,
+    `повышенных ${jobs.filter((j) => j.priority === "Повышенная").length}, с требованием ТС ${jobs.filter((j) => j.vehicle).length}`,
     `адреса OSM: заявка «${jobs[0]?.address ?? "—"}», старт «${engineers[0]?.address ?? "—"}»`,
     `seed ${data.meta.seed}`,
   ].join("\n");
