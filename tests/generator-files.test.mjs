@@ -62,7 +62,7 @@ test("dispatcher coordinates remain marked as manual after CSV and JSON import",
 });
 
 test("average window is a mean, not a uniform duration", () => {
-  for (const average of [60, 240, 480]) {
+  for (const average of [60, 100, 240, 480]) {
     for (const count of [1, 2, 25, 250, 300, 350]) {
       const dataset = generateDataset(csvJobs, csvEngineers, { jobs: count, engineers: 25, windowMinutes: average, speedKmh: 24 });
       const widths = dataset.jobs.map(job => job.windowEnd - job.windowStart);

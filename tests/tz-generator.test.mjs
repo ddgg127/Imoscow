@@ -6,6 +6,7 @@ import { compatible } from "../lib/vrptw.ts";
 test("TZ generator honors exact counts, mean window and two priority levels", () => {
   for (const [engineers, jobs, windowMinutes, urgentShare, vehicleConstraintShare] of [
     [15, 100, 240, 15, 25],
+    [15, 100, 100, 15, 25],
     [35, 200, 180, 15, 25],
     [25, 300, 360, 20, 30],
     [100, 100, 60, 0, 0],
