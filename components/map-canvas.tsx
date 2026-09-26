@@ -300,7 +300,9 @@ export function MapCanvas(props: CanvasProps) {
   const { visibleJobs, baselineJobs, engineers, selectedEngineerId, selectedJobId, simTime, simPlaying, simSpeed, carSpeedKmh, simEnd, onSimTime, onSimPlaying, compare, routingEnabled, routes, baselineRoutes, onSelectEngineer, onSelectJob, onInspectJob, onRoutingState } = props;
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
-  const markersRef = useRef<Marker[]>([]);
+  const jobMarkersRef = useRef<Marker[]>([]);
+  const engineerMarkersRef = useRef<Marker[]>([]);
+  const legMarkersRef = useRef<Marker[]>([]);
   const vehiclesRef = useRef<Map<string, Marker>>(new Map());
   const clockRef = useRef<HTMLSpanElement>(null);
   const actionBoxRef = useRef<HTMLDivElement>(null);
@@ -387,7 +389,7 @@ export function MapCanvas(props: CanvasProps) {
     let cancelled = false;
     let resizeObserver: ResizeObserver | null = null;
     const vehicles = vehiclesRef.current;
-    const markers = markersRef.current;
+    const markerGroups = [jobMarkersRef.current, engineerMarkersRef.current, legMarkersRef.current];
     void (async () => {
       const maplibre = await import("maplibre-gl");
       if (cancelled || !containerRef.current || mapRef.current) return;
@@ -440,7 +442,7 @@ export function MapCanvas(props: CanvasProps) {
       resizeObserver?.disconnect();
       vehicles.forEach(marker => marker.remove());
       vehicles.clear();
-      markers.forEach(marker => marker.remove());
+      markerGroups.forEach(markers => markers.forEach(marker => marker.remove()));
       mapRef.current?.remove();
       mapRef.current = null;
       loadedRef.current = false;
@@ -473,16 +475,31 @@ export function MapCanvas(props: CanvasProps) {
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !loadedRef.current) return;
-    markersRef.current.forEach(marker => marker.remove());
-    markersRef.current.length = 0;
+    let cancelled = false;
+    const markers = engineerMarkersRef.current;
+    markers.forEach(marker => marker.remove());
+    markers.length = 0;
     void import("maplibre-gl").then(({ Marker }) => {
-      if (!mapRef.current) return;
+      if (cancelled || !mapRef.current) return;
       if (!simulating) {
         markerEngineers.forEach(engineer => {
           const el = markerButton(`engineer-map-marker${selectedEngineerId === engineer.id ? " selected" : ""}`, engineerMarkerLabel(engineer), engineer.color, engineer.name, () => onSelectEngineer(engineer.id));
-          markersRef.current.push(new Marker({ element: el }).setLngLat(engineer.start).addTo(mapRef.current!));
+          markers.push(new Marker({ element: el }).setLngLat(engineer.start).addTo(mapRef.current!));
         });
       }
+    });
+    return () => { cancelled = true; markers.forEach(marker => marker.remove()); markers.length = 0; };
+  }, [simulating, selectedEngineerId, markerEngineers, onSelectEngineer, mapReady]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !loadedRef.current) return;
+    let cancelled = false;
+    const markers = jobMarkersRef.current;
+    markers.forEach(marker => marker.remove());
+    markers.length = 0;
+    void import("maplibre-gl").then(({ Marker }) => {
+      if (cancelled || !mapRef.current) return;
       markerJobs.forEach(job => {
         const engineer = engineers.find(item => item.id === job.engineerId);
         const color = engineer?.color ?? "#6b7280";
@@ -494,14 +511,28 @@ export function MapCanvas(props: CanvasProps) {
           `Заявка ${markerLabel} (${job.id}) · ${job.address}`,
           () => onSelectJob(job.id)
         );
-        markersRef.current.push(new Marker({ element: el }).setLngLat(job.coordinates).addTo(mapRef.current!));
+        markers.push(new Marker({ element: el }).setLngLat(job.coordinates).addTo(mapRef.current!));
       });
+    });
+    return () => { cancelled = true; markers.forEach(marker => marker.remove()); markers.length = 0; };
+  }, [selectedEngineerId, selectedJobId, markerJobs, engineers, onSelectJob, mapReady]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !loadedRef.current) return;
+    let cancelled = false;
+    const markers = legMarkersRef.current;
+    markers.forEach(marker => marker.remove());
+    markers.length = 0;
+    void import("maplibre-gl").then(({ Marker }) => {
+      if (cancelled || !mapRef.current) return;
       if (selectedLeg) {
         const origin = markerButton("leg-origin-marker", "ОТ", "#18213a", selectedLeg.originLabel, () => {});
-        markersRef.current.push(new Marker({ element: origin }).setLngLat(selectedLeg.origin).addTo(mapRef.current!));
+        markers.push(new Marker({ element: origin }).setLngLat(selectedLeg.origin).addTo(mapRef.current!));
       }
     });
-  }, [compare, routingEnabled, simulating, selectedEngineerId, selectedJobId, selectedLeg, markerEngineers, markerJobs, engineers, onSelectEngineer, onSelectJob, mapReady]);
+    return () => { cancelled = true; markers.forEach(marker => marker.remove()); markers.length = 0; };
+  }, [selectedLeg, mapReady]);
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !loadedRef.current) return;
