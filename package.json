@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": ">=22.13.0"
+    "node": ">=22.19.0"
   },
   "scripts": {
     "predev": "node scripts/import-csv.mjs && node scripts/copy-maplibre-worker.mjs",
@@ -16,6 +16,7 @@
     "typecheck": "tsc --noEmit",
     "test": "node --test tests/*.test.mjs",
     "test:solver": "python -m pytest solver_service -q",
+    "check:routing": "node scripts/check-routing.mjs",
     "dev:generator": "npm --prefix generator run dev",
     "generate:data": "npm --prefix generator run generate",
     "db:generate": "drizzle-kit generate"

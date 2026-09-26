@@ -360,6 +360,7 @@ export function AboutSolutionView({
       return;
     }
     const from = progressRef.current;
+    // eslint-disable-next-line react-hooks/purity
     const started = performance.now();
     const duration = 650 + Math.abs(next - from) * 1400;
     const frame = (now: number) => {

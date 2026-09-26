@@ -202,7 +202,7 @@ export function generateTzDataset(rawOptions: Partial<GenerateTzOptions> = {}): 
   ]);
 
   // 1. Инженеры: сбалансированное распределение навыков, оборудования и транспорта
-  let noviceN = Math.max(0, Math.round(engineerCount * ((rawOptions.novice ?? 30) / 100)));
+  const noviceN = Math.max(0, Math.round(engineerCount * ((rawOptions.novice ?? 30) / 100)));
   let specN = Math.max(0, Math.round(engineerCount * ((rawOptions.specialist ?? 45) / 100)));
   if (noviceN + specN > engineerCount) specN = Math.max(0, engineerCount - noviceN);
   const proN = Math.max(0, engineerCount - noviceN - specN);
@@ -269,7 +269,7 @@ export function generateTzDataset(rawOptions: Partial<GenerateTzOptions> = {}): 
   const hardPct = rawOptions.jobHard ?? 25;
   const totalWeight = easyPct + medPct + hardPct || 100;
 
-  let localN = Math.max(0, Math.round((easyPct / totalWeight) * jobCount));
+  const localN = Math.max(0, Math.round((easyPct / totalWeight) * jobCount));
   let connectN = Math.max(0, Math.round((medPct / totalWeight) * jobCount));
   if (localN + connectN > jobCount) connectN = Math.max(0, jobCount - localN);
   const emergencyN = Math.max(0, jobCount - localN - connectN);
@@ -402,7 +402,7 @@ export function generateTzDataset(rawOptions: Partial<GenerateTzOptions> = {}): 
   const engineersByVehicle: Record<string, number> = {};
   const engineersBySkill: Record<string, number> = {};
   for (const e of engineers) {
-    const lvl = (e as any).level ?? "специалист";
+    const lvl = (e as Engineer & { level?: string }).level ?? "специалист";
     engineersByLevel[lvl] = (engineersByLevel[lvl] ?? 0) + 1;
     engineersByVehicle[e.transport] = (engineersByVehicle[e.transport] ?? 0) + 1;
     for (const s of e.skills) {
@@ -467,7 +467,7 @@ export function engineersToTzCsv(engineers: Engineer[]): string {
   const rows = engineers.map(e => [
     e.id,
     e.name,
-    (e as any).address ?? `Старт ${e.name}`,
+    (e as Engineer & { address?: string }).address ?? `Старт ${e.name}`,
     e.start[1],
     e.start[0],
     minutesToHm(e.shiftStart),
@@ -476,7 +476,7 @@ export function engineersToTzCsv(engineers: Engineer[]): string {
     e.skills.join(", "),
     e.equipment.join(", "),
     e.transport,
-    (e as any).level ?? (e.skills.length === 1 ? "новичок" : e.skills.length === 2 ? "специалист" : "профи"),
+    (e as Engineer & { level?: string }).level ?? (e.skills.length === 1 ? "новичок" : e.skills.length === 2 ? "специалист" : "профи"),
   ]);
   return csvFile(header, rows);
 }
@@ -594,14 +594,16 @@ export function downloadTzJson(dataset: GeneratedTzDataset) {
 
 export type GeneratedDataset = { jobs: Job[]; engineers: Engineer[]; speedKmh: number };
 
-export function generateDataset(sourceJobs: Job[], sourceEngineers: Engineer[], options: { jobs: number; engineers: number; windowMinutes: number; speedKmh: number }): GeneratedDataset {
-  const jobs = applyAverageWindows(scaleJobs(sourceJobs, options.jobs), options.windowMinutes).map(job => ({
-    ...job, engineerId: null, baselineEngineerId: null, status: job.cancelled ? "Отменена" : "Новая", executionStatus: "not_started" as const,
-  }));
+export function generateDataset(sourceJobs: Job[], sourceEngineers: Engineer[], options: { jobs: number; engineers: number; windowMinutes: number; speedKmh: number; highPriority?: boolean }): GeneratedDataset {
+  const jobs = applyAverageWindows(scaleJobs(sourceJobs, options.jobs), options.windowMinutes).map((job, index) => {
+    const elevated = Boolean(options.highPriority) && index % 7 === 2;
+    return { ...job, engineerId: null, baselineEngineerId: null, status: job.cancelled ? "Отменена" : "Новая", executionStatus: "not_started" as const,
+      urgency: elevated ? "urgent" as const : "normal" as const, priority: elevated ? 2 : 1 };
+  });
   return { jobs, engineers: scaleEngineers(sourceEngineers, options.engineers, jobs), speedKmh: options.speedKmh };
 }
 
-const legacyColumns = ["recordType", "id", "region", "area", "address", "kind", "workType", "lon", "lat", "geocodeQuality", "windowStart", "windowEnd", "serviceMinutes", "normativeMinutes", "travelReserveMinutes", "estimatedTravelMinutes", "normSource", "equipment", "requiredTransport", "allowedTransports", "priority", "urgency", "workClass", "status", "executionStatus", "cancelled", "name", "initials", "skills", "transport", "shiftStart", "shiftEnd", "color", "speedKmh"] as const;
+const columns = ["recordType", "id", "region", "area", "address", "kind", "workType", "lon", "lat", "geocodeQuality", "windowStart", "windowEnd", "serviceMinutes", "normativeMinutes", "travelReserveMinutes", "estimatedTravelMinutes", "normSource", "equipment", "requiredTransport", "allowedTransports", "priority", "urgency", "workClass", "status", "executionStatus", "cancelled", "name", "initials", "skills", "transport", "shiftStart", "shiftEnd", "startAddress", "startMode", "officeAddress", "equipmentIssue", "color", "speedKmh"] as const;
 
 function legacyCsvCell(value: unknown) {
   const text = value == null ? "" : String(value);
@@ -611,8 +613,8 @@ function legacyCsvCell(value: unknown) {
 
 export function generatedCsv(dataset: GeneratedDataset) {
   const jobs = dataset.jobs.map(job => ({ recordType: "job", id: job.id, region: job.region, area: job.area, address: job.address, kind: job.kind, workType: job.workType ?? job.kind, lon: job.coordinates[0], lat: job.coordinates[1], geocodeQuality: job.geocodeQuality, windowStart: job.windowStart, windowEnd: job.windowEnd, serviceMinutes: job.serviceMinutes, normativeMinutes: job.normativeMinutes, travelReserveMinutes: job.travelReserveMinutes, estimatedTravelMinutes: job.estimatedTravelMinutes, normSource: job.normSource, equipment: job.equipment, requiredTransport: job.requiredTransport, allowedTransports: job.allowedTransports?.join("|"), priority: job.priority, urgency: job.urgency, workClass: job.workClass, status: job.status, executionStatus: job.executionStatus ?? "not_started", cancelled: Boolean(job.cancelled), speedKmh: dataset.speedKmh }));
-  const engineers = dataset.engineers.map(engineer => ({ recordType: "engineer", id: engineer.id, region: engineer.region, lon: engineer.start[0], lat: engineer.start[1], equipment: engineer.equipment.join("|"), name: engineer.name, initials: engineer.initials, skills: engineer.skills.join("|"), transport: engineer.transport, shiftStart: engineer.shiftStart, shiftEnd: engineer.shiftEnd, color: engineer.color, speedKmh: engineer.speedKmh ?? "" }));
-  return "\uFEFF" + legacyColumns.join(",") + "\r\n" + [...jobs, ...engineers].map(row => legacyColumns.map(column => legacyCsvCell((row as Record<string, unknown>)[column])).join(",")).join("\r\n") + "\r\n";
+  const engineers = dataset.engineers.map(engineer => ({ recordType: "engineer", id: engineer.id, region: engineer.region, lon: engineer.start[0], lat: engineer.start[1], equipment: engineer.equipment.join("|"), name: engineer.name, initials: engineer.initials, skills: engineer.skills.join("|"), transport: engineer.transport, shiftStart: engineer.shiftStart, shiftEnd: engineer.shiftEnd, startAddress: engineer.startAddress, startMode: engineer.startMode, officeAddress: engineer.officeAddress, equipmentIssue: engineer.equipmentIssue, color: engineer.color, speedKmh: engineer.speedKmh ?? "" }));
+  return "\uFEFF" + columns.join(",") + "\r\n" + [...jobs, ...engineers].map(row => columns.map(column => legacyCsvCell((row as Record<string, unknown>)[column])).join(",")).join("\r\n") + "\r\n";
 }
 
 export function generatedJson(dataset: GeneratedDataset) {

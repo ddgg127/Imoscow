@@ -11,14 +11,20 @@ export type Job = {
   normSource?: "экспертный норматив" | "демонстрационное допущение" | "введено пользователем";
   urgency?: "normal" | "urgent"; workClass?: "emergency" | "connection" | "repair";
   executionStatus?: "not_started" | "in_progress" | "completed";
-  baselineUnassignedReason?: string; geocodeVerified?: boolean; geocodeQuality?: "house" | "street" | "fallback"; geocodeDisplayName?: string;
+  baselineUnassignedReason?: string; geocodeVerified?: boolean; geocodeQuality?: "house" | "street" | "manual" | "fallback"; geocodeDisplayName?: string;
   unassignedReason?: string;
   unassignedCategory?: "no_executor" | "cannot_insert" | "alternative_plan" | "not_applicable";
 };
+export function jobPriorityLevel(job: Pick<Job, "priority" | "urgency">): 1 | 2 {
+  return job.urgency === "urgent" || job.priority === 2 ? 2 : 1;
+}
 export type Engineer = {
   id: string; initials: string; name: string; route: string; jobs: number; distance: string; load: number;
   color: string; region: Region; start: Coordinate; skills: string[]; equipment: string[]; transport: string;
   shiftStart: number; shiftEnd: number; speedKmh?: number;
+  /** A day's fixed departure point; office kits are issued before shift, local kits beforehand. */
+  startAddress?: string; startMode?: "office" | "local"; officeAddress?: string;
+  equipmentIssue?: "office_before_shift" | "preissued";
 };
 export type RouteStop = { jobId: string; arrival: number; start: number; end: number; distanceKm: number; travelMinutes?: number; onTime: boolean };
 export type RoutePlan = { engineerId: string; stops: RouteStop[]; distanceKm: number; durationMinutes: number; load: number };
@@ -36,7 +42,7 @@ export type PlanComparison = {
 };
 export type OptimizationResult = { jobs: Job[]; routes: RoutePlan[]; baselineRoutes: RoutePlan[]; metrics: PlanMetrics; baseline: PlanMetrics; comparison: PlanComparison; zones: ZoneMetric[]; runtimeMs: number };
 export type ReplanChangeKind = "assignment" | "order" | "route" | "fleet" | "time" | "event";
-export type ReplanChange = { kind: ReplanChangeKind; key: string; message: string };
+export type ReplanChange = { kind: ReplanChangeKind; key: string; message: string; necessity?: "required" };
 export type AssignmentAlternative = { engineerId: string; engineerName: string; reason: string; feasible: boolean };
 export type AssignmentExplanation = {
   summary: string;
@@ -232,7 +238,9 @@ export function scaleEngineers(source: Engineer[], count: number, jobs: Job[] = 
       name: `${base.name} · ${wave + 1}`,
       route: `Маршрут ${String(i + 1).padStart(2, "0")}`,
       color: SCALE_COLORS[i % SCALE_COLORS.length],
-      start: [Number((base.start[0] + Math.cos(angle) * radius).toFixed(5)), Number((base.start[1] + Math.sin(angle) * radius).toFixed(5))],
+      // A named, geocoded daily departure point must not be jittered into a
+      // building or field when the generator scales the demonstration crew.
+      start: base.startAddress ? [...base.start] as Coordinate : [Number((base.start[0] + Math.cos(angle) * radius).toFixed(5)), Number((base.start[1] + Math.sin(angle) * radius).toFixed(5))],
       skills: [...base.skills],
       equipment: [...base.equipment],
     });
@@ -495,7 +503,7 @@ function routePositions(result: OptimizationResult) {
 }
 
 /** Human-readable, deterministic difference between two calculated plans. */
-export function compareReplannedPlans(before: OptimizationResult, after: OptimizationResult, engineers: Engineer[], eventTime?: number): ReplanChange[] {
+export function compareReplannedPlans(before: OptimizationResult, after: OptimizationResult, engineers: Engineer[], eventTime?: number, event?: { type: string; id: string }): ReplanChange[] {
   const names = new Map(engineers.map(engineer => [engineer.id, engineer.name]));
   const previous = routePositions(before);
   const next = routePositions(after);
@@ -513,7 +521,10 @@ export function compareReplannedPlans(before: OptimizationResult, after: Optimiz
       const message = oldName && newName
         ? `№${jobId} переназначена: ${oldName} → ${newName}.`
         : newName ? `№${jobId} назначена инженеру ${newName}.` : `№${jobId} снята с маршрута ${oldName ?? "инженера"}.`;
-      changes.push({ kind: "assignment", key: `assignment-${jobId}`, message });
+      const necessity = event && ((event.type === "cancel_job" && event.id === jobId)
+        || (event.type === "new_job" && event.id === jobId)
+        || (event.type === "engineer_unavailable" && oldPlace?.engineerId === event.id)) ? "required" as const : undefined;
+      changes.push({ kind: "assignment", key: `assignment-${jobId}`, message, necessity });
     } else if (oldPlace && newPlace && oldPlace.position !== newPlace.position) {
       changes.push({ kind: "order", key: `order-${jobId}`, message: `№${jobId} перемещена с ${oldPlace.position}-го на ${newPlace.position}-е место в маршруте ${names.get(newPlace.engineerId) ?? newPlace.engineerId}.` });
     }
@@ -828,7 +839,7 @@ function recoverUnassigned(engineers: Engineer[], jobs: Job[], assignments: Map<
   const pending = jobs.filter(job => !assigned.has(job.id)).sort((a, b) => {
     const aChoices = engineers.filter(engineer => compatible(engineer, a)).length;
     const bChoices = engineers.filter(engineer => compatible(engineer, b)).length;
-    return aChoices - bChoices || a.windowEnd - b.windowEnd || b.priority - a.priority;
+    return jobPriorityLevel(b) - jobPriorityLevel(a) || aChoices - bChoices || a.windowEnd - b.windowEnd;
   });
   for (const job of pending) {
     let direct: { engineer: Engineer; route: Job[]; score: number } | null = null;

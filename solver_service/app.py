@@ -55,6 +55,11 @@ class Matrix(BaseModel):
         return self
 
 
+class PreviousAppointment(BaseModel):
+    engineerId: str
+    start: int = Field(ge=0, le=1440)
+
+
 class SolveRequest(BaseModel):
     engineers: list[Engineer] = Field(min_length=1, max_length=500)
     jobs: list[Job] = Field(max_length=1000)
@@ -63,6 +68,7 @@ class SolveRequest(BaseModel):
     eventTime: int | None = Field(default=None, ge=0, le=1440)
     eventType: Literal["new_job", "cancel_job", "engineer_unavailable", "recalculate"] | None = None
     forcedAssignments: dict[str, str] = Field(default_factory=dict)
+    previousAppointments: dict[str, PreviousAppointment] = Field(default_factory=dict)
     matrix: Matrix
     modeMatrices: dict[str, Matrix] = Field(default_factory=dict)
     timeLimitSeconds: int = Field(default=12, ge=1, le=60)
@@ -156,6 +162,9 @@ def solve_vrptw(data: SolveRequest) -> SolveResponse:
         raise HTTPException(status_code=422, detail=f"forced assignment references unknown jobs: {', '.join(unknown_jobs)}")
     if unknown_engineers:
         raise HTTPException(status_code=422, detail=f"forced assignment references unknown engineers: {', '.join(unknown_engineers)}")
+    unknown_previous = sorted(set(data.previousAppointments) - job_ids)
+    if unknown_previous:
+        raise HTTPException(status_code=422, detail=f"previous appointment references unknown jobs: {', '.join(unknown_previous)}")
     node_count = len(node_points)
     starts = list(range(engineer_count))
     ends = list(range(engineer_count))
@@ -165,6 +174,13 @@ def solve_vrptw(data: SolveRequest) -> SolveResponse:
     for name, matrix in data.modeMatrices.items():
         if matrix.points != data.matrix.points:
             raise HTTPException(status_code=422, detail=f"{name} matrix points must match the main matrix")
+
+    max_arc_cost = max(int(math.ceil(value * 10)) for matrix in [data.matrix, *data.modeMatrices.values()] for row in matrix.distancesKm for value in row)
+    # These costs apply only during a temporal replan. Keeping the old engineer
+    # and promised start is preferred when it does not sacrifice higher-ranked
+    # coverage or priorities; an incident can still force a move.
+    assignment_change_cost = min(2000, max(1, max_arc_cost * 5)) if data.previousAppointments else 0
+    time_shift_cost = min(50, max(1, max_arc_cost // 20)) if data.previousAppointments else 0
 
     def distance_callback(vehicle: int):
         def distance(from_index: int, to_index: int) -> int:
@@ -176,7 +192,12 @@ def solve_vrptw(data: SolveRequest) -> SolveResponse:
             # Decimetric-kilometre objective (100 m units): preserve useful
             # route ordering without multiplying lexicographic penalties into
             # int64 overflow for the complete 205-job source dataset.
-            return max(0, int(round(value * 10)))
+            cost = max(0, int(round(value * 10)))
+            if to_node >= engineer_count:
+                old = data.previousAppointments.get(data.jobs[to_node - engineer_count].id)
+                if old and old.engineerId != data.engineers[vehicle].id:
+                    cost += assignment_change_cost
+            return cost
         return distance
 
     def time_callback(vehicle: int):
@@ -194,26 +215,19 @@ def solve_vrptw(data: SolveRequest) -> SolveResponse:
     for vehicle, distance_index in enumerate(distance_indices):
         routing.SetArcCostEvaluatorOfVehicle(distance_index, vehicle)
 
-    # Lexicographic: emergencies -> urgent jobs -> total served -> work class
-    # and business priority -> active fleet -> road distance. A new incident
-    # can displace several ordinary jobs; ordinary work cannot displace it.
-    max_arc_cost = max(int(math.ceil(value * 10)) for matrix in [data.matrix, *data.modeMatrices.values()] for row in matrix.distancesKm for value in row)
+    # Lexicographic: elevated jobs -> total served -> stability, active fleet,
+    # and distance. Work class specifies the skill, not an extra priority tier.
     max_total_distance = max(1, max_arc_cost * len(data.jobs))
     vehicle_weight = max_total_distance + 1
     max_fleet_and_distance = len(data.engineers) * vehicle_weight + max_total_distance
-    priority_weight = max_fleet_and_distance + 1
-    class_rank = {"repair": 0, "connection": 1, "emergency": 2}
-    effective_priority = {job.id: class_rank[job.workClass] * 101 + job.priority for job in data.jobs}
-    priority_sum = sum(effective_priority.values())
-    dropped_job_weight = priority_sum * priority_weight + max_fleet_and_distance + 1
-    urgent_weight = len(data.jobs) * dropped_job_weight + priority_sum * priority_weight + max_fleet_and_distance + 1
-    emergency_weight = len(data.jobs) * urgent_weight + len(data.jobs) * dropped_job_weight + priority_sum * priority_weight + max_fleet_and_distance + 1
+    max_stability_cost = len(data.previousAppointments) * (assignment_change_cost + (max(engineer.shiftEnd for engineer in data.engineers) + 1440) * time_shift_cost)
+    secondary_cost = max_fleet_and_distance + max_stability_cost
+    dropped_job_weight = secondary_cost + 1
+    elevated_weight = len(data.jobs) * dropped_job_weight + secondary_cost + 1
     def drop_penalty(job: Job) -> int:
-        urgent = job.urgency == "urgent" or job.id == data.urgentId
-        return (dropped_job_weight + effective_priority[job.id] * priority_weight
-                + (urgent_weight if urgent else 0)
-                + (emergency_weight if job.workClass == "emergency" else 0))
-    max_objective = sum(drop_penalty(job) for job in data.jobs) + max_fleet_and_distance
+        elevated = job.urgency == "urgent" or job.priority == 2 or job.id == data.urgentId
+        return dropped_job_weight + (elevated_weight if elevated else 0)
+    max_objective = sum(drop_penalty(job) for job in data.jobs) + secondary_cost
     if max_objective >= 8_000_000_000_000_000_000:
         raise HTTPException(status_code=422, detail="matrix costs are too large for a safe integer objective")
 
@@ -232,6 +246,10 @@ def solve_vrptw(data: SolveRequest) -> SolveResponse:
     for job_offset, job in enumerate(data.jobs):
         node = engineer_count + job_offset
         index = manager.NodeToIndex(node)
+        old = data.previousAppointments.get(job.id)
+        if old:
+            time_dimension.SetCumulVarSoftLowerBound(index, old.start, time_shift_cost)
+            time_dimension.SetCumulVarSoftUpperBound(index, old.start, time_shift_cost)
         allowed: list[int] = []
         for vehicle, engineer in enumerate(data.engineers):
             if not compatible(engineer, job):

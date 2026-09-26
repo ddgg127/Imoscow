@@ -36,6 +36,9 @@ function verifyRoundTrip(fileName, text) {
     assert.equal(actual.transport, expected.transport);
     assert.equal(actual.shiftStart, expected.shiftStart);
     assert.equal(actual.shiftEnd, expected.shiftEnd);
+    assert.equal(actual.startAddress, expected.startAddress ?? "");
+    assert.equal(actual.startMode, expected.startMode);
+    assert.equal(actual.equipmentIssue, expected.equipmentIssue);
   }
   assert.ok(imported.jobs.every(job => job.geocodeVerified), "Generated coordinates remain usable for routing");
   const result = optimizeVrptw(imported.engineers, imported.jobs, { speedKmh: imported.speedKmh, travel: fallbackTravel(imported.speedKmh), zoneBudget: 80 });
@@ -49,6 +52,13 @@ test("generator JSON is importable and routable without losing planning fields",
 
 test("generator CSV is importable and routable without losing planning fields", () => {
   verifyRoundTrip("generated.csv", generatedCsv(sample));
+});
+
+test("dispatcher coordinates remain marked as manual after CSV and JSON import", () => {
+  const dataset = { ...sample, jobs: [{ ...sample.jobs[0], geocodeQuality: "manual", geocodeVerified: true }] };
+  for (const [file, text] of [["manual.csv", generatedCsv(dataset)], ["manual.json", generatedJson(dataset)]]) {
+    assert.equal(importPlanText(text, file, centers).jobs[0].geocodeQuality, "manual");
+  }
 });
 
 test("average window is a mean, not a uniform duration", () => {
@@ -82,5 +92,19 @@ test("large generated CSV and JSON keep variable windows and the selected team",
     assert.equal(imported.engineers.length, 25);
     assert.deepEqual(imported.jobs.map(job => [job.id, job.windowStart, job.windowEnd]), dataset.jobs.map(job => [job.id, job.windowStart, job.windowEnd]));
     assert.deepEqual(imported.engineers.map(engineer => engineer.id), dataset.engineers.map(engineer => engineer.id));
+  }
+});
+
+test("priority checkbox produces a reproducible urgent minority in both upload formats", () => {
+  const ordinary = generateDataset(csvJobs, csvEngineers, { jobs: 70, engineers: 15, windowMinutes: 240, speedKmh: 24, highPriority: false });
+  const mixed = generateDataset(csvJobs, csvEngineers, { jobs: 70, engineers: 15, windowMinutes: 240, speedKmh: 24, highPriority: true });
+  assert.equal(ordinary.jobs.filter(job => job.urgency === "urgent").length, 0);
+  assert.equal(mixed.jobs.filter(job => job.urgency === "urgent").length, 10);
+  assert.ok(ordinary.jobs.every(job => job.priority === 1));
+  assert.ok(mixed.jobs.every(job => job.priority === (job.urgency === "urgent" ? 2 : 1)));
+  for (const [file, text] of [["urgent.csv", generatedCsv(mixed)], ["urgent.json", generatedJson(mixed)]]) {
+    const imported = importPlanText(text, file, centers);
+    assert.equal(imported.jobs.filter(job => job.urgency === "urgent").length, 10);
+    assert.ok(imported.jobs.every(job => job.priority === (job.urgency === "urgent" ? 2 : 1)));
   }
 });

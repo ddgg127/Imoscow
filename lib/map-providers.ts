@@ -14,10 +14,75 @@ export interface RouteResult {
   provider: string;
 }
 
+/** Public read-only road graph as a browser fallback when the app proxy is unreachable. */
+export async function publicOsmRoute(request: RouteRequest, allowLegs = true): Promise<RouteResult> {
+  if (request.mode === "transit") {
+    const estimate = await publicOsmRoute({ ...request, mode: "walking" }, allowLegs);
+    return { ...estimate, provider: "walking-estimate" };
+  }
+  const bases = request.mode === "walking" ? ["https://routing.openstreetmap.de/routed-foot"]
+    : request.mode === "cycling" ? ["https://routing.openstreetmap.de/routed-bike"]
+    : ["https://router.project-osrm.org", "https://routing.openstreetmap.de/routed-car"];
+  const path = request.points.map(point => point.join(",")).join(";");
+  for (const base of bases) {
+    try {
+      const response = await fetch(`${base}/route/v1/driving/${path}?overview=full&geometries=geojson&steps=false`, { signal: AbortSignal.timeout(5000) });
+      if (!response.ok) continue;
+      const data = await response.json() as { routes?: Array<{ geometry?: GeoJSON.LineString; distance?: number; duration?: number }> };
+      const route = data.routes?.[0];
+      if (route?.geometry?.coordinates?.length && route.geometry.coordinates.length >= 2 && Number.isFinite(route.distance) && Number.isFinite(route.duration)) {
+        return { geometry: route.geometry, distanceMeters: route.distance!, durationSeconds: route.duration!, provider: "osrm" };
+      }
+    } catch { /* Try the next public OSM router. */ }
+  }
+  if (allowLegs && request.points.length > 2) {
+    const legs: RouteResult[] = [];
+    for (let offset = 1; offset < request.points.length; offset += 4) {
+      const batch = request.points.slice(offset, offset + 4);
+      legs.push(...await Promise.all(batch.map((point, index) => publicOsmRoute({ mode: request.mode, points: [request.points[offset + index - 1], point] }))));
+    }
+    return { geometry: { type: "LineString", coordinates: legs.flatMap((leg, index) => index ? leg.geometry.coordinates.slice(1) : leg.geometry.coordinates) }, distanceMeters: legs.reduce((sum, leg) => sum + leg.distanceMeters, 0), durationSeconds: legs.reduce((sum, leg) => sum + leg.durationSeconds, 0), provider: "osrm" };
+  }
+  throw new Error("Публичные дорожные маршрутизаторы недоступны");
+}
+
 export interface MatrixResult {
   durations: Array<Array<number | null>>;
   distances: Array<Array<number | null>>;
   provider: string;
+}
+
+/** Browser fallback for deployments whose server cannot reach public OSRM. */
+export async function publicOsmMatrix(points: Coordinate[], mode: TravelMode): Promise<MatrixResult> {
+  const bases = mode === "walking" ? ["https://routing.openstreetmap.de/routed-foot"]
+    : mode === "cycling" ? ["https://routing.openstreetmap.de/routed-bike"]
+    : ["https://router.project-osrm.org", "https://routing.openstreetmap.de/routed-car"];
+  const size = points.length;
+  const blockSize = size <= 90 ? size : 40;
+  for (const base of bases) {
+    try {
+      const distances = Array.from({ length: size }, () => Array<number | null>(size).fill(null));
+      const durations = Array.from({ length: size }, () => Array<number | null>(size).fill(null));
+      const coordinates = points.map(point => point.join(",")).join(";");
+      for (let from = 0; from < size; from += blockSize) {
+        const sources = Array.from({ length: Math.min(blockSize, size - from) }, (_, index) => from + index);
+        for (let to = 0; to < size; to += blockSize) {
+          const destinations = Array.from({ length: Math.min(blockSize, size - to) }, (_, index) => to + index);
+          const url = `${base}/table/v1/driving/${coordinates}?annotations=duration,distance&sources=${sources.join(";")}&destinations=${destinations.join(";")}`;
+          const response = await fetch(url, { signal: AbortSignal.timeout(5000) });
+          if (!response.ok) throw new Error(`OSRM table ${response.status}`);
+          const table = await response.json() as { code?: string; distances?: Array<Array<number | null>>; durations?: Array<Array<number | null>> };
+          if (table.code !== "Ok" || !table.distances || !table.durations) throw new Error("Некорректная дорожная матрица");
+          sources.forEach((row, i) => destinations.forEach((col, j) => {
+            distances[row][col] = table.distances?.[i]?.[j] ?? null;
+            durations[row][col] = table.durations?.[i]?.[j] ?? null;
+          }));
+        }
+      }
+      return { distances, durations, provider: "browser-osrm" };
+    } catch { /* Try the next public road graph. */ }
+  }
+  throw new Error("Публичные дорожные матрицы недоступны из браузера");
 }
 
 export interface RoutingProvider {
@@ -38,37 +103,53 @@ export interface GeocodingProvider {
  */
 export class BackendRoutingProvider implements RoutingProvider {
   readonly id: "osrm" | "yandex";
+  private readonly baseUrl: string;
+  private readonly apiKey: string;
 
-  constructor(id: "osrm" | "yandex", private readonly baseUrl = "/api/routing", private readonly apiKey = "") {
+  constructor(id: "osrm" | "yandex", baseUrl = "/api/routing", apiKey = "") {
     this.id = id;
+    this.baseUrl = baseUrl;
+    this.apiKey = apiKey;
   }
 
   async buildRoute(request: RouteRequest): Promise<RouteResult> {
-    const response = await fetch(this.baseUrl, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ provider: this.id, apiKey: this.apiKey || undefined, ...request }),
-    });
-    if (!response.ok) throw new Error("Не удалось построить маршрут");
+    let response: Response;
+    try {
+      response = await fetch(this.baseUrl, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ provider: this.id, apiKey: this.apiKey || undefined, ...request }),
+        signal: AbortSignal.timeout(40000),
+      });
+    } catch { return publicOsmRoute(request, false); }
+    if (!response.ok) return publicOsmRoute(request, false);
     return response.json() as Promise<RouteResult>;
   }
 
   async buildMatrix(points: Coordinate[], mode: TravelMode): Promise<MatrixResult> {
-    const response = await fetch(`${this.baseUrl}/matrix`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ provider: this.id, points, mode }),
-    });
-    if (!response.ok) throw new Error("Не удалось получить матрицу времени");
+    let response: Response;
+    try {
+      response = await fetch(`${this.baseUrl}/matrix`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ provider: this.id, points, mode }),
+        signal: AbortSignal.timeout(18000),
+      });
+    } catch { return publicOsmMatrix(points, mode); }
+    if (!response.ok) return publicOsmMatrix(points, mode);
     return response.json() as Promise<MatrixResult>;
   }
 }
 
 export class BackendGeocodingProvider implements GeocodingProvider {
   readonly id: "nominatim" | "yandex";
+  private readonly baseUrl: string;
+  private readonly apiKey: string;
 
-  constructor(id: "nominatim" | "yandex", private readonly baseUrl = "/api/geocode", private readonly apiKey = "") {
+  constructor(id: "nominatim" | "yandex", baseUrl = "/api/geocode", apiKey = "") {
     this.id = id;
+    this.baseUrl = baseUrl;
+    this.apiKey = apiKey;
   }
 
   async geocode(address: string): Promise<Coordinate | null> {

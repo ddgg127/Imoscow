@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pause, Play } from "lucide-react";
+import { dragTime } from "@/lib/time-drum-motion";
 import { minutesLabel } from "@/lib/vrptw";
 
 const STEP = 30;
@@ -43,7 +44,8 @@ export function TimeDrum({ start, end, time, playing, speed, onTime, onPlaying, 
   const onSpeedRef = useRef(onSpeed);
   const disabledRef = useRef(disabled);
   const speedValueRef = useRef(speed);
-  const dragRef = useRef<{ y: number } | null>(null);
+  const dragRef = useRef<{ y: number; time: number } | null>(null);
+  const frameRef = useRef<number | null>(null);
   const [speedOpen, setSpeedOpen] = useState(false);
   useEffect(() => {
     timeRef.current = time;
@@ -63,7 +65,18 @@ export function TimeDrum({ start, end, time, playing, speed, onTime, onPlaying, 
     return list;
   }, [start, end]);
 
-  const clamp = (value: number) => Math.min(endRef.current, Math.max(startRef.current, value));
+  const clamp = useCallback((value: number) => Math.min(endRef.current, Math.max(startRef.current, value)), []);
+  const setTimeSmoothly = useCallback((value: number) => {
+    timeRef.current = clamp(value);
+    if (frameRef.current === null) {
+      frameRef.current = requestAnimationFrame(() => {
+        frameRef.current = null;
+        onTimeRef.current(timeRef.current);
+      });
+    }
+  }, [clamp]);
+
+  useEffect(() => () => { if (frameRef.current !== null) cancelAnimationFrame(frameRef.current); }, []);
 
   useEffect(() => {
     const el = lensRef.current;
@@ -73,11 +86,11 @@ export function TimeDrum({ start, end, time, playing, speed, onTime, onPlaying, 
       if (disabledRef.current) return;
       onPlayingRef.current(false);
       const gain = event.shiftKey ? FINE : 1;
-      onTimeRef.current(clamp(timeRef.current + event.deltaY * WHEEL * gain));
+      setTimeSmoothly(timeRef.current + event.deltaY * WHEEL * gain);
     };
     el.addEventListener("wheel", onWheel, { passive: false });
     return () => el.removeEventListener("wheel", onWheel);
-  }, []);
+  }, [setTimeSmoothly]);
 
   useEffect(() => {
     if (!speedOpen) return;
@@ -170,15 +183,13 @@ export function TimeDrum({ start, end, time, playing, speed, onTime, onPlaying, 
           if (disabled) return;
           event.preventDefault();
           try { event.currentTarget.setPointerCapture(event.pointerId); } catch { /* synthetic pointer */ }
-          dragRef.current = { y: event.clientY };
+          dragRef.current = { y: event.clientY, time: timeRef.current };
           onPlaying(false);
         }}
         onPointerMove={event => {
           if (!dragRef.current || disabledRef.current) return;
           const dy = event.clientY - dragRef.current.y;
-          dragRef.current.y = event.clientY;
-          const gain = event.shiftKey ? FINE : 1;
-          onTimeRef.current(clamp(timeRef.current + dy / ITEM * STEP * gain));
+          setTimeSmoothly(dragTime(dragRef.current.time, dy, ITEM, STEP, event.shiftKey, startRef.current, endRef.current));
         }}
         onPointerUp={() => { dragRef.current = null; }}
         onPointerCancel={() => { dragRef.current = null; }}

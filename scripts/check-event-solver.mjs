@@ -19,7 +19,7 @@ const emergency = makeJob("incident", [37.79, 55.72], 790, 900, 80, true);
 const allJobs = [...jobs, emergency];
 const event = { type: "new_job", time: 790, id: "incident" };
 const prepared = prepareTemporalReplan(before, engineers, allJobs, [], event);
-const payload = createSolverPayload(prepared.continuationEngineers, prepared.remainingJobs, 24, travel, emergency.id, undefined, event);
+const payload = createSolverPayload(prepared.continuationEngineers, prepared.remainingJobs, 24, travel, emergency.id, undefined, event, before);
 const response = await fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
 const output = await response.json();
 if (!response.ok || output.engine !== "ortools") throw new Error(`Event solver check failed: ${response.status} ${JSON.stringify(output)}`);

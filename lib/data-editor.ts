@@ -58,7 +58,7 @@ export function validateEditedData(jobs: Job[], engineers: Engineer[]) {
     if (!validCoordinate(job.coordinates)) return `Заявка № ${job.id}: координаты вне допустимого диапазона.`;
     if (!validWindow(job.windowStart, job.windowEnd)) return `Заявка № ${job.id}: некорректное окно времени.`;
     if (!Number.isFinite(job.serviceMinutes) || job.serviceMinutes <= 0) return `Заявка № ${job.id}: норматив должен быть положительным.`;
-    if (!Number.isInteger(job.priority) || job.priority < 1 || job.priority > 100) return `Заявка № ${job.id}: приоритет должен быть от 1 до 100.`;
+    if (![1, 2].includes(job.priority)) return `Заявка № ${job.id}: приоритет должен быть обычным или повышенным.`;
   }
   ids.clear();
   for (const [index, engineer] of engineers.entries()) {

@@ -13,12 +13,13 @@ export type SolverPayload = {
   eventTime?: number;
   eventType?: DispatchEvent["type"];
   forcedAssignments?: Record<string, string>;
+  previousAppointments?: Record<string, { engineerId: string; start: number }>;
   timeLimitSeconds?: number;
   matrix: { points: [number, number][]; distancesKm: number[][]; durationsMin: number[][] };
   modeMatrices?: Record<string, { points: [number, number][]; distancesKm: number[][]; durationsMin: number[][] }>;
 };
 
-export function createSolverPayload(engineers: Engineer[], jobs: Job[], speedKmh: number, travel: TravelMatrix, urgentId?: string, forcedAssignments?: Record<string, string>, event?: DispatchEvent): SolverPayload {
+export function createSolverPayload(engineers: Engineer[], jobs: Job[], speedKmh: number, travel: TravelMatrix, urgentId?: string, forcedAssignments?: Record<string, string>, event?: DispatchEvent, previous?: OptimizationResult): SolverPayload {
   const points = uniquePoints(engineers, jobs);
   const dense = (matrix: TravelMatrix) => ({ points, distancesKm: points.map(from => points.map(to => Number(matrix.distanceKm(from, to).toFixed(4)))), durationsMin: points.map(from => points.map(to => Number(matrix.durationMin(from, to).toFixed(3)))) });
   const modeMatrices: SolverPayload["modeMatrices"] = {};
@@ -26,7 +27,11 @@ export function createSolverPayload(engineers: Engineer[], jobs: Job[], speedKmh
     if (engineers.some(engineer => ["Пешком", "Пешеход"].includes(engineer.transport))) modeMatrices.walking = dense(travel.forTransport("Пешком"));
     if (engineers.some(engineer => engineer.transport === "Велосипед")) modeMatrices.cycling = dense(travel.forTransport("Велосипед"));
   }
-  return { engineers, jobs, speedKmh, urgentId, eventTime: event?.time, eventType: event?.type, forcedAssignments, timeLimitSeconds: forcedAssignments ? 8 : 12, matrix: dense(travel), modeMatrices };
+  const remaining = new Set(jobs.map(job => job.id));
+  const previousAppointments = previous ? Object.fromEntries(previous.routes.flatMap(route => route.stops
+    .filter(stop => remaining.has(stop.jobId))
+    .map(stop => [stop.jobId, { engineerId: route.engineerId, start: stop.start }]))) : undefined;
+  return { engineers, jobs, speedKmh, urgentId, eventTime: event?.time, eventType: event?.type, forcedAssignments, previousAppointments, timeLimitSeconds: forcedAssignments ? 8 : 12, matrix: dense(travel), modeMatrices };
 }
 
 export function travelFromSolverPayload(payload: SolverPayload): TravelMatrix {
@@ -65,8 +70,8 @@ function validResponse(value: unknown): value is SolverResponse {
     && item.routes.every(route => typeof route?.engineerId === "string" && Array.isArray(route.jobIds) && route.jobIds.every(id => typeof id === "string"));
 }
 
-export async function solveVrptwServer(engineers: Engineer[], jobs: Job[], speedKmh: number, travel: TravelMatrix, urgentId?: string, event?: DispatchEvent): Promise<{ result: OptimizationResult; engine: "ortools" }> {
-  const payload = createSolverPayload(engineers, jobs, speedKmh, travel, urgentId, undefined, event);
+export async function solveVrptwServer(engineers: Engineer[], jobs: Job[], speedKmh: number, travel: TravelMatrix, urgentId?: string, event?: DispatchEvent, previous?: OptimizationResult): Promise<{ result: OptimizationResult; engine: "ortools" }> {
+  const payload = createSolverPayload(engineers, jobs, speedKmh, travel, urgentId, undefined, event, previous);
   const response = await fetch("/api/solver", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
   const server = await response.json().catch(() => null) as (SolverResponse & { error?: string }) | null;
   if (!response.ok) throw new Error(server?.error ?? `OR-Tools API ${response.status}`);

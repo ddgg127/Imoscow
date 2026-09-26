@@ -16,22 +16,26 @@ export async function loadRoadTravel(
   // resulting distance comparison as fully mode-specific.
   if (engineers.some(engineer => engineer.transport === "Общественный транспорт")) provider = "fallback";
   const names = options?.region ? [options.region] : regions;
+  const requests: Array<() => Promise<void>> = [];
   for (const mode of modes) {
     for (const name of names) {
       const modeEngineers = mode === "driving" ? engineers.filter(item => item.region === name) : engineers.filter(item => item.region === name && (mode === "walking" ? ["Пешком", "Пешеход"].includes(item.transport) : item.transport === "Велосипед"));
       const modeJobs = jobs.filter(job => job.region === name && modeEngineers.some(engineer => transportAllowed(job, engineer.transport)));
       const points = uniquePoints(modeEngineers, modeJobs);
       if (points.length < 2) continue;
-      try {
-        const table = await routing.buildMatrix(points, mode);
-        if (table.distances.some((row, i) => points.some((_, j) => i !== j && (row?.[j] == null || table.durations[i]?.[j] == null)))) provider = "fallback";
-        parts.get(mode)!.push(travelFromTable(points, table.distances, table.durations, speedKmh));
-      } catch {
-        parts.get(mode)!.push(fallbackTravel(speedKmh));
-        provider = "fallback";
-      }
+      requests.push(async () => {
+        try {
+          const table = await routing.buildMatrix(points, mode);
+          if (table.distances.some((row, i) => points.some((_, j) => i !== j && (row?.[j] == null || table.durations[i]?.[j] == null)))) provider = "fallback";
+          parts.get(mode)!.push(travelFromTable(points, table.distances, table.durations, speedKmh));
+        } catch {
+          parts.get(mode)!.push(fallbackTravel(speedKmh));
+          provider = "fallback";
+        }
+      });
     }
   }
+  for (let offset = 0; offset < requests.length; offset += 3) await Promise.all(requests.slice(offset, offset + 3).map(request => request()));
   const byMode = new Map([...parts].map(([mode, matrices]) => [mode, mergeTravel(matrices, speedKmh)]));
   const driving = byMode.get("driving") ?? fallbackTravel(speedKmh);
   return { travel: { ...driving, forTransport: transport => byMode.get(transport === "Пешком" || transport === "Пешеход" ? "walking" : transport === "Велосипед" ? "cycling" : "driving") ?? driving }, provider };

@@ -237,7 +237,7 @@ export function EngineerTimeline({
           <div className="shelf-items">
             <div className="shelf-item wide">
               <small>Адрес старта</small>
-              <strong>{(engineer as any).address ?? "Жилой дом (Москва)"}</strong>
+              <strong>{(engineer as Engineer & { address?: string }).address ?? "Жилой дом (Москва)"}</strong>
             </div>
             <div className="shelf-item">
               <small>Координаты</small>

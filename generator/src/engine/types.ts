@@ -13,7 +13,7 @@ export const VEHICLES = [
 
 export type Vehicle = (typeof VEHICLES)[number];
 
-export const PRIORITIES = ["Обычная", "Срочная"] as const;
+export const PRIORITIES = ["Обычная", "Повышенная"] as const;
 export type Priority = (typeof PRIORITIES)[number];
 
 export const ENGINEER_LEVELS = ["новичок", "специалист", "профи"] as const;

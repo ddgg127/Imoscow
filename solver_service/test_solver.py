@@ -67,6 +67,27 @@ def test_solver_minimizes_active_fleet_after_served_count():
     assert len(result.routes) == 1
 
 
+def test_temporal_replan_prefers_existing_appointment_when_feasible():
+    data = payload()
+    data["jobs"] = data["jobs"][:1]
+    without_history = solve_vrptw(SolveRequest.model_validate(data))
+    assert without_history.routes[0].engineerId == "e1"
+    data["previousAppointments"] = {"a": {"engineerId": "e2", "start": 510}}
+    with_history = solve_vrptw(SolveRequest.model_validate(data))
+    assert with_history.routes[0].engineerId == "e2"
+    assert not with_history.droppedJobIds
+
+
+def test_temporal_replan_can_move_job_when_old_engineer_is_unavailable():
+    data = payload()
+    data["jobs"] = data["jobs"][:1]
+    data["engineers"][1]["skills"] = ["Недоступен"]
+    data["previousAppointments"] = {"a": {"engineerId": "e2", "start": 510}}
+    result = solve_vrptw(SolveRequest.model_validate(data))
+    assert result.routes[0].engineerId == "e1"
+    assert not result.droppedJobIds
+
+
 def test_incompatible_job_is_dropped_not_assigned():
     data = payload()
     data["jobs"][0]["kind"] = "Сварка"
@@ -133,13 +154,13 @@ def test_explicit_transport_is_hard_and_missing_transport_is_unrestricted():
     assert all(compatible(engineer, request.jobs[0]) for engineer in request.engineers)
 
 
-def test_emergency_wins_over_two_ordinary_jobs_in_a_conflict():
+def test_elevated_job_wins_over_two_ordinary_jobs_in_a_conflict():
     data = payload()
     data["engineers"] = data["engineers"][:1]
     data["jobs"] = [
         {**data["jobs"][0], "id": "normal-1", "coordinates": [1, 0], "windowStart": 483, "windowEnd": 483, "serviceMinutes": 60, "workClass": "repair"},
         {**data["jobs"][0], "id": "normal-2", "coordinates": [1, 0], "windowStart": 543, "windowEnd": 543, "serviceMinutes": 60, "workClass": "repair"},
-        {**data["jobs"][0], "id": "incident", "coordinates": [1, 0], "windowStart": 483, "windowEnd": 483, "serviceMinutes": 80, "workClass": "emergency", "urgency": "urgent"},
+        {**data["jobs"][0], "id": "incident", "coordinates": [1, 0], "windowStart": 483, "windowEnd": 483, "serviceMinutes": 80, "workClass": "repair", "urgency": "urgent", "priority": 2},
     ]
     points = [data["engineers"][0]["start"]] + [job["coordinates"] for job in data["jobs"]]
     data["matrix"] = {"points": points, "distancesKm": [[abs(a[0] - b[0]) for b in points] for a in points], "durationsMin": [[abs(a[0] - b[0]) * 3 for b in points] for a in points]}
@@ -147,6 +168,19 @@ def test_emergency_wins_over_two_ordinary_jobs_in_a_conflict():
     result = solve_vrptw(SolveRequest.model_validate(data))
     assert "incident" in [job_id for route in result.routes for job_id in route.jobIds]
     assert len(result.droppedJobIds) >= 1
+
+
+def test_ordinary_emergency_does_not_outrank_elevated_repair():
+    data = payload()
+    data["engineers"] = data["engineers"][:1]
+    data["jobs"] = [
+        {**data["jobs"][0], "id": "ordinary-emergency", "windowStart": 483, "windowEnd": 483, "serviceMinutes": 90, "workClass": "emergency", "priority": 5},
+        {**data["jobs"][0], "id": "elevated-repair", "windowStart": 483, "windowEnd": 483, "serviceMinutes": 90, "workClass": "repair", "priority": 2},
+    ]
+    points = [data["engineers"][0]["start"]] + [job["coordinates"] for job in data["jobs"]]
+    data["matrix"] = {"points": points, "distancesKm": [[abs(a[0] - b[0]) for b in points] for a in points], "durationsMin": [[abs(a[0] - b[0]) * 3 for b in points] for a in points]}
+    result = solve_vrptw(SolveRequest.model_validate(data))
+    assert [job_id for route in result.routes for job_id in route.jobIds] == ["elevated-repair"]
 
 
 def test_event_continuation_cannot_start_before_event_time():
