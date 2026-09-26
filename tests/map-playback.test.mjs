@@ -15,8 +15,7 @@ test("map source contains the actual road polyline and selected engineer only", 
   const selected = roadLineFeatures([first, second], roads, second.id);
   assert.deepEqual(selected.features.map(feature => feature.properties.id), [second.id]);
   assert.equal(roadLineFeatures([first], {}, first.id).features.length, 0, "never draw a fake straight line");
-  const estimated = roadLineFeatures([first], { [first.id]: [first.start, csvJobs[0].coordinates] }, first.id, { [first.id]: "direct-estimate" });
-  assert.equal(estimated.features[0].properties.estimated, 1, "direct estimate is explicitly marked for dashed display");
+  assert.ok(all.features.every(feature => feature.properties.estimated === undefined), "road lines have no dashed estimate layer");
 });
 
 test("engineer moves continuously along bends, not a straight chord or teleport", () => {

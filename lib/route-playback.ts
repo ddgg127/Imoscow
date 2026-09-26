@@ -26,7 +26,7 @@ function sliceByDistance(coords: Coordinate[], fraction: number) {
   return { point: coords[coords.length - 1], line: coords };
 }
 
-/** Interpolates along the displayed route, including a labelled direct estimate when roads are unavailable. */
+/** Interpolates only along a returned road or pedestrian graph line. */
 export function positionAtSimTime(engineer: Engineer, plan: RoutePlan, jobs: Job[], road: Coordinate[], simTime: number) {
   if (road.length < 2) return null;
   const byId = new Map(jobs.map(job => [job.id, job]));
@@ -50,9 +50,9 @@ export function positionAtSimTime(engineer: Engineer, plan: RoutePlan, jobs: Job
   return { point: road[road.length - 1], done: true };
 }
 
-export function roadLineFeatures(engineers: Engineer[], roads: Record<string, Coordinate[]>, selectedEngineerId: string | null = null, sources: Record<string, string> = {}) {
+export function roadLineFeatures(engineers: Engineer[], roads: Record<string, Coordinate[]>, selectedEngineerId: string | null = null) {
   return { type: "FeatureCollection" as const, features: engineers.filter(engineer => !selectedEngineerId || engineer.id === selectedEngineerId).flatMap(engineer => {
     const coordinates = roads[engineer.id];
-    return coordinates?.length >= 2 ? [{ type: "Feature" as const, properties: { id: engineer.id, color: engineer.color, selected: selectedEngineerId === engineer.id ? 1 : 0, estimated: sources[engineer.id] === "direct-estimate" ? 1 : 0, opacity: 1 }, geometry: { type: "LineString" as const, coordinates } }] : [];
+    return coordinates?.length >= 2 ? [{ type: "Feature" as const, properties: { id: engineer.id, color: engineer.color, selected: selectedEngineerId === engineer.id ? 1 : 0, opacity: 1 }, geometry: { type: "LineString" as const, coordinates } }] : [];
   }) };
 }

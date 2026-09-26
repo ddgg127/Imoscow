@@ -15,9 +15,9 @@ export interface RouteResult {
 }
 
 /** Public read-only road graph as a browser fallback when the app proxy is unreachable. */
-export async function publicOsmRoute(request: RouteRequest): Promise<RouteResult> {
+export async function publicOsmRoute(request: RouteRequest, allowLegs = true): Promise<RouteResult> {
   if (request.mode === "transit") {
-    const estimate = await publicOsmRoute({ ...request, mode: "walking" });
+    const estimate = await publicOsmRoute({ ...request, mode: "walking" }, allowLegs);
     return { ...estimate, provider: "walking-estimate" };
   }
   const bases = request.mode === "walking" ? ["https://routing.openstreetmap.de/routed-foot"]
@@ -26,7 +26,7 @@ export async function publicOsmRoute(request: RouteRequest): Promise<RouteResult
   const path = request.points.map(point => point.join(",")).join(";");
   for (const base of bases) {
     try {
-      const response = await fetch(`${base}/route/v1/driving/${path}?overview=full&geometries=geojson&steps=false`, { signal: AbortSignal.timeout(12000) });
+      const response = await fetch(`${base}/route/v1/driving/${path}?overview=full&geometries=geojson&steps=false`, { signal: AbortSignal.timeout(5000) });
       if (!response.ok) continue;
       const data = await response.json() as { routes?: Array<{ geometry?: GeoJSON.LineString; distance?: number; duration?: number }> };
       const route = data.routes?.[0];
@@ -35,7 +35,7 @@ export async function publicOsmRoute(request: RouteRequest): Promise<RouteResult
       }
     } catch { /* Try the next public OSM router. */ }
   }
-  if (request.points.length > 2) {
+  if (allowLegs && request.points.length > 2) {
     const legs: RouteResult[] = [];
     for (let offset = 1; offset < request.points.length; offset += 4) {
       const batch = request.points.slice(offset, offset + 4);
@@ -69,7 +69,7 @@ export async function publicOsmMatrix(points: Coordinate[], mode: TravelMode): P
         for (let to = 0; to < size; to += blockSize) {
           const destinations = Array.from({ length: Math.min(blockSize, size - to) }, (_, index) => to + index);
           const url = `${base}/table/v1/driving/${coordinates}?annotations=duration,distance&sources=${sources.join(";")}&destinations=${destinations.join(";")}`;
-          const response = await fetch(url, { signal: AbortSignal.timeout(8000) });
+          const response = await fetch(url, { signal: AbortSignal.timeout(5000) });
           if (!response.ok) throw new Error(`OSRM table ${response.status}`);
           const table = await response.json() as { code?: string; distances?: Array<Array<number | null>>; durations?: Array<Array<number | null>> };
           if (table.code !== "Ok" || !table.distances || !table.durations) throw new Error("Некорректная дорожная матрица");
@@ -113,29 +113,31 @@ export class BackendRoutingProvider implements RoutingProvider {
   }
 
   async buildRoute(request: RouteRequest): Promise<RouteResult> {
+    let response: Response;
     try {
-      const response = await fetch(this.baseUrl, {
+      response = await fetch(this.baseUrl, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ provider: this.id, apiKey: this.apiKey || undefined, ...request }),
-        signal: AbortSignal.timeout(18000),
+        signal: AbortSignal.timeout(40000),
       });
-      if (response.ok) return response.json() as Promise<RouteResult>;
-    } catch { /* Browser can still reach a public router when the proxy cannot. */ }
-    return publicOsmRoute(request);
+    } catch { return publicOsmRoute(request, false); }
+    if (!response.ok) return publicOsmRoute(request, false);
+    return response.json() as Promise<RouteResult>;
   }
 
   async buildMatrix(points: Coordinate[], mode: TravelMode): Promise<MatrixResult> {
+    let response: Response;
     try {
-      const response = await fetch(`${this.baseUrl}/matrix`, {
+      response = await fetch(`${this.baseUrl}/matrix`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ provider: this.id, points, mode }),
         signal: AbortSignal.timeout(18000),
       });
-      if (response.ok) return response.json() as Promise<MatrixResult>;
-    } catch { /* Browser may reach public OSRM when the server cannot. */ }
-    return publicOsmMatrix(points, mode);
+    } catch { return publicOsmMatrix(points, mode); }
+    if (!response.ok) return publicOsmMatrix(points, mode);
+    return response.json() as Promise<MatrixResult>;
   }
 }
 

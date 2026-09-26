@@ -21,6 +21,34 @@ test("multi-stop road geometry comes from one ordered OSRM route request", async
   }
 });
 
+test("long route recovers ordered road bends from smaller graph requests", async () => {
+  const originalFetch = globalThis.fetch;
+  const points = Array.from({ length: 10 }, (_, index) => [37.1 + index * 0.01, 55.1]);
+  const calls = [];
+  globalThis.fetch = async (url, options) => {
+    const value = String(url);
+    calls.push(value);
+    if (!value.includes("valhalla1")) return new Response("long route unavailable", { status: 400 });
+    const locations = JSON.parse(options.body).locations;
+    if (locations.length > 5) return new Response("too many stops", { status: 400 });
+    const legs = locations.slice(1).map((point, index) => ({ shape: encodePolyline6([
+      [locations[index].lon, locations[index].lat],
+      [(locations[index].lon + point.lon) / 2, 55.12],
+      [point.lon, point.lat],
+    ]) }));
+    return new Response(JSON.stringify({ trip: { legs, summary: { length: 10, time: 900 } } }), { status: 200 });
+  };
+  try {
+    const result = await osrmRouteLegs(points);
+    assert.equal(result.provider, "valhalla");
+    assert.ok(result.geometry.coordinates.some(point => point[1] === 55.12), "route follows returned bends");
+    assert.deepEqual(result.geometry.coordinates[0], points[0]);
+    assert.ok(Math.abs(result.geometry.coordinates.at(-1)[0] - points.at(-1)[0]) < 1e-6);
+    assert.equal(result.geometry.coordinates.at(-1)[1], points.at(-1)[1]);
+    assert.equal(calls.filter(url => url.includes("valhalla1")).length, 4, "one full attempt and three ordered chunks");
+  } finally { globalThis.fetch = originalFetch; }
+});
+
 test("road geometry falls back to FOSSGIS and uses the pedestrian network", async () => {
   const originalFetch = globalThis.fetch;
   const calls = [];
