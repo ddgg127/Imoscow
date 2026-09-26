@@ -18,6 +18,7 @@ import { DataEditor } from "@/components/data-editor";
 import { PlanAnalysisView } from "@/components/plan-analysis";
 import { BackendGeocodingProvider, type Coordinate } from "@/lib/map-providers";
 import { loadRoadTravel } from "@/lib/road-travel";
+import demoScenario from "@/data/demo-scenario.json";
 import { downloadPlan } from "@/lib/export-plan";
 import { downloadAllTzCsvs, downloadBlob, downloadGeneratedDataset, downloadTzJson, engineersToTzCsv, eventsToTzCsv, generateDataset, generateTzDataset, jobsToTzCsv, type GeneratedDataset, type GeneratedTzDataset, type GenerateTzOptions } from "@/lib/generator-files";
 import { importPlanFile } from "@/lib/import-data";
@@ -417,6 +418,7 @@ function GeneratorView({
   generatedFrom,
   generatedTz,
   onGenerate,
+  onDemo,
   onPlan,
   onClear,
   onImportFile,
@@ -430,6 +432,7 @@ function GeneratorView({
   generatedFrom: PlanConfig | null;
   generatedTz: GeneratedTzDataset | null;
   onGenerate: (opts?: Partial<GenerateTzOptions>) => void;
+  onDemo: () => void;
   onPlan: () => void;
   onClear: () => void;
   onImportFile?: (file: File) => Promise<void>;
@@ -654,6 +657,9 @@ function GeneratorView({
 
             {heavyRun && <p className="config-warning">Большой объём данных: расчёт дорожной матрицы займёт дополнительное время.</p>}
 
+            <button type="button" className="generator-demo-btn" onClick={onDemo}>
+              <Sparkles size={15} /> Загрузить показательный набор · 12 инженеров / 51 заявка
+            </button>
             <button
               className="generator-primary-btn wide"
               onClick={handleRunGenerate}
@@ -808,7 +814,7 @@ function GeneratorView({
         </div>
       </div>
 
-      {(currentDataset || generated) && (
+      {hasData && (
         <article className="panel generator-preview-panel">
           <div className="panel-header">
             <div>
@@ -1704,6 +1710,7 @@ export default function Dashboard() {
         generatedTz={generatedTz}
         onGenerate={createGenerated}
         onClear={clearDataset}
+        onDemo={() => { void handleImport(new File([JSON.stringify(demoScenario)], "demo-scenario.json", { type: "application/json" })); }}
         onPlan={() => {
           navigate("plan");
           if (!applied) startPlanning();

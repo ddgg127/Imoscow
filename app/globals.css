@@ -144,6 +144,9 @@ html,body,.workspace{transition:background-color .22s ease,color .22s ease}.side
 .generator-primary-btn:hover:not(:disabled){filter:brightness(1.08)}
 .generator-primary-btn:disabled{opacity:.45;cursor:not-allowed}
 .generator-primary-btn.wide{width:100%;height:38px}
+.generator-demo-btn{width:100%;min-height:38px;padding:8px 12px;display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid color-mix(in srgb,var(--primary) 38%,var(--border));border-radius:8px;background:var(--secondary);color:var(--secondary-foreground);font-size:12px;font-weight:750;cursor:pointer;text-align:center}
+.generator-demo-btn:hover{border-color:var(--primary);background:var(--accent)}
+.generator-demo-btn:focus-visible{outline:2px solid var(--ring);outline-offset:2px}
 
 .generator-secondary-btn{min-height:38px;padding:0 12px;display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--border);border-radius:9px;background:var(--card);color:var(--foreground);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
 .generator-secondary-btn:hover{background:var(--accent)}
@@ -327,6 +330,7 @@ html,body,.workspace{transition:background-color .22s ease,color .22s ease}.side
 .filter-btn.btn-all:hover{background:var(--accent);border-color:var(--ring)}
 .filter-btn.btn-all.active{background:var(--foreground);color:var(--background);border-color:var(--foreground)}
 .filter-btn.btn-all b{background:var(--muted);color:inherit}
+.filter-btn.btn-all.active b{background:color-mix(in srgb,currentColor 18%,transparent);color:inherit}
 
 .filter-btn.btn-in-progress{border:1px solid #bbf7d0;background:#f0fdf4;color:#15803d}
 .filter-btn.btn-in-progress:hover{border-color:#16a34a;background:#dcfce7;color:#14532d}
