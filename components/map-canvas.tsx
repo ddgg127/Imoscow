@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type Ref } from "rea
 import type { Map as MapLibreMap, Marker } from "maplibre-gl";
 import { Layers3, Navigation } from "lucide-react";
 import { BackendRoutingProvider, type Coordinate, type TravelMode } from "@/lib/map-providers";
+import { localRoadRoute } from "@/lib/local-roads";
 import { roadLegForJob } from "@/lib/route-leg";
 import { positionAtSimTime, roadLineFeatures } from "@/lib/route-playback";
 import { engineerSpeedKmh } from "@/lib/transport-speed";
@@ -73,8 +74,23 @@ function roadMode(transport: string): TravelMode {
   return transport === "Пешком" || transport === "Пешеход" ? "walking" : transport === "Велосипед" ? "cycling" : transport === "Общественный транспорт" ? "transit" : "driving";
 }
 
-async function roadLine(waypoints: Coordinate[], provider: BackendRoutingProvider, mode: TravelMode = "driving"): Promise<[Coordinate[], boolean, string]> {
+function roadSourceLabel(source: string | undefined, status: RoutingState) {
+  if (source === "walking-estimate") return "Показан пешеходный путь; расписание и маршрут ОТ недоступны";
+  if (source === "local-road-estimate") return "Оценочный маршрут по дорогам: профиль этого транспорта не покрывает все точки";
+  if (source?.startsWith("local-")) return "Маршрут по сохранённым дорогам OpenStreetMap";
+  if (source && source !== "none") return "Маршрут по дорогам OpenStreetMap";
+  return status === "fallback" ? "Дорожный маршрут для этого инженера недоступен" : "Загружаем дорожный маршрут…";
+}
+
+async function roadLine(waypoints: Coordinate[], provider: BackendRoutingProvider, mode: TravelMode = "driving"): Promise<[Coordinate[], boolean, string, number[]?]> {
   if (waypoints.length < 2) return [waypoints, false, "none"];
+  try {
+    const result = await localRoadRoute(waypoints, mode);
+    const coords = result.geometry.coordinates;
+    if (coords.length >= 2 && Number.isFinite(result.distanceMeters)) return [coords, false, result.provider, result.legEnds];
+  } catch {
+    // Imported points outside the bundled graph can still use the public router.
+  }
   try {
     const result = await provider.buildRoute({ points: waypoints, mode });
     const coords = result.geometry.coordinates as Coordinate[];
@@ -86,7 +102,7 @@ async function roadLine(waypoints: Coordinate[], provider: BackendRoutingProvide
   }
 }
 
-type RoadEntry = { coordinates: Coordinate[]; source: string };
+type RoadEntry = { coordinates: Coordinate[]; source: string; legEnds?: number[] };
 const roadCache = new Map<string, RoadEntry>();
 
 function roadKey(engineer: Engineer, waypoints: Coordinate[]) {
@@ -103,9 +119,9 @@ async function fetchRoadLines(engineers: Engineer[], jobs: Job[], plans: Map<str
       const key = roadKey(engineer, waypoints);
       let entry = roadCache.get(key);
       if (!entry) {
-        const [coordinates, failed, source] = await roadLine(waypoints, provider, roadMode(engineer.transport));
+        const [coordinates, failed, source, legEnds] = await roadLine(waypoints, provider, roadMode(engineer.transport));
         if (!failed || source === "walking-estimate") {
-          entry = { coordinates, source };
+          entry = { coordinates, source, legEnds };
           if (roadCache.size > 2000) roadCache.clear();
           roadCache.set(key, entry);
         }
@@ -130,6 +146,7 @@ function useRoadRoutes(
   onRoutingState: (state: RoutingState) => void,
 ) {
   const [roadRoutes, setRoadRoutes] = useState<Record<string, Coordinate[]>>({});
+  const [roadLegEnds, setRoadLegEnds] = useState<Record<string, number[]>>({});
   const [routeSources, setRouteSources] = useState<Record<string, string>>({});
   const [baselineRoads, setBaselineRoads] = useState<Record<string, Coordinate[]>>({});
   const [routeStatus, setRouteStatus] = useState<RoutingState>(routingEnabled ? "loading" : "idle");
@@ -142,6 +159,7 @@ function useRoadRoutes(
       // Reset cached external routing state when road routing is disabled.
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setRoadRoutes({});
+      setRoadLegEnds({});
       setRouteSources({});
       setRouteProgress({ ready: 0, total: 0 });
       setRouteStatus("idle");
@@ -155,6 +173,7 @@ function useRoadRoutes(
       return entry ? [[engineer.id, entry] as const] : [];
     });
     setRoadRoutes(Object.fromEntries(cached.map(([id, entry]) => [id, entry.coordinates])));
+    setRoadLegEnds(Object.fromEntries(cached.flatMap(([id, entry]) => entry.legEnds ? [[id, entry.legEnds] as const] : [])));
     setRouteSources(Object.fromEntries(cached.map(([id, entry]) => [id, entry.source])));
     let ready = cached.length;
     let failed = 0;
@@ -163,21 +182,18 @@ function useRoadRoutes(
     onRoutingState(ready === visibleEngineers.length ? "ready" : "loading");
     const provider = new BackendRoutingProvider(providerId, "/api/routing", apiKey);
     void (async () => {
-      let timedOut = false;
-      let timer: ReturnType<typeof setTimeout> | undefined;
-      const finished = fetchRoadLines(visibleEngineers.filter(engineer => !cached.some(([id]) => id === engineer.id)), visibleJobs, planByEngineer, false, provider, () => cancelled || timedOut, (id, entry) => {
-        if (cancelled || timedOut) return;
+      await fetchRoadLines(visibleEngineers.filter(engineer => !cached.some(([id]) => id === engineer.id)), visibleJobs, planByEngineer, false, provider, () => cancelled, (id, entry) => {
+        if (cancelled) return;
         if (entry) {
           ready++;
           setRoadRoutes(current => ({ ...current, [id]: entry.coordinates }));
+          if (entry.legEnds) setRoadLegEnds(current => ({ ...current, [id]: entry.legEnds! }));
           setRouteSources(current => ({ ...current, [id]: entry.source }));
         } else failed++;
         setRouteProgress({ ready, total: visibleEngineers.length });
       });
-      await Promise.race([finished, new Promise<void>(resolve => { timer = setTimeout(() => { timedOut = true; resolve(); }, 45000); })]);
-      if (timer) clearTimeout(timer);
       if (cancelled) return;
-      const state: RoutingState = failed || timedOut ? "fallback" : "ready";
+      const state: RoutingState = failed ? "fallback" : "ready";
       setRouteStatus(state);
       onRoutingState(state);
     })();
@@ -200,7 +216,7 @@ function useRoadRoutes(
     })();
     return () => { cancelled = true; };
   }, [routingEnabled, compare, baselineEngineers, baselineJobs, baselineByEngineer, providerId, apiKey]);
-  return { roadRoutes, routeSources, baselineRoads, routeStatus, routeProgress, retryRoads: () => setRetryEpoch(current => current + 1) };
+  return { roadRoutes, roadLegEnds, routeSources, baselineRoads, routeStatus, routeProgress, retryRoads: () => setRetryEpoch(current => current + 1) };
 }
 
 function captionText(status: RoutingState, progress: { ready: number; total: number }) {
@@ -291,7 +307,7 @@ export function MapCanvas(props: CanvasProps) {
     const ids = new Set((baselineRoutes.length ? baselineRoutes.map(route => route.engineerId) : baselineJobs.map(job => job.baselineEngineerId)).filter((id): id is string => Boolean(id)));
     return engineers.filter(engineer => ids.has(engineer.id));
   }, [engineers, baselineRoutes, baselineJobs]);
-  const { roadRoutes, routeSources, baselineRoads, routeStatus, routeProgress, retryRoads } = useRoadRoutes(routingEnabled, compare, visibleEngineers, visibleJobs, routes, baselineEngineers, baselineJobs, baselineRoutes, "osrm", "", onRoutingState);
+  const { roadRoutes, roadLegEnds, routeSources, baselineRoads, routeStatus, routeProgress, retryRoads } = useRoadRoutes(routingEnabled, compare, visibleEngineers, visibleJobs, routes, baselineEngineers, baselineJobs, baselineRoutes, "osrm", "", onRoutingState);
   const latestRef = useRef({ visibleJobs, visibleEngineers, compare, routingEnabled });
   useEffect(() => { latestRef.current = { visibleJobs, visibleEngineers, compare, routingEnabled }; }, [visibleJobs, visibleEngineers, compare, routingEnabled]);
   const planByEngineer = useMemo(() => new Map(routes.map(route => [route.engineerId, route])), [routes]);
@@ -299,8 +315,8 @@ export function MapCanvas(props: CanvasProps) {
   const selectedRoutePlan = selectedEngineerId ? planByEngineer.get(selectedEngineerId) : undefined;
   const [focusedRoad, setFocusedRoad] = useState<{ key: string; coordinates: Coordinate[]; source: string } | null>(null);
   const rawSelectedLeg = useMemo(() => selectedJobId && selectedRouteEngineer && selectedRoutePlan
-    ? roadLegForJob(selectedRouteEngineer, selectedRoutePlan, visibleJobs, roadRoutes[selectedRouteEngineer.id] ?? [], selectedJobId)
-    : null, [selectedJobId, selectedRouteEngineer, selectedRoutePlan, visibleJobs, roadRoutes]);
+    ? roadLegForJob(selectedRouteEngineer, selectedRoutePlan, visibleJobs, roadRoutes[selectedRouteEngineer.id] ?? [], selectedJobId, roadLegEnds[selectedRouteEngineer.id])
+    : null, [selectedJobId, selectedRouteEngineer, selectedRoutePlan, visibleJobs, roadRoutes, roadLegEnds]);
   const legKey = rawSelectedLeg && selectedJobId ? `${selectedJobId}:${rawSelectedLeg.origin.join(",")}:${rawSelectedLeg.destination.join(",")}` : "";
   useEffect(() => {
     if (!rawSelectedLeg || !selectedJobId) return;
@@ -479,14 +495,14 @@ export function MapCanvas(props: CanvasProps) {
   const simSpeedRef = useRef(simSpeed);
   const simTimeRef = useRef(simTime);
   const simEndRef = useRef(simEnd);
-  const fleetRef = useRef({ visibleEngineers, visibleJobs, engineers, selectedEngineerId, planByEngineer, routeFor, routeSources, onSelectEngineer, onSimTime, onSimPlaying, compare, routeData, baselineData });
+  const fleetRef = useRef({ visibleEngineers, visibleJobs, engineers, selectedEngineerId, planByEngineer, routeFor, roadLegEnds, routeSources, onSelectEngineer, onSimTime, onSimPlaying, compare, routeData, baselineData });
   useEffect(() => {
     simPlayingRef.current = simPlaying;
     simSpeedRef.current = simSpeed;
     simTimeRef.current = simTime;
     simEndRef.current = simEnd;
-    fleetRef.current = { visibleEngineers, visibleJobs, engineers, selectedEngineerId, planByEngineer, routeFor, routeSources, onSelectEngineer, onSimTime, onSimPlaying, compare, routeData, baselineData };
-  }, [simPlaying, simSpeed, simTime, simEnd, visibleEngineers, visibleJobs, engineers, selectedEngineerId, planByEngineer, routeFor, routeSources, onSelectEngineer, onSimTime, onSimPlaying, compare, routeData, baselineData]);
+    fleetRef.current = { visibleEngineers, visibleJobs, engineers, selectedEngineerId, planByEngineer, routeFor, roadLegEnds, routeSources, onSelectEngineer, onSimTime, onSimPlaying, compare, routeData, baselineData };
+  }, [simPlaying, simSpeed, simTime, simEnd, visibleEngineers, visibleJobs, engineers, selectedEngineerId, planByEngineer, routeFor, roadLegEnds, routeSources, onSelectEngineer, onSimTime, onSimPlaying, compare, routeData, baselineData]);
   useEffect(() => {
     const map = mapRef.current;
     const clearVehicles = () => {
@@ -545,7 +561,7 @@ export function MapCanvas(props: CanvasProps) {
         const plan = plans.get(engineer.id) ?? null;
         const hasRoad = coords.length >= 2;
         const estimated = fleetRef.current.routeSources[engineer.id] === "walking-estimate";
-        const pose = plan && hasRoad ? positionAtSimTime(engineer, plan, jobs, coords, time) : null;
+        const pose = plan && hasRoad ? positionAtSimTime(engineer, plan, jobs, coords, time, fleetRef.current.roadLegEnds[engineer.id]) : null;
         const point = pose?.point ?? engineer.start;
         const label = engineerMarkerLabel(engineer);
         let marker = vehiclesRef.current.get(engineer.id);
@@ -608,7 +624,7 @@ export function MapCanvas(props: CanvasProps) {
   }, [simulating, mapReady]);
   return <div className="map-canvas real-map" aria-label="Интерактивная карта маршрутов инженеров">
     <div ref={containerRef} className="maplibre-host" data-route-features={routeData.features.length} data-route-points={routeData.features.reduce((sum, feature) => sum + feature.geometry.coordinates.length, 0)} data-road-status={routeStatus} />
-    {selectedRouteEngineer && <div className="selected-route-summary" style={{ ["--route-color" as string]: selectedLeg ? "#f43f5e" : selectedRouteEngineer.color }}><span>{selectedLeg ? "Участок к выбранной заявке" : "Маршрут инженера"}</span><strong>{selectedRouteEngineer.name}</strong>{selectedLeg ? <><small>{selectedLeg.originLabel} → {selectedLeg.destinationLabel}</small><small>Прибытие {minutesLabel(selectedLeg.stop.arrival)} · участок {selectedLeg.stop.distanceKm.toFixed(1).replace(".", ",")} км</small></> : <small>{selectedRoutePlan?.stops.length ?? 0} заявок · {selectedRoutePlan ? `${selectedRoutePlan.distanceKm.toFixed(1).replace(".", ",")} км` : "маршрут не построен"}</small>}<small>{selectedRouteEngineer.transport} · скорость {engineerSpeedKmh(selectedRouteEngineer.transport, selectedRouteEngineer.speedKmh, carSpeedKmh)} км/ч</small>{selectedRoadSource === "walking-estimate" ? <small>Показан пешеходный путь; расписание и маршрут ОТ недоступны</small> : selectedRoadSource && selectedRoadSource !== "none" ? <small>Геометрия по сети дорог · {selectedRoadSource}</small> : routeStatus === "fallback" ? <small>Дорожный сервис не вернул маршрут для этого инженера</small> : <small>Загружаем дорожную геометрию…</small>}<button type="button" onClick={() => onSelectEngineer(selectedRouteEngineer.id)}>Показать все маршруты</button></div>}
+    {selectedRouteEngineer && <div className="selected-route-summary" style={{ ["--route-color" as string]: selectedLeg ? "#f43f5e" : selectedRouteEngineer.color }}><span>{selectedLeg ? "Участок к выбранной заявке" : "Маршрут инженера"}</span><strong>{selectedRouteEngineer.name}</strong>{selectedLeg ? <><small>{selectedLeg.originLabel} → {selectedLeg.destinationLabel}</small><small>Прибытие {minutesLabel(selectedLeg.stop.arrival)} · участок {selectedLeg.stop.distanceKm.toFixed(1).replace(".", ",")} км</small></> : <small>{selectedRoutePlan?.stops.length ?? 0} заявок · {selectedRoutePlan ? `${selectedRoutePlan.distanceKm.toFixed(1).replace(".", ",")} км` : "маршрут не построен"}</small>}<small>{selectedRouteEngineer.transport} · скорость {engineerSpeedKmh(selectedRouteEngineer.transport, selectedRouteEngineer.speedKmh, carSpeedKmh)} км/ч</small><small>{roadSourceLabel(selectedRoadSource, routeStatus)}</small><button type="button" onClick={() => onSelectEngineer(selectedRouteEngineer.id)}>Показать все маршруты</button></div>}
     <MapChrome caption={captionText(routeStatus, routeProgress)} status={routeStatus} clockRef={clockRef} onFit={() => { if (selectedEngineerId) onSelectEngineer(selectedEngineerId); else void fitVisible(); }} onZoomIn={() => mapRef.current?.zoomIn()} onZoomOut={() => mapRef.current?.zoomOut()} onRetry={retryRoads} />
     <div ref={actionBoxRef} className="playback-action" hidden>
       <strong>Сейчас</strong>

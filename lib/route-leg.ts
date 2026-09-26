@@ -17,7 +17,7 @@ export function waypointIndices(coords: Coordinate[], waypoints: Coordinate[]) {
   return indices;
 }
 
-export function roadLegForJob(engineer: Engineer, plan: RoutePlan, jobs: Job[], road: Coordinate[], jobId: string) {
+export function roadLegForJob(engineer: Engineer, plan: RoutePlan, jobs: Job[], road: Coordinate[], jobId: string, legEnds?: number[]) {
   const stopIndex = plan.stops.findIndex(stop => stop.jobId === jobId);
   if (stopIndex < 0) return null;
   const byId = new Map(jobs.map(job => [job.id, job]));
@@ -26,7 +26,7 @@ export function roadLegForJob(engineer: Engineer, plan: RoutePlan, jobs: Job[], 
   const previous = stopIndex > 0 ? byId.get(plan.stops[stopIndex - 1].jobId) : undefined;
   const origin = previous?.coordinates ?? engineer.start;
   const waypoints = [engineer.start, ...plan.stops.map(stop => byId.get(stop.jobId)?.coordinates).filter((point): point is Coordinate => Boolean(point))];
-  const indices = waypointIndices(road, waypoints);
+  const indices = legEnds?.length === plan.stops.length + 1 ? legEnds : waypointIndices(road, waypoints);
   const from = indices[stopIndex] ?? 0;
   const to = indices[stopIndex + 1] ?? road.length - 1;
   const coordinates = road.length >= 2 && to > from ? road.slice(from, to + 1) : [];

@@ -27,11 +27,11 @@ function sliceByDistance(coords: Coordinate[], fraction: number) {
 }
 
 /** Interpolates only along a returned road or pedestrian graph line. */
-export function positionAtSimTime(engineer: Engineer, plan: RoutePlan, jobs: Job[], road: Coordinate[], simTime: number) {
+export function positionAtSimTime(engineer: Engineer, plan: RoutePlan, jobs: Job[], road: Coordinate[], simTime: number, legEnds?: number[]) {
   if (road.length < 2) return null;
   const byId = new Map(jobs.map(job => [job.id, job]));
   const waypoints = [engineer.start, ...plan.stops.map(stop => byId.get(stop.jobId)?.coordinates).filter((point): point is Coordinate => Boolean(point))];
-  const indices = waypointIndices(road, waypoints);
+  const indices = legEnds?.length === plan.stops.length + 1 ? legEnds : waypointIndices(road, waypoints);
   if (indices.length !== plan.stops.length + 1) return null;
   if (simTime <= engineer.shiftStart) return { point: road[0], done: false };
   let departure = engineer.shiftStart;
