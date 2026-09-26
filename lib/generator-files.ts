@@ -202,8 +202,9 @@ export function generateTzDataset(rawOptions: Partial<GenerateTzOptions> = {}): 
   ]);
 
   // 1. Инженеры: сбалансированное распределение навыков, оборудования и транспорта
-  const noviceN = Math.max(1, Math.round(engineerCount * ((rawOptions.novice ?? 30) / 100)));
-  const specN = Math.max(1, Math.round(engineerCount * ((rawOptions.specialist ?? 45) / 100)));
+  let noviceN = Math.max(0, Math.round(engineerCount * ((rawOptions.novice ?? 30) / 100)));
+  let specN = Math.max(0, Math.round(engineerCount * ((rawOptions.specialist ?? 45) / 100)));
+  if (noviceN + specN > engineerCount) specN = Math.max(0, engineerCount - noviceN);
   const proN = Math.max(0, engineerCount - noviceN - specN);
 
   const levels: Array<{ level: "новичок" | "специалист" | "профи"; skills: TzSkill[] }> = [];
@@ -268,9 +269,10 @@ export function generateTzDataset(rawOptions: Partial<GenerateTzOptions> = {}): 
   const hardPct = rawOptions.jobHard ?? 25;
   const totalWeight = easyPct + medPct + hardPct || 100;
 
-  const localN = Math.max(1, Math.round((easyPct / totalWeight) * jobCount));
-  const connectN = Math.max(1, Math.round((medPct / totalWeight) * jobCount));
-  const emergencyN = Math.max(1, jobCount - localN - connectN);
+  let localN = Math.max(0, Math.round((easyPct / totalWeight) * jobCount));
+  let connectN = Math.max(0, Math.round((medPct / totalWeight) * jobCount));
+  if (localN + connectN > jobCount) connectN = Math.max(0, jobCount - localN);
+  const emergencyN = Math.max(0, jobCount - localN - connectN);
 
   const jobSkills: TzSkill[] = [];
   let l = 0, c = 0, e = 0;
