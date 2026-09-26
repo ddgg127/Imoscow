@@ -22,6 +22,19 @@ test("local graph follows connected roads and preserves ordered stop boundaries"
   assert.deepEqual(walk.geometry.coordinates.at(-1), [37, 55.001]);
 });
 
+test("one-way car dead end keeps an explicitly estimated road line", () => {
+  const graph = new LocalRoadGraph({
+    version: 1,
+    source: "test",
+    nodes: [[37, 55], [37.001, 55]],
+    edges: [[0, 1, 3, 2]],
+  });
+  const road = graph.route([[37.001, 55], [37, 55]], "driving");
+  assert.equal(road.provider, "local-road-estimate");
+  assert.deepEqual(road.legEnds, [0, 1]);
+  assert.ok(road.distanceMeters > 0);
+});
+
 test("bundled graph covers every source job from a regional engineer", () => {
   const packed = JSON.parse(gunzipSync(readFileSync(new URL("../public/road-graph.json.gz", import.meta.url))));
   const graph = new LocalRoadGraph(packed);

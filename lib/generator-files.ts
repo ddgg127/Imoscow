@@ -1,4 +1,4 @@
-import { applyAverageWindows, scaleEngineers, scaleJobs, type Engineer, type Job, type Region } from "./vrptw.ts";
+import { applyAverageWindows, jobPriorityLevel, scaleEngineers, scaleJobs, type Engineer, type Job, type Region } from "./vrptw.ts";
 import type { Coordinate } from "./map-providers.ts";
 import catalog from "../generator/src/data/moscow-buildings.json" with { type: "json" };
 
@@ -218,6 +218,31 @@ export function generateTzDataset(rawOptions: Partial<GenerateTzOptions> = {}): 
     levels.push({ level: "профи", skills: [...TZ_SKILLS] });
   }
 
+  const zoneOrder: Region[] = ["Восток", "Юго-восток", "Югоцентр"];
+  const zoneShare = (zone: Region) => mixedJobPool.filter(building => regionForPoint(building.lon, building.lat) === zone).length / mixedJobPool.length;
+  const minimumZoneCrew = engineerCount >= 9 ? 2 : engineerCount >= 3 ? 1 : 0;
+  const eastCount = Math.max(minimumZoneCrew, Math.round(engineerCount * zoneShare("Восток")));
+  const southeastCount = Math.max(minimumZoneCrew, Math.round(engineerCount * zoneShare("Юго-восток")));
+  const zoneQuota: Record<Region, number> = {
+    "Восток": Math.min(eastCount, engineerCount),
+    "Юго-восток": Math.min(southeastCount, Math.max(0, engineerCount - eastCount)),
+    "Югоцентр": Math.max(0, engineerCount - eastCount - southeastCount),
+  };
+  const assignedZones: Region[] = Array(engineerCount).fill("Югоцентр");
+  const openIndices = levels.map((_, index) => index).sort((a, b) => levels[b].skills.length - levels[a].skills.length || a - b);
+  const remainingQuota = { ...zoneQuota };
+  for (const zone of zoneOrder) {
+    if (!remainingQuota[zone]) continue;
+    const index = openIndices.shift();
+    if (index == null) break;
+    assignedZones[index] = zone;
+    remainingQuota[zone]--;
+  }
+  const remainingZones = zoneOrder.flatMap(zone => Array(remainingQuota[zone]).fill(zone) as Region[]);
+  for (const [position, index] of openIndices.entries()) assignedZones[index] = remainingZones[position];
+  const startsByZone = Object.fromEntries(zoneOrder.map(zone => [zone, shuffleList(createRng(seed ^ (zone.length * 7919)), resPool.filter(building => regionForPoint(building.lon, building.lat) === zone))])) as Record<Region, typeof resPool>;
+  const usedStarts: Record<Region, number> = { "Восток": 0, "Юго-восток": 0, "Югоцентр": 0 };
+
   const usedNames = new Set<string>();
   const engineers: Engineer[] = levels.map(({ level, skills }, i) => {
     let name = "";
@@ -234,7 +259,9 @@ export function generateTzDataset(rawOptions: Partial<GenerateTzOptions> = {}): 
     }
     if (!name) name = `Инженер ${i + 1}`;
 
-    const b = shuffledResEngineers[i % shuffledResEngineers.length];
+    const assignedZone = assignedZones[i];
+    const zoneStarts = startsByZone[assignedZone];
+    const b = zoneStarts.length ? zoneStarts[usedStarts[assignedZone]++ % zoneStarts.length] : shuffledResEngineers[i % shuffledResEngineers.length];
     const shift = SHIFTS[i % SHIFTS.length];
     const vehicle = VEHICLES[i % VEHICLES.length];
     const equipment = skills.map(s => SKILL_EQUIPMENT[s]);
@@ -282,9 +309,16 @@ export function generateTzDataset(rawOptions: Partial<GenerateTzOptions> = {}): 
     if (e < emergencyN) { jobSkills.push(TZ_SKILLS[2]); e++; }
   }
 
-  const jobs: Job[] = jobSkills.map((skill, i) => {
+  const chooseJobs = (share: number, salt: number) => new Set(
+    shuffleList(createRng(seed ^ salt), jobSkills.map((_, index) => index))
+      .slice(0, Math.max(0, Math.min(jobCount, Math.round(jobCount * share / 100)))),
+  );
+  const urgentIndices = chooseJobs(urgentShare, 0x173a9);
+  const transportIndices = chooseJobs(vehicleConstraintShare, 0x38b71);
+
+  const jobs: Job[] = applyAverageWindows(jobSkills.map((skill, i) => {
     const b = mixedJobPool[i % mixedJobPool.length];
-    const urgent = (rng() * 100) < urgentShare;
+    const urgent = urgentIndices.has(i);
     const titles = JOB_TITLES_BY_SKILL[skill];
     const title = titles[i % titles.length];
 
@@ -302,10 +336,10 @@ export function generateTzDataset(rawOptions: Partial<GenerateTzOptions> = {}): 
     const windowEnd = windowStart + span;
 
     const equipment = SKILL_EQUIPMENT[skill];
-    const constrainVehicle = (rng() * 100) < vehicleConstraintShare;
+    const constrainVehicle = transportIndices.has(i);
     let requiredTransport = "";
     if (constrainVehicle) {
-      const capable = engineers.filter(eng => eng.skills.includes(skill));
+      const capable = engineers.filter(eng => eng.region === regionForPoint(b.lon, b.lat) && eng.skills.includes(skill));
       requiredTransport = capable.length ? pick(rng, capable).transport : pick(rng, [...VEHICLES]);
     }
 
@@ -329,7 +363,7 @@ export function generateTzDataset(rawOptions: Partial<GenerateTzOptions> = {}): 
       risk: false,
       equipment,
       requiredTransport,
-      priority: urgent ? 10 : 1,
+      priority: urgent ? 2 : 1,
       serviceMinutes,
       normativeMinutes: serviceMinutes + (skill === "Аварийные работы" ? 20 : 0),
       travelReserveMinutes: skill === "Аварийные работы" ? 20 : 0,
@@ -343,10 +377,10 @@ export function generateTzDataset(rawOptions: Partial<GenerateTzOptions> = {}): 
       cancelled: false,
     };
     return jobItem;
-  });
+  }), targetWindow);
 
   // 3. События перепланирования (3 регламентированных ТЗ типа)
-  const normalJobs = jobs.filter(j => j.priority < 10);
+  const normalJobs = jobs.filter(j => jobPriorityLevel(j) === 1);
   const cancelJob = normalJobs[Math.floor(normalJobs.length / 2)] ?? jobs[0];
   const unavailableEngineer = engineers[Math.floor(engineers.length / 2)] ?? engineers[0];
 
@@ -371,7 +405,7 @@ export function generateTzDataset(rawOptions: Partial<GenerateTzOptions> = {}): 
     risk: false,
     equipment: SKILL_EQUIPMENT[urgentSkill],
     requiredTransport: "Автомобиль",
-    priority: 10,
+    priority: 2,
     serviceMinutes: 50,
     normativeMinutes: 70,
     travelReserveMinutes: 20,
@@ -423,7 +457,7 @@ export function generateTzDataset(rawOptions: Partial<GenerateTzOptions> = {}): 
       engineersByLevel,
       engineersByVehicle,
       engineersBySkill,
-      urgentJobsCount: jobs.filter(j => j.priority >= 10).length,
+      urgentJobsCount: jobs.filter(j => jobPriorityLevel(j) === 2).length,
       constrainedTransportJobsCount: jobs.filter(j => Boolean(j.requiredTransport)).length,
     },
   };
@@ -505,7 +539,7 @@ export function jobsToTzCsv(jobs: Job[]): string {
     j.serviceMinutes,
     minutesToHm(j.windowStart),
     minutesToHm(j.windowEnd),
-    j.priority >= 10 ? "Срочная" : "Обычная",
+    jobPriorityLevel(j) === 2 ? "Срочная" : "Обычная",
     j.kind,
     j.equipment,
     j.requiredTransport ?? "",
@@ -543,7 +577,7 @@ export function eventsToTzCsv(events: TzReplanEvent[]): string {
       j ? j.serviceMinutes : "",
       j ? minutesToHm(j.windowStart) : "",
       j ? minutesToHm(j.windowEnd) : "",
-      j ? (j.priority >= 10 ? "Срочная" : "Обычная") : "",
+      j ? (jobPriorityLevel(j) === 2 ? "Срочная" : "Обычная") : "",
       j ? j.kind : "",
       j ? j.equipment : "",
       j ? (j.requiredTransport ?? "") : "",

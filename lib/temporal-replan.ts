@@ -1,4 +1,4 @@
-import { comparePlansStrict, compatible, minutesLabel, regions, simulate, type Engineer, type Job, type OptimizationResult, type RoutePlan, type RouteStop, type TravelMatrix } from "./vrptw.ts";
+import { comparePlansStrict, compatible, jobPriorityLevel, minutesLabel, regions, simulate, type Engineer, type Job, type OptimizationResult, type RoutePlan, type RouteStop, type TravelMatrix } from "./vrptw.ts";
 
 export type DispatchEvent = { type: "new_job" | "cancel_job" | "engineer_unavailable" | "recalculate"; time: number; id: string };
 
@@ -19,7 +19,7 @@ export function unforeseenEvent(plan: OptimizationResult, engineers: Engineer[],
   const starts = plan.routes.flatMap(route => route.stops.map(stop => stop.start)).sort((a, b) => a - b);
   const time = starts.length ? starts[Math.min(starts.length - 1, Math.floor(starts.length / 3))] : 8 * 60 + 30;
   const future = plan.routes.flatMap(route => route.stops.filter(stop => stop.start >= time).map(stop => ({ engineerId: route.engineerId, stop })));
-  const ordinary = future.find(item => jobs.find(job => job.id === item.stop.jobId && job.priority < 10 && !job.cancelled));
+  const ordinary = future.find(item => jobs.find(job => job.id === item.stop.jobId && jobPriorityLevel(job) === 1 && !job.cancelled));
   if (ordinary) return { type: "cancel_job", time, id: ordinary.stop.jobId };
   const busy = future.find(item => engineers.some(engineer => engineer.id === item.engineerId));
   if (busy) return { type: "engineer_unavailable", time, id: busy.engineerId };

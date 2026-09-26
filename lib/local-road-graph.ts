@@ -190,26 +190,28 @@ export class LocalRoadGraph {
   route(points: Coordinate[], requested: TravelMode): LocalRoadRoute {
     if (points.length < 2) throw new Error("Нужны минимум две точки маршрута");
     const preferred = requested === "driving" ? CAR : requested === "cycling" ? BIKE : FOOT;
-    let mode = preferred;
-    let snapped: number[];
-    try { snapped = this.snaps(points, preferred); }
-    catch {
-      if (preferred === CAR) throw new Error("Автодорожный граф не покрывает все точки маршрута");
-      mode = CAR;
-      snapped = this.snaps(points, CAR);
+    const candidates = [...new Set([preferred, FOOT, CAR])];
+    for (const mode of candidates) {
+      try {
+        const snapped = this.snaps(points, mode);
+        let distanceMeters = 0;
+        const coordinates: Coordinate[] = [];
+        const legEnds = [0];
+        for (let index = 1; index < snapped.length; index++) {
+          const leg = this.shortest(snapped[index - 1], snapped[index], mode);
+          distanceMeters += leg.distance;
+          for (const node of index === 1 ? leg.nodes : leg.nodes.slice(1)) coordinates.push([this.lon[node], this.lat[node]]);
+          legEnds.push(Math.max(0, coordinates.length - 1));
+        }
+        if (coordinates.length === 1) coordinates.push([...coordinates[0]]);
+        const provider = mode !== preferred ? "local-road-estimate" : requested === "transit" ? "walking-estimate" : requested === "walking" ? "local-walk" : requested === "cycling" ? "local-bike" : "local-car";
+        const speedKmh = mode === CAR ? 30 : mode === BIKE ? 12 : 5;
+        return { geometry: { type: "LineString", coordinates }, legEnds, distanceMeters, durationSeconds: distanceMeters / 1000 / speedKmh * 3600, provider };
+      } catch {
+        // A nearby component can be unreachable in this direction; try another
+        // real road profile and label the result as an estimate.
+      }
     }
-    let distanceMeters = 0;
-    const coordinates: Coordinate[] = [];
-    const legEnds = [0];
-    for (let index = 1; index < snapped.length; index++) {
-      const leg = this.shortest(snapped[index - 1], snapped[index], mode);
-      distanceMeters += leg.distance;
-      for (const node of index === 1 ? leg.nodes : leg.nodes.slice(1)) coordinates.push([this.lon[node], this.lat[node]]);
-      legEnds.push(Math.max(0, coordinates.length - 1));
-    }
-    if (coordinates.length === 1) coordinates.push([...coordinates[0]]);
-    const provider = mode !== preferred ? "local-road-estimate" : requested === "transit" ? "walking-estimate" : requested === "walking" ? "local-walk" : requested === "cycling" ? "local-bike" : "local-car";
-    const speedKmh = mode === CAR ? 30 : mode === BIKE ? 12 : 5;
-    return { geometry: { type: "LineString", coordinates }, legEnds, distanceMeters, durationSeconds: distanceMeters / 1000 / speedKmh * 3600, provider };
+    throw new Error("Точки находятся вне связанного локального дорожного графа");
   }
 }

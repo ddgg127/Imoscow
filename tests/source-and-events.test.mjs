@@ -124,6 +124,16 @@ test("cancelling a doubly unassigned request is a genuine no-op for routes", () 
   assert.deepEqual(compareReplannedPlans(previous, next, [engineer], 790), []);
 });
 
+test("canceling an optimized-unassigned job leaves agreed routes intact even when baseline assigned it", () => {
+  const jobs = [job("X", 0, 480, 550), job("Y", 1, 600, 700)];
+  const previous = resultFromRouteOrder([engineer], jobs, [{ engineerId: "e", jobIds: ["Y"] }], { speedKmh: 24, travel });
+  assert.equal(previous.jobs.find(item => item.id === "X").baselineEngineerId, "e");
+  const next = resultFromRouteOrder([engineer], jobs.map(item => item.id === "X" ? { ...item, cancelled: true } : item), [{ engineerId: "e", jobIds: ["Y"] }], { speedKmh: 24, travel });
+  assert.deepEqual(next.routes, previous.routes);
+  assert.equal(next.metrics.total, previous.metrics.total - 1);
+  assert.deepEqual(compareReplannedPlans(previous, next, [engineer], 540), []);
+});
+
 test("saved 12/51 reference case has a visible baseline conflict and one resource blocker", () => {
   const demo = JSON.parse(readFileSync(new URL("../data/demo-scenario.json", import.meta.url), "utf8"));
   const imported = importPlanText(JSON.stringify(demo), "demo-scenario.json", centers);

@@ -10,14 +10,14 @@ import {
   X,
   Zap,
 } from "lucide-react";
-import type { Engineer, Job, RoutePlan } from "@/lib/vrptw";
+import { jobPriorityLevel, type Engineer, type Job, type RoutePlan } from "@/lib/vrptw";
 
-export type TaskFilter = "all" | "in_progress" | "waiting" | "completed" | "unassigned";
+export type TaskFilter = "all" | "in_progress" | "waiting" | "completed" | "unassigned" | "cancelled";
 
-export type JobState = "in_progress" | "waiting" | "completed" | "unassigned";
+export type JobState = "in_progress" | "waiting" | "completed" | "unassigned" | "cancelled";
 
 export function getJobState(job: Job, started: boolean): JobState {
-  if (job.cancelled) return "unassigned";
+  if (job.cancelled) return "cancelled";
   if (job.executionStatus === "completed") return "completed";
   if (job.executionStatus === "in_progress") return "in_progress";
   if (started && !job.engineerId) return "unassigned";
@@ -29,6 +29,7 @@ const STATE_LABELS: Record<JobState, string> = {
   waiting: "Ожидает",
   completed: "Завершена",
   unassigned: "Не удаётся назначить",
+  cancelled: "Отменена",
 };
 
 export function AssignmentBoard({
@@ -73,6 +74,7 @@ export function AssignmentBoard({
     let waiting = 0;
     let completed = 0;
     let unassigned = 0;
+    let cancelled = 0;
 
     for (const job of jobs) {
       const state = jobStates.get(job.id);
@@ -80,6 +82,7 @@ export function AssignmentBoard({
       else if (state === "waiting") waiting++;
       else if (state === "completed") completed++;
       else if (state === "unassigned") unassigned++;
+      else if (state === "cancelled") cancelled++;
     }
 
     return {
@@ -88,6 +91,7 @@ export function AssignmentBoard({
       waiting: waiting,
       completed: completed,
       unassigned: unassigned,
+      cancelled: cancelled,
     };
   }, [jobs, jobStates]);
 
@@ -165,6 +169,9 @@ export function AssignmentBoard({
         >
           Не удаётся назначить <b>{counts.unassigned}</b>
         </button>
+        <button type="button" className={`filter-btn btn-cancelled ${filter === "cancelled" ? "active" : ""}`} onClick={() => setFilter("cancelled")}>
+          Отменены <b>{counts.cancelled}</b>
+        </button>
       </div>
 
       {/* Cards list: single column, ~5 cards visible, 6th peeking */}
@@ -173,7 +180,7 @@ export function AssignmentBoard({
           filteredJobs.map(job => {
             const state = jobStates.get(job.id) || "waiting";
             const engineer = job.engineerId ? byEngineer.get(job.engineerId) : undefined;
-            const isUrgent = job.priority >= 10;
+            const isUrgent = jobPriorityLevel(job) === 2;
             const isSelected = selectedJobId === job.id;
 
             return (
