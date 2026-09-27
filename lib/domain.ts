@@ -4,6 +4,27 @@ export const TZ_SKILLS = [
   "Аварийные работы",
 ] as const;
 
+export const EXTRA_SKILLS = [
+  "Монтаж СКС",
+  "Видеонаблюдение",
+  "Электропитание",
+] as const;
+
+export const ALL_SKILLS = [...TZ_SKILLS, ...EXTRA_SKILLS] as const;
+
+export const SKILL_EQUIPMENT_POOLS: Record<string, readonly string[]> = {
+  "Локальные работы": ["Диагностический комплект", "Кабельный тестер", "Wi-Fi анализатор", "Мультиметр"],
+  "Работы на подключение и дозаказы": ["ONT", "Сварочный аппарат", "Оптический кросс", "Монтажный набор GPON"],
+  "Аварийные работы": ["Рефлектометр", "Трассоискатель", "Аварийный комплект", "Тепловизор"],
+  "Монтаж СКС": ["Обжимной инструмент", "Тестер витой пары", "Кабельный органайзер"],
+  "Видеонаблюдение": ["Комплект IP-камеры", "PoE-инжектор", "Видеорегистратор"],
+  "Электропитание": ["ИБП-тестер", "Клещи токовые", "Набор для шкафа питания"],
+};
+
+export const SKILL_EQUIPMENT: Record<string, string> = Object.fromEntries(
+  Object.entries(SKILL_EQUIPMENT_POOLS).map(([skill, pool]) => [skill, pool[0] ?? skill]),
+);
+
 export const VEHICLES = [
   "Автомобиль",
   "Пешеход",
@@ -17,22 +38,38 @@ export const PRIORITY_NORMAL = 1;
 export const PRIORITY_URGENT = 10;
 
 export type TzSkill = (typeof TZ_SKILLS)[number];
+export type ExtraSkill = (typeof EXTRA_SKILLS)[number];
 export type Vehicle = (typeof VEHICLES)[number];
 export type PriorityLabel = (typeof PRIORITIES)[number];
 
-const SKILL_ALIASES: Record<string, TzSkill> = {
+export const LEGACY_SKILLS = [
+  "Подключение и модернизация",
+  "Аварийно-восстановительные работы",
+] as const;
+
+const SKILL_ALIASES: Record<string, string> = {
   "локальные работы": "Локальные работы",
-  "подключение и модернизация": "Работы на подключение и дозаказы",
   "работы на подключение и дозаказы": "Работы на подключение и дозаказы",
-  "аварийно-восстановительные работы": "Аварийные работы",
   "аварийные работы": "Аварийные работы",
+  "монтаж скс": "Монтаж СКС",
+  "скс": "Монтаж СКС",
+  "видеонаблюдение": "Видеонаблюдение",
+  "электропитание": "Электропитание",
 };
 
-export function canonicalSkill(raw: string): TzSkill {
-  const exact = SKILL_ALIASES[raw.trim().toLocaleLowerCase("ru")];
-  if (exact) return exact;
-  if (/авар|повреж|обрыв|нет\s*(?:линк|связ)|восстанов|недоступ/i.test(raw)) return TZ_SKILLS[2];
-  if (/подключ|монтаж|дозаказ|gpon|гигабит|конверг|миграц|замен/i.test(raw)) return TZ_SKILLS[1];
+export function canonicalSkill(raw: string): string {
+  const trimmed = raw.trim();
+  if (!trimmed) return TZ_SKILLS[0];
+  const lower = trimmed.toLocaleLowerCase("ru");
+  const preserved = [...ALL_SKILLS, ...LEGACY_SKILLS].find(skill => skill.toLocaleLowerCase("ru") === lower);
+  if (preserved) return preserved;
+  const aliased = SKILL_ALIASES[lower];
+  if (aliased) return aliased;
+  if (/видеонаблюд|ip.?камер|видеорегистр/i.test(trimmed)) return "Видеонаблюдение";
+  if (/скс|витой пар|патч.?панел/i.test(trimmed)) return "Монтаж СКС";
+  if (/электропитан|ибп|щитов/i.test(trimmed)) return "Электропитание";
+  if (/авар|повреж|обрыв|нет\s*(?:линк|связ)|восстанов|недоступ/i.test(trimmed)) return TZ_SKILLS[2];
+  if (/подключ|дозаказ|gpon|гигабит|конверг|миграц/i.test(trimmed)) return TZ_SKILLS[1];
   return TZ_SKILLS[0];
 }
 
@@ -55,19 +92,18 @@ export function priorityLabel(priority: number): PriorityLabel {
   return priority >= PRIORITY_URGENT ? "Срочная" : "Обычная";
 }
 
-export function plannerSkills(raw: string, level = ""): TzSkill[] {
+export function plannerSkills(raw: string, level = ""): string[] {
   const parts = raw.split(/[,;]/).map(part => part.trim()).filter(Boolean);
   const mapped = [...new Set(parts.map(canonicalSkill))];
-  if (/профи/i.test(level) || parts.length >= 3) return [...TZ_SKILLS];
-  if (/специал/i.test(level) || parts.length === 2) return mapped.length >= 2 ? mapped : [TZ_SKILLS[0], TZ_SKILLS[1]];
-  return mapped.length ? mapped : [TZ_SKILLS[0]];
+  if (mapped.length) return mapped;
+  if (/профи/i.test(level)) return [...TZ_SKILLS];
+  if (/специал/i.test(level)) return [TZ_SKILLS[0], TZ_SKILLS[1]];
+  return [TZ_SKILLS[0]];
 }
 
 export function equipmentFor(raw: string, skill: string) {
   if (raw) return raw;
-  if (skill === TZ_SKILLS[2]) return "Рефлектометр";
-  if (skill === TZ_SKILLS[1]) return "ONT";
-  return "Диагностический комплект";
+  return SKILL_EQUIPMENT[skill] ?? SKILL_EQUIPMENT[TZ_SKILLS[0]] ?? "Диагностический комплект";
 }
 
 export function serviceMinutesFor(raw: string, skill: string) {

@@ -1,31 +1,12 @@
+import { ALL_SKILLS, EXTRA_SKILLS, SKILL_EQUIPMENT, SKILL_EQUIPMENT_POOLS, TZ_SKILLS, VEHICLES, type TzSkill, type Vehicle } from "./domain.ts";
 import { applyAverageWindows, jobPriorityLevel, scaleEngineers, scaleJobs, type Engineer, type Job, type Region } from "./vrptw.ts";
 import type { Coordinate } from "./map-providers.ts";
 import catalog from "../generator/src/data/moscow-buildings.json" with { type: "json" };
 
+export { ALL_SKILLS, EXTRA_SKILLS, SKILL_EQUIPMENT, SKILL_EQUIPMENT_POOLS, TZ_SKILLS, VEHICLES };
+export type { TzSkill, Vehicle };
+
 export const BUILDING_COUNT = catalog.buildings.length;
-
-export const TZ_SKILLS = [
-  "Локальные работы",
-  "Работы на подключение и дозаказы",
-  "Аварийные работы",
-] as const;
-
-export type TzSkill = (typeof TZ_SKILLS)[number];
-
-export const SKILL_EQUIPMENT: Record<string, string> = {
-  "Локальные работы": "Диагностический комплект",
-  "Работы на подключение и дозаказы": "ONT",
-  "Аварийные работы": "Рефлектометр",
-};
-
-export const VEHICLES = [
-  "Автомобиль",
-  "Пешеход",
-  "Велосипед",
-  "Общественный транспорт",
-] as const;
-
-export type Vehicle = (typeof VEHICLES)[number];
 
 export type TzReplanEvent = {
   type: "отмена заявки" | "недоступность инженера" | "срочная заявка";
@@ -65,6 +46,10 @@ export type GenerateTzOptions = {
   pro?: number; // % Профи (3 навыка)
   urgentShare?: number; // % срочных заявок
   vehicleConstraintShare?: number; // % с ограничением транспорта
+  extraSkillShare?: number; // % заявок с дополнительными навыками
+  cancelEvents?: number;
+  unavailableEvents?: number;
+  urgentEvents?: number;
   seed?: number;
 };
 
@@ -103,7 +88,7 @@ const SPEC_PAIRS: Array<[TzSkill, TzSkill]> = [
   [TZ_SKILLS[1], TZ_SKILLS[2]],
 ];
 
-const JOB_TITLES_BY_SKILL: Record<TzSkill, string[]> = {
+const JOB_TITLES_BY_SKILL: Record<string, string[]> = {
   "Локальные работы": [
     "Диагностика абонентской линии",
     "Настройка пользовательского роутера",
@@ -133,6 +118,24 @@ const JOB_TITLES_BY_SKILL: Record<TzSkill, string[]> = {
     "Восстановление оптического линка после повреждения",
     "Локализация обрыва рефлектометром и сварка",
   ],
+  "Монтаж СКС": [
+    "Прокладка витой пары в офисе",
+    "Сборка патч-панели этажа",
+    "Обжим и маркировка портов СКС",
+    "Тестирование линии категории 6",
+  ],
+  "Видеонаблюдение": [
+    "Установка IP-камеры на фасаде",
+    "Настройка видеорегистратора",
+    "Замена камеры в подъезде",
+    "Юстировка обзора камеры двора",
+  ],
+  "Электропитание": [
+    "Замена ИБП в шкафу узла",
+    "Ревизия щита питания этажа",
+    "Подключение резервного питания",
+    "Измерение нагрузки в шкафу",
+  ],
 };
 
 function createRng(seed = 42) {
@@ -160,6 +163,281 @@ function shuffleList<T>(rng: () => number, list: readonly T[]): T[] {
   return arr;
 }
 
+function uniqueStrings(items: readonly string[]): string[] {
+  return [...new Set(items)];
+}
+
+function kitForSkills(skills: readonly string[], level: string, rng: () => number): string[] {
+  const tools: string[] = [];
+  for (const skill of skills) {
+    const pool = SKILL_EQUIPMENT_POOLS[skill] ?? [SKILL_EQUIPMENT[skill] ?? skill];
+    if (level === "новичок") {
+      tools.push(pool[0]!);
+      if (pool[1] && rng() < 0.4) tools.push(pool[1]);
+    } else if (level === "специалист") {
+      tools.push(pool[0]!);
+      if (pool[1]) tools.push(pool[1]);
+      if (pool[2] && rng() < 0.55) tools.push(pool[2]);
+    } else {
+      tools.push(...pool);
+    }
+  }
+  return uniqueStrings(tools);
+}
+
+function extraSkillsFor(level: string, index: number, rng: () => number): string[] {
+  if (level === "новичок") return [];
+  const first = EXTRA_SKILLS[index % EXTRA_SKILLS.length];
+  if (level === "специалист") return rng() < 0.62 ? [first] : [];
+  const second = EXTRA_SKILLS[(index + 1) % EXTRA_SKILLS.length];
+  return rng() < 0.48 ? [first, second] : [first];
+}
+
+function toneForSkill(skill: string): string {
+  if (skill === TZ_SKILLS[2] || skill === "Электропитание") return "amber";
+  if (skill === TZ_SKILLS[1] || skill === "Монтаж СКС") return "blue";
+  if (skill === "Видеонаблюдение") return "green";
+  return "violet";
+}
+
+function workClassForSkill(skill: string): NonNullable<Job["workClass"]> {
+  if (skill === TZ_SKILLS[2]) return "emergency";
+  if (skill === TZ_SKILLS[1] || skill === "Монтаж СКС" || skill === "Видеонаблюдение") return "connection";
+  return "repair";
+}
+
+function serviceRangeForSkill(skill: string): [number, number] {
+  if (skill === TZ_SKILLS[2]) return [45, 90];
+  if (skill === TZ_SKILLS[1]) return [35, 65];
+  if (skill === "Электропитание") return [30, 70];
+  if (skill === "Видеонаблюдение") return [35, 75];
+  if (skill === "Монтаж СКС") return [30, 60];
+  return [20, 40];
+}
+
+function titleForSkill(skill: string, index: number): string {
+  const titles = JOB_TITLES_BY_SKILL[skill] ?? JOB_TITLES_BY_SKILL[TZ_SKILLS[0]]!;
+  return titles[index % titles.length]!;
+}
+
+function localToolForSkill(rng: () => number, skill: string, region: Region, engineers: Engineer[]): string {
+  const pool = SKILL_EQUIPMENT_POOLS[skill] ?? [SKILL_EQUIPMENT[skill] ?? skill];
+  const capable = engineers.filter(engineer => engineer.region === region && engineer.skills.includes(skill));
+  const held = uniqueStrings(capable.flatMap(engineer => engineer.equipment.filter(tool => pool.includes(tool))));
+  return pick(rng, held.length ? held : [pool[0]!]);
+}
+
+function coverZoneSkills(engineers: Engineer[], skills: readonly string[]): void {
+  const zones: Region[] = ["Восток", "Юго-восток", "Югоцентр"];
+  for (const zone of zones) {
+    const local = engineers.filter(engineer => engineer.region === zone);
+    if (!local.length) continue;
+    for (const skill of skills) {
+      if (local.some(engineer => engineer.skills.includes(skill))) continue;
+      const host = [...local].sort((a, b) => b.skills.length - a.skills.length || a.id.localeCompare(b.id))[0];
+      if (!host) continue;
+      host.skills = uniqueStrings([...host.skills, skill]);
+      const pool = SKILL_EQUIPMENT_POOLS[skill] ?? [SKILL_EQUIPMENT[skill] ?? skill];
+      const take = host.skills.length <= 1 ? 1 : Math.min(2, pool.length);
+      host.equipment = uniqueStrings([...host.equipment, ...pool.slice(0, take)]);
+    }
+  }
+}
+
+function applyExtraSkillJobs(jobs: Job[], engineers: Engineer[], rng: () => number, share: number): void {
+  const shareClamped = Math.max(0, Math.min(40, share));
+  const candidates = jobs.filter(job => job.kind !== TZ_SKILLS[2]);
+  const budget = Math.round(candidates.length * shareClamped / 100);
+  if (budget <= 0) return;
+  let converted = 0;
+  for (const job of shuffleList(rng, candidates)) {
+    if (converted >= budget) break;
+    const extrasHeld = uniqueStrings(
+      engineers.filter(engineer => engineer.region === job.region).flatMap(engineer => engineer.skills.filter(skill => EXTRA_SKILLS.includes(skill as typeof EXTRA_SKILLS[number]))),
+    );
+    if (!extrasHeld.length) continue;
+    const skill = pick(rng, extrasHeld);
+    const [lo, hi] = serviceRangeForSkill(skill);
+    job.kind = skill;
+    job.workType = titleForSkill(skill, converted + Number.parseInt(job.id, 10));
+    job.tone = toneForSkill(skill);
+    job.workClass = workClassForSkill(skill);
+    job.equipment = localToolForSkill(rng, skill, job.region, engineers);
+    job.serviceMinutes = intBetween(rng, lo, hi);
+    job.normativeMinutes = job.serviceMinutes + (skill === "Электропитание" ? 15 : 0);
+    if (job.requiredTransport) {
+      const capable = engineers.filter(engineer =>
+        engineer.region === job.region
+        && engineer.skills.includes(skill)
+        && engineer.equipment.includes(job.equipment)
+      );
+      job.requiredTransport = capable.length ? pick(rng, capable).transport : "";
+    }
+    converted += 1;
+  }
+}
+
+function nextGeneratedJobId(jobs: Job[]): string {
+  const nums = jobs.map(job => Number.parseInt(job.id, 10)).filter(Number.isFinite);
+  const max = nums.length ? Math.max(...nums) : jobs.length;
+  return String(max + 1).padStart(4, "0");
+}
+
+function spreadEventTimes(rng: () => number, count: number): string[] {
+  const used = new Set<number>();
+  const minutes: number[] = [];
+  for (let i = 0; i < count; i++) {
+    let value = 9 * 60 + intBetween(rng, 0, 7 * 60);
+    value = Math.round(value / 5) * 5;
+    let guard = 0;
+    while (used.has(value) && guard < 48) {
+      value = ((value + 15 - 9 * 60) % (8 * 60)) + 9 * 60;
+      guard += 1;
+    }
+    used.add(value);
+    minutes.push(value);
+  }
+  minutes.sort((a, b) => a - b);
+  return minutes.map(minutesToHm);
+}
+
+type BuildingRef = { address: string; area?: string; lon: number; lat: number };
+
+function makeUrgentEventJob(
+  rng: () => number,
+  jobs: Job[],
+  engineers: Engineer[],
+  buildings: BuildingRef[],
+  index: number,
+): Job {
+  const building = buildings[(jobs.length + index * 11 + 7) % buildings.length] ?? buildings[0]!;
+  const region = regionForPoint(building.lon, building.lat);
+  const localSkills = uniqueStrings(engineers.filter(engineer => engineer.region === region).flatMap(engineer => engineer.skills));
+  const skill = pick(rng, localSkills.length ? localSkills : [...ALL_SKILLS]);
+  const [lo, hi] = serviceRangeForSkill(skill);
+  const serviceMinutes = intBetween(rng, lo, hi);
+  const span = Math.max(serviceMinutes + 40, intBetween(rng, 90, 150));
+  const windowStart = intBetween(rng, 9 * 60, 16 * 60);
+  const windowEnd = Math.min(22 * 60, windowStart + span);
+  const capable = engineers.filter(engineer => engineer.region === region && engineer.skills.includes(skill));
+  const requiredTransport = rng() < 0.45 && capable.some(engineer => engineer.transport === "Автомобиль")
+    ? "Автомобиль"
+    : "";
+  return {
+    id: nextGeneratedJobId(jobs),
+    time: `${minutesToHm(windowStart)}–${minutesToHm(windowEnd)}`,
+    windowStart,
+    windowEnd,
+    area: building.area || "Москва",
+    address: building.address,
+    kind: skill,
+    workType: `Срочный выезд: ${titleForSkill(skill, index).toLocaleLowerCase("ru")}`,
+    tone: toneForSkill(skill),
+    region,
+    engineerId: null,
+    baselineEngineerId: null,
+    coordinates: [building.lon, building.lat] as Coordinate,
+    geocodeVerified: true,
+    geocodeQuality: "house",
+    risk: false,
+    equipment: localToolForSkill(rng, skill, region, engineers),
+    requiredTransport,
+    priority: 2,
+    serviceMinutes,
+    normativeMinutes: serviceMinutes + 20,
+    travelReserveMinutes: 20,
+    estimatedTravelMinutes: 20,
+    normSource: "экспертный норматив",
+    urgency: "urgent",
+    workClass: workClassForSkill(skill),
+    source: "Событие перепланирования",
+    status: "Новая",
+    executionStatus: "not_started",
+    cancelled: false,
+  };
+}
+
+function clampEventCount(value: number | undefined, fallback: number, max: number): number {
+  if (value == null || !Number.isFinite(value)) return Math.min(fallback, max);
+  return Math.max(0, Math.min(max, Math.round(value)));
+}
+
+export function createTzReplanEvent(options: {
+  type: TzReplanEvent["type"];
+  time: string;
+  jobs: Job[];
+  engineers: Engineer[];
+  events?: TzReplanEvent[];
+  buildings?: BuildingRef[];
+  seed?: number;
+}): TzReplanEvent {
+  const rng = createRng(options.seed ?? 17);
+  const jobs = options.jobs;
+  const engineers = options.engineers;
+  const events = options.events ?? [];
+  const buildings = options.buildings ?? catalog.buildings;
+  if (options.type === "отмена заявки") {
+    const used = new Set(events.filter(event => event.type === "отмена заявки").map(event => event.entityId));
+    const ordinary = jobs.filter(job => jobPriorityLevel(job) === 1 && !used.has(job.id));
+    const pool = ordinary.length ? ordinary : jobs.filter(job => !used.has(job.id));
+    const job = pool[Math.floor(pool.length / 2)] ?? jobs[0];
+    return { type: "отмена заявки", time: options.time, entityId: job?.id ?? "0001" };
+  }
+  if (options.type === "недоступность инженера") {
+    const used = new Set(events.filter(event => event.type === "недоступность инженера").map(event => event.entityId));
+    const pool = engineers.filter(engineer => !used.has(engineer.id));
+    const engineer = pool[Math.floor(pool.length / 2)] ?? engineers[0];
+    return { type: "недоступность инженера", time: options.time, entityId: engineer?.id ?? "E001" };
+  }
+  const existingUrgent = events.filter(event => event.type === "срочная заявка" && event.job).map(event => event.job!);
+  const job = makeUrgentEventJob(rng, [...jobs, ...existingUrgent], engineers, buildings, existingUrgent.length);
+  return { type: "срочная заявка", time: options.time, entityId: job.id, job };
+}
+
+function buildReplanEvents(
+  rng: () => number,
+  jobs: Job[],
+  engineers: Engineer[],
+  buildings: BuildingRef[],
+  options: { cancelEvents?: number; unavailableEvents?: number; urgentEvents?: number },
+): TzReplanEvent[] {
+  const cancelN = clampEventCount(options.cancelEvents, 1, jobs.length);
+  const unavailableN = clampEventCount(options.unavailableEvents, 1, engineers.length);
+  const urgentN = clampEventCount(options.urgentEvents, 1, 12);
+  const times = spreadEventTimes(rng, cancelN + unavailableN + urgentN);
+  const events: TzReplanEvent[] = [];
+  let timeIndex = 0;
+
+  const usedJobs = new Set<string>();
+  const cancelPool = shuffleList(rng, jobs.filter(job => jobPriorityLevel(job) === 1));
+  const fallbackJobs = cancelPool.length ? cancelPool : shuffleList(rng, jobs);
+  for (let i = 0; i < cancelN; i++) {
+    const job = fallbackJobs.find(item => !usedJobs.has(item.id)) ?? fallbackJobs[i % fallbackJobs.length];
+    if (!job) break;
+    usedJobs.add(job.id);
+    events.push({ type: "отмена заявки", time: times[timeIndex++] ?? "10:00", entityId: job.id });
+  }
+
+  const usedEngineers = new Set<string>();
+  const engineerPool = shuffleList(rng, engineers);
+  for (let i = 0; i < unavailableN; i++) {
+    const engineer = engineerPool.find(item => !usedEngineers.has(item.id)) ?? engineerPool[i % engineerPool.length];
+    if (!engineer) break;
+    usedEngineers.add(engineer.id);
+    events.push({ type: "недоступность инженера", time: times[timeIndex++] ?? "11:00", entityId: engineer.id });
+  }
+
+  const urgentJobs: Job[] = [];
+  for (let i = 0; i < urgentN; i++) {
+    const job = makeUrgentEventJob(rng, [...jobs, ...urgentJobs], engineers, buildings, i);
+    urgentJobs.push(job);
+    events.push({ type: "срочная заявка", time: times[timeIndex++] ?? "12:00", entityId: job.id, job });
+  }
+
+  events.sort((a, b) => a.time.localeCompare(b.time));
+  return events;
+}
+
 function minutesToHm(total: number): string {
   const wrapped = ((total % (24 * 60)) + 24 * 60) % (24 * 60);
   const h = String(Math.floor(wrapped / 60)).padStart(2, "0");
@@ -182,6 +460,7 @@ export function generateTzDataset(rawOptions: Partial<GenerateTzOptions> = {}): 
   const speedKmh = Math.max(10, rawOptions.speedKmh ?? 24);
   const urgentShare = rawOptions.urgentShare ?? 15;
   const vehicleConstraintShare = rawOptions.vehicleConstraintShare ?? 25;
+  const extraSkillShare = rawOptions.extraSkillShare ?? 18;
   const seed = rawOptions.seed ?? 42;
 
   const rng = createRng(seed);
@@ -207,15 +486,21 @@ export function generateTzDataset(rawOptions: Partial<GenerateTzOptions> = {}): 
   if (noviceN + specN > engineerCount) specN = Math.max(0, engineerCount - noviceN);
   const proN = Math.max(0, engineerCount - noviceN - specN);
 
-  const levels: Array<{ level: "новичок" | "специалист" | "профи"; skills: TzSkill[] }> = [];
+  const levels: Array<{ level: "новичок" | "специалист" | "профи"; skills: string[] }> = [];
   for (let i = 0; i < noviceN; i++) {
     levels.push({ level: "новичок", skills: [TZ_SKILLS[i % 3]] });
   }
   for (let i = 0; i < specN; i++) {
-    levels.push({ level: "специалист", skills: [...SPEC_PAIRS[i % 3]] });
+    levels.push({
+      level: "специалист",
+      skills: uniqueStrings([...SPEC_PAIRS[i % 3], ...extraSkillsFor("специалист", i, rng)]),
+    });
   }
   for (let i = 0; i < proN; i++) {
-    levels.push({ level: "профи", skills: [...TZ_SKILLS] });
+    levels.push({
+      level: "профи",
+      skills: uniqueStrings([...TZ_SKILLS, ...extraSkillsFor("профи", i, rng)]),
+    });
   }
 
   const zoneOrder: Region[] = ["Восток", "Юго-восток", "Югоцентр"];
@@ -264,7 +549,7 @@ export function generateTzDataset(rawOptions: Partial<GenerateTzOptions> = {}): 
     const b = zoneStarts.length ? zoneStarts[usedStarts[assignedZone]++ % zoneStarts.length] : shuffledResEngineers[i % shuffledResEngineers.length];
     const shift = SHIFTS[i % SHIFTS.length];
     const vehicle = VEHICLES[i % VEHICLES.length];
-    const equipment = skills.map(s => SKILL_EQUIPMENT[s]);
+    const equipment = kitForSkills(skills, level, rng);
     const region = regionForPoint(b.lon, b.lat);
 
     const eng: Engineer & { address: string; level: string } = {
@@ -289,6 +574,7 @@ export function generateTzDataset(rawOptions: Partial<GenerateTzOptions> = {}): 
     };
     return eng;
   });
+  coverZoneSkills(engineers, ALL_SKILLS);
 
   // 2. Заявки: равномерно чередуем навыки и распределяем по зданиям
   const easyPct = rawOptions.jobEasy ?? 40;
@@ -316,16 +602,13 @@ export function generateTzDataset(rawOptions: Partial<GenerateTzOptions> = {}): 
   const urgentIndices = chooseJobs(urgentShare, 0x173a9);
   const transportIndices = chooseJobs(vehicleConstraintShare, 0x38b71);
 
-  const jobs: Job[] = applyAverageWindows(jobSkills.map((skill, i) => {
+  const draftedJobs = jobSkills.map((skill, i) => {
     const b = mixedJobPool[i % mixedJobPool.length];
     const urgent = urgentIndices.has(i);
-    const titles = JOB_TITLES_BY_SKILL[skill];
-    const title = titles[i % titles.length];
-
-    let serviceMinutes = 30;
-    if (skill === "Локальные работы") serviceMinutes = intBetween(rng, 20, 40);
-    else if (skill === "Работы на подключение и дозаказы") serviceMinutes = intBetween(rng, 35, 65);
-    else serviceMinutes = intBetween(rng, 45, 90);
+    const region = regionForPoint(b.lon, b.lat);
+    const title = titleForSkill(skill, i);
+    const [lo, hi] = serviceRangeForSkill(skill);
+    const serviceMinutes = intBetween(rng, lo, hi);
 
     // Окно: длительность варьируется вокруг targetWindow
     const spanVariation = intBetween(rng, -Math.floor(targetWindow * 0.35), Math.floor(targetWindow * 0.45));
@@ -335,15 +618,14 @@ export function generateTzDataset(rawOptions: Partial<GenerateTzOptions> = {}): 
     const windowStart = intBetween(rng, earliestStart, latestStart);
     const windowEnd = windowStart + span;
 
-    const equipment = SKILL_EQUIPMENT[skill];
+    const equipment = localToolForSkill(rng, skill, region, engineers);
     const constrainVehicle = transportIndices.has(i);
     let requiredTransport = "";
     if (constrainVehicle) {
-      const capable = engineers.filter(eng => eng.region === regionForPoint(b.lon, b.lat) && eng.skills.includes(skill));
+      const capable = engineers.filter(eng => eng.region === region && eng.skills.includes(skill) && eng.equipment.includes(equipment));
       requiredTransport = capable.length ? pick(rng, capable).transport : pick(rng, [...VEHICLES]);
     }
 
-    const region = regionForPoint(b.lon, b.lat);
     const jobItem: Job = {
       id: String(i + 1).padStart(4, "0"),
       time: `${minutesToHm(windowStart)}–${minutesToHm(windowEnd)}`,
@@ -353,7 +635,7 @@ export function generateTzDataset(rawOptions: Partial<GenerateTzOptions> = {}): 
       address: b.address,
       kind: skill,
       workType: title,
-      tone: skill === "Аварийные работы" ? "amber" : skill === "Работы на подключение и дозаказы" ? "blue" : "violet",
+      tone: toneForSkill(skill),
       region,
       engineerId: null,
       baselineEngineerId: null,
@@ -365,65 +647,27 @@ export function generateTzDataset(rawOptions: Partial<GenerateTzOptions> = {}): 
       requiredTransport,
       priority: urgent ? 2 : 1,
       serviceMinutes,
-      normativeMinutes: serviceMinutes + (skill === "Аварийные работы" ? 20 : 0),
-      travelReserveMinutes: skill === "Аварийные работы" ? 20 : 0,
+      normativeMinutes: serviceMinutes + (skill === TZ_SKILLS[2] ? 20 : 0),
+      travelReserveMinutes: skill === TZ_SKILLS[2] ? 20 : 0,
       estimatedTravelMinutes: 15,
       normSource: "демонстрационное допущение",
       urgency: urgent ? "urgent" : "normal",
-      workClass: skill === "Аварийные работы" ? "emergency" : skill === "Работы на подключение и дозаказы" ? "connection" : "repair",
-      source: "Генератор ТЗ",
+      workClass: workClassForSkill(skill),
+      source: "Генератор",
       status: "Новая",
       executionStatus: "not_started",
       cancelled: false,
     };
     return jobItem;
-  }), targetWindow);
+  });
+  applyExtraSkillJobs(draftedJobs, engineers, rng, extraSkillShare);
+  const jobs: Job[] = applyAverageWindows(draftedJobs, targetWindow);
 
-  // 3. События перепланирования (3 регламентированных ТЗ типа)
-  const normalJobs = jobs.filter(j => jobPriorityLevel(j) === 1);
-  const cancelJob = normalJobs[Math.floor(normalJobs.length / 2)] ?? jobs[0];
-  const unavailableEngineer = engineers[Math.floor(engineers.length / 2)] ?? engineers[0];
-
-  const urgentBuilding = mixedJobPool[(jobCount + 7) % mixedJobPool.length];
-  const urgentSkill = TZ_SKILLS[2]; // Аварийные работы
-  const urgentJob: Job = {
-    id: String(jobs.length + 1).padStart(4, "0"),
-    time: "10:30–12:30",
-    windowStart: 10 * 60 + 30,
-    windowEnd: 12 * 60 + 30,
-    area: urgentBuilding.area || "Москва",
-    address: urgentBuilding.address,
-    kind: urgentSkill,
-    workType: "Срочный выезд: аварийное повреждение кабеля",
-    tone: "amber",
-    region: regionForPoint(urgentBuilding.lon, urgentBuilding.lat),
-    engineerId: null,
-    baselineEngineerId: null,
-    coordinates: [urgentBuilding.lon, urgentBuilding.lat] as Coordinate,
-    geocodeVerified: true,
-    geocodeQuality: "house",
-    risk: false,
-    equipment: SKILL_EQUIPMENT[urgentSkill],
-    requiredTransport: "Автомобиль",
-    priority: 2,
-    serviceMinutes: 50,
-    normativeMinutes: 70,
-    travelReserveMinutes: 20,
-    estimatedTravelMinutes: 20,
-    normSource: "экспертный норматив",
-    urgency: "urgent",
-    workClass: "emergency",
-    source: "Событие перепланирования",
-    status: "Новая",
-    executionStatus: "not_started",
-    cancelled: false,
-  };
-
-  const events: TzReplanEvent[] = [
-    { type: "отмена заявки", time: "08:30", entityId: cancelJob.id },
-    { type: "недоступность инженера", time: "08:40", entityId: unavailableEngineer.id },
-    { type: "срочная заявка", time: "08:45", entityId: urgentJob.id, job: urgentJob },
-  ];
+  const events = buildReplanEvents(rng, jobs, engineers, mixedJobPool, {
+    cancelEvents: rawOptions.cancelEvents,
+    unavailableEvents: rawOptions.unavailableEvents,
+    urgentEvents: rawOptions.urgentEvents,
+  });
 
   // Сбор статистики для информативных карточек
   const jobsBySkill: Record<string, number> = {};

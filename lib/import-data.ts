@@ -1,10 +1,10 @@
 import type { Coordinate } from "./map-providers";
 import type { Engineer, Job, Region } from "./vrptw";
+import { TZ_SKILLS, canonicalSkill as mapCanonicalSkill, equipmentFor as defaultEquipment, plannerSkills as mapPlannerSkills } from "./domain.ts";
 
 export type ImportedPlan = { jobs: Job[]; engineers?: Engineer[]; speedKmh?: number; warnings: string[] };
 
 const regions: Region[] = ["Восток", "Юго-восток", "Югоцентр"];
-const skills = ["Локальные работы", "Подключение и модернизация", "Аварийно-восстановительные работы"] as const;
 const transports = ["Автомобиль", "Общественный транспорт", "Велосипед", "Пешком"];
 const engineerColors = ["#6547e7", "#0f938b", "#e97931", "#4381d2", "#c44b8a", "#2f9e44", "#c9a227", "#db3f55"];
 
@@ -38,10 +38,7 @@ function timeMinutes(raw: string, fallback: number) {
 }
 
 export function canonicalSkill(raw: string) {
-  if (skills.includes(raw as typeof skills[number])) return raw;
-  if (/авар|повреж|обрыв|нет\s*(?:линк|связ)|восстанов|недоступ/i.test(raw)) return skills[2];
-  if (/подключ|монтаж|дозаказ|gpon|гигабит|конверг|миграц|замен/i.test(raw)) return skills[1];
-  return skills[0];
+  return mapCanonicalSkill(raw);
 }
 
 function canonicalTransport(raw: string, fallback = "") {
@@ -54,25 +51,20 @@ function canonicalTransport(raw: string, fallback = "") {
 }
 
 function plannerSkills(raw: string, level = "") {
-  const parts = raw.split(/[,;]/).map(part => part.trim()).filter(Boolean);
-  const mapped = [...new Set(parts.map(canonicalSkill))];
-  if (/профи/i.test(level) || parts.length >= 3) return [...skills];
-  if (/специал/i.test(level) || parts.length === 2) return mapped.length >= 2 ? mapped : [skills[0], skills[1]];
-  return mapped.length ? mapped : [skills[0]];
+  return mapPlannerSkills(raw, level);
 }
 
 function equipmentFor(raw: string, skill: string) {
-  if (raw) return raw;
-  if (skill === skills[2]) return "Рефлектометр";
-  if (skill === skills[1]) return "ONT";
-  return "Диагностический комплект";
+  return defaultEquipment(raw, skill);
 }
 
 function serviceFor(raw: string, skill: string) {
   const explicit = Number(raw);
   if (Number.isFinite(explicit) && explicit >= 5 && explicit <= 480) return Math.round(explicit);
-  if (skill === skills[2]) return 80;
-  if (skill === skills[1]) return 45;
+  if (skill === TZ_SKILLS[2]) return 80;
+  if (skill === TZ_SKILLS[1]) return 45;
+  if (skill === "Видеонаблюдение" || skill === "Электропитание") return 50;
+  if (skill === "Монтаж СКС") return 40;
   return 30;
 }
 
@@ -165,9 +157,9 @@ function rowsToJobs(rows: Record<string, unknown>[], centers: Record<Region, Coo
     const priority = priorityFor(value(row, ["priority", "приоритет"]), rawUrgency);
     const explicitService = value(row, ["serviceminutes", "service_minutes", "время работы", "длительность", "durationmin"]);
     const explicitNorm = numberValue(row, ["normativeMinutes", "normative_minutes", "норматив"]);
-    const reserve = numberValue(row, ["travelReserveMinutes", "travel_reserve_minutes"]) ?? (kind === skills[2] ? 20 : 0);
+    const reserve = numberValue(row, ["travelReserveMinutes", "travel_reserve_minutes"]) ?? (kind === TZ_SKILLS[2] ? 20 : 0);
     const serviceMinutes = explicitService ? serviceFor(explicitService, kind) : explicitNorm != null ? Math.max(5, Math.round(explicitNorm - reserve)) : serviceFor("", kind);
-    const workClass = value(row, ["workClass", "work_class"]) || (kind === skills[2] ? "emergency" : kind === skills[1] ? "connection" : "repair");
+    const workClass = value(row, ["workClass", "work_class"]) || (kind === TZ_SKILLS[2] ? "emergency" : kind === TZ_SKILLS[1] || kind === "Монтаж СКС" || kind === "Видеонаблюдение" ? "connection" : "repair");
     const urgency = priority === 2 ? "urgent" : "normal";
     return {
       id, time: `${String(Math.floor(start / 60)).padStart(2, "0")}:${String(start % 60).padStart(2, "0")}–${String(Math.floor(end / 60)).padStart(2, "0")}:${String(end % 60).padStart(2, "0")}`,
@@ -175,9 +167,9 @@ function rowsToJobs(rows: Record<string, unknown>[], centers: Record<Region, Coo
       kind, workType: rawWork, tone: ["violet", "blue", "amber", "green"][index % 4], region: resolvedRegion,
       engineerId: null, baselineEngineerId: null, coordinates: point, geocodeVerified: verified,
       geocodeQuality: verified ? (["street", "manual"].includes(value(row, ["geocodeQuality"])) ? value(row, ["geocodeQuality"]) as "street" | "manual" : "house") : "fallback", risk: false, equipment, requiredTransport: transport, allowedTransports: allowed.length ? allowed : undefined, priority,
-      serviceMinutes, normativeMinutes: explicitNorm ?? (kind === skills[2] ? 100 : undefined), travelReserveMinutes: reserve,
+      serviceMinutes, normativeMinutes: explicitNorm ?? (kind === TZ_SKILLS[2] ? 100 : undefined), travelReserveMinutes: reserve,
       estimatedTravelMinutes: numberValue(row, ["estimatedTravelMinutes", "estimated_travel_minutes"]) ?? reserve,
-      normSource: explicitService || explicitNorm != null ? "введено пользователем" : kind === skills[2] ? "экспертный норматив" : "демонстрационное допущение",
+      normSource: explicitService || explicitNorm != null ? "введено пользователем" : kind === TZ_SKILLS[2] ? "экспертный норматив" : "демонстрационное допущение",
       urgency, workClass: ["emergency", "connection", "repair"].includes(workClass) ? workClass as Job["workClass"] : "repair",
       source, status: value(row, ["status", "статус"]) || "Новая", executionStatus: (["not_started", "in_progress", "completed"].includes(value(row, ["executionStatus", "execution_status", "выполнение"])) ? value(row, ["executionStatus", "execution_status", "выполнение"]) : "not_started") as Job["executionStatus"], cancelled: /^(true|1|да)$/i.test(value(row, ["cancelled", "отменена"])),
     };

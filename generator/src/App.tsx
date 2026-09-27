@@ -88,6 +88,9 @@ export default function App() {
         <Field label="Профи" value={params.pro} onChange={set("pro")} />
         <Field label="% повышенных" value={params.urgentShare} onChange={set("urgentShare")} />
         <Field label="% заявок с ТС" value={params.vehicleConstraintShare} onChange={set("vehicleConstraintShare")} />
+        <Field label="Отмены заявок" value={params.cancelEvents} onChange={set("cancelEvents")} />
+        <Field label="Недоступность инженеров" value={params.unavailableEvents} onChange={set("unavailableEvents")} />
+        <Field label="Срочные заявки" value={params.urgentEvents} onChange={set("urgentEvents")} />
         <Field label="Seed" value={params.seed} onChange={set("seed")} />
       </form>
 

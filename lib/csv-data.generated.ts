@@ -8087,7 +8087,7 @@ export const csvMeta = {
     "Юго-восток",
     "Югоцентр"
   ],
-  "generatedAt": "2026-09-25",
+  "generatedAt": "2026-09-27",
   "geocoding": {
     "uniqueAddresses": 198,
     "fallbackAddresses": 0,

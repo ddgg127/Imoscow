@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { AlertTriangle, BarChart3, Check, ChevronDown, Clipboard, Clock3, Compass, Contrast, Database, Download, FileJson, FileUp, Layers3, MapPin, Menu, MoreHorizontal, Play, Plus, RefreshCw, Route, Search, Sliders, Sparkles, SunMoon, Table2, Upload, Users, UsersRound, Waypoints, Wrench, X, Zap } from "lucide-react";
+import { AlertTriangle, BarChart3, Check, ChevronDown, Clock3, Compass, Contrast, Database, Download, FileJson, MapPin, Menu, MoreHorizontal, Play, Plus, RefreshCw, Route, Search, Sparkles, SunMoon, Table2, Upload, Users, UsersRound, Wrench, X, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -20,7 +20,7 @@ import { BackendGeocodingProvider, type Coordinate } from "@/lib/map-providers";
 import { loadRoadTravel } from "@/lib/road-travel";
 import demoScenario from "@/data/demo-scenario.json";
 import { downloadPlan } from "@/lib/export-plan";
-import { downloadAllTzCsvs, downloadBlob, downloadGeneratedDataset, downloadTzJson, engineersToTzCsv, eventsToTzCsv, generateDataset, generateTzDataset, jobsToTzCsv, type GeneratedDataset, type GeneratedTzDataset, type GenerateTzOptions } from "@/lib/generator-files";
+import { createTzReplanEvent, downloadAllTzCsvs, downloadBlob, downloadGeneratedDataset, downloadTzJson, engineersToTzCsv, eventsToTzCsv, generateDataset, generateTzDataset, jobsToTzCsv, type GeneratedDataset, type GeneratedTzDataset, type GenerateTzOptions, type TzReplanEvent } from "@/lib/generator-files";
 import { importPlanFile } from "@/lib/import-data";
 import { executionAtTime, executionLabels, parseTime, validateEditedData } from "@/lib/data-editor";
 import { solveCounterfactualServer, solveVrptwServer, type SolverEngine } from "@/lib/server-solver";
@@ -411,6 +411,46 @@ function CappedShare({
   );
 }
 
+function CompactCount({
+  label,
+  value,
+  onChange,
+  min = 0,
+  max = 999,
+}: {
+  label: string;
+  value: number;
+  onChange: (value: number) => void;
+  min?: number;
+  max?: number;
+}) {
+  return (
+    <label className="gen-compact-count">
+      <span>{label}</span>
+      <input
+        type="number"
+        min={min}
+        max={max}
+        value={value}
+        aria-label={label}
+        onChange={event => {
+          const next = Number(event.target.value);
+          if (!Number.isFinite(next)) return;
+          onChange(Math.max(min, Math.min(max, Math.round(next))));
+        }}
+      />
+    </label>
+  );
+}
+
+function joinCounts(record: Record<string, number>, limit?: number) {
+  const entries = Object.entries(record).sort((a, b) => b[1] - a[1]);
+  const shown = limit ? entries.slice(0, limit) : entries;
+  const rest = entries.length - shown.length;
+  const text = shown.map(([name, count]) => `${name} ${count}`).join(" · ");
+  return rest > 0 ? `${text} · ещё ${rest}` : text;
+}
+
 function GeneratorView({
   draft,
   setDraft,
@@ -418,6 +458,7 @@ function GeneratorView({
   generatedFrom,
   generatedTz,
   onGenerate,
+  onAddEvent,
   onDemo,
   onPlan,
   onClear,
@@ -432,6 +473,7 @@ function GeneratorView({
   generatedFrom: PlanConfig | null;
   generatedTz: GeneratedTzDataset | null;
   onGenerate: (opts?: Partial<GenerateTzOptions>) => void;
+  onAddEvent: (event: TzReplanEvent) => void;
   onDemo: () => void;
   onPlan: () => void;
   onClear: () => void;
@@ -460,8 +502,14 @@ function GeneratorView({
   }, [draft.jobs]);
 
   const [seed, setSeed] = useState(42);
+  const [cancelEvents, setCancelEvents] = useState(1);
+  const [unavailableEvents, setUnavailableEvents] = useState(1);
+  const [urgentEvents, setUrgentEvents] = useState(1);
+  const [newEventType, setNewEventType] = useState<TzReplanEvent["type"]>("отмена заявки");
+  const [newEventTime, setNewEventTime] = useState("11:20");
   const [previewTab, setPreviewTab] = useState<"jobs" | "engineers" | "events">("jobs");
   const [showAllRows, setShowAllRows] = useState(false);
+  const [paramsOpen, setParamsOpen] = useState(() => !(generatedTz?.jobs.length || generated?.jobs.length || importedJobs?.length));
 
   // Dropzone drag & drop state
   const [isDragging, setIsDragging] = useState(false);
@@ -518,9 +566,19 @@ function GeneratorView({
       pro: shareOf(engineerCounts[2] ?? 0, draft.engineers),
       urgentShare: shareOf(urgentCount, draft.jobs),
       vehicleConstraintShare: shareOf(vehicleCount, draft.jobs),
+      cancelEvents,
+      unavailableEvents,
+      urgentEvents,
       seed,
     });
     setPreviewTab("jobs");
+    setParamsOpen(false);
+  };
+
+  const handleDemo = () => {
+    onDemo();
+    setPreviewTab("jobs");
+    setParamsOpen(false);
   };
 
   const currentDataset = generatedTz;
@@ -528,6 +586,8 @@ function GeneratorView({
   const currentEngineers = currentDataset ? currentDataset.engineers : (generated?.engineers ?? importedEngineers ?? []);
   const currentEvents = currentDataset?.events ?? [];
   const hasData = currentJobs.length > 0;
+  const eventTotal = cancelEvents + unavailableEvents + urgentEvents;
+  const showImportStatus = Boolean(importStatus && /Геокодирование|Читаем|Ошибка|Не удалось/.test(importStatus));
 
   const fresh = generated && generatedFrom && Object.keys(draft).every(key => draft[key as keyof PlanConfig] === generatedFrom[key as keyof PlanConfig]);
   const heavyRun = draft.engineers * draft.jobs > 150000;
@@ -537,33 +597,59 @@ function GeneratorView({
   const maxWindow = widths.length ? Math.max(...widths) : 0;
   const meanWindow = widths.length ? Math.round(widths.reduce((sum, width) => sum + width, 0) / widths.length) : 0;
 
+  const openFilePicker = () => fileInputRef.current?.click();
+  const handleDropFile = (file?: File) => {
+    if (file) void onImportFile?.(file);
+  };
+
   return (
     <section className="page-view generator-view">
-      <div className="generator-layout">
-        {/* LEFT COLUMN: The Two Generator Parameter Zones */}
-        <article className="panel generator-config">
-          <div className="panel-header">
-            <div>
-              <h2>Параметры генерации</h2>
-            </div>
-            <button
-              className="generator-primary-btn"
-              onClick={handleRunGenerate}
-            >
-              <Sparkles size={14} /> Сгенерировать
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".csv,.json,text/csv,application/json"
+        hidden
+        onChange={event => {
+          const file = event.target.files?.[0];
+          if (file) void onImportFile?.(file);
+          event.target.value = "";
+        }}
+      />
+
+      <article className={`panel generator-form${paramsOpen ? " is-open" : ""}`}>
+        <div className="generator-form-bar">
+          <button
+            type="button"
+            className="generator-form-toggle"
+            aria-expanded={paramsOpen}
+            onClick={() => setParamsOpen(open => !open)}
+          >
+            <ChevronDown size={16} />
+            <span>Параметры набора</span>
+            {!paramsOpen && (
+              <em>{draft.engineers} инж. · {draft.jobs} заявок · {eventTotal} соб.</em>
+            )}
+          </button>
+          <div className="generator-form-actions">
+            <button type="button" className="generator-ghost-btn" onClick={openFilePicker}>
+              <Upload size={14} /> Импорт
+            </button>
+            <button type="button" className="generator-ghost-btn" onClick={handleDemo}>
+              Пример 12 / 51
+            </button>
+            <button type="button" className="generator-primary-btn" onClick={handleRunGenerate}>
+              Сгенерировать
             </button>
           </div>
+        </div>
 
-          <div className="config-body">
-            {/* ZONE 1: ENGINEERS */}
-            <div className="generator-zone-section">
-              <div className="zone-section-header">
-                <Users size={16} />
-                <h3>Инженеры</h3>
-              </div>
-
+        {paramsOpen && (
+          <div className="generator-form-grid">
+          <div className="generator-form-col">
+            <h3>Инженеры</h3>
+            <div className="gen-volume">
               <ConfigNumberField
-                label="Общий штат инженеров"
+                label="Штат"
                 value={draft.engineers}
                 onChange={value => setDraft(current => ({ ...current, engineers: value }))}
                 sliderMin={4}
@@ -571,419 +657,336 @@ function GeneratorView({
                 snapStep={1}
                 suffix="чел."
               />
-
-              <ShareGroup
-                rows={["Новички, 1 навык", "Специалисты, 2 навыка", "Профи, 3 навыка"]}
-                total={draft.engineers}
-                unit="чел."
-                counts={engineerCounts}
-                onChange={setEngineerCounts}
-              />
             </div>
+            <ShareGroup
+              rows={["Новички", "Специалисты", "Профи"]}
+              total={draft.engineers}
+              unit="чел."
+              counts={engineerCounts}
+              onChange={setEngineerCounts}
+            />
+          </div>
 
-            {/* ZONE 2: JOBS */}
-            <div className="generator-zone-section">
-              <div className="zone-section-header">
-                <Wrench size={16} />
-                <h3>Заявки</h3>
+          <div className="generator-form-col">
+            <h3>Заявки</h3>
+            <div className="gen-volume-pair">
+              <div className="gen-volume">
+                <ConfigNumberField
+                  label="Количество"
+                  value={draft.jobs}
+                  onChange={value => setDraft(current => ({ ...current, jobs: value }))}
+                  sliderMin={10}
+                  sliderMax={300}
+                  snapStep={5}
+                  suffix="шт."
+                />
               </div>
-
-              <ConfigNumberField
-                label="Общее количество заявок"
-                value={draft.jobs}
-                onChange={value => setDraft(current => ({ ...current, jobs: value }))}
-                sliderMin={10}
-                sliderMax={300}
-                snapStep={5}
-                suffix="шт."
-              />
-
-              <ConfigNumberField
-                label="Среднее окно заявки (SLA)"
-                value={draft.windowMinutes}
-                onChange={value => setDraft(current => ({ ...current, windowMinutes: value }))}
-                sliderMin={60}
-                sliderMax={360}
-                inputMin={60}
-                inputMax={600}
-                snapStep={15}
-                suffix="мин"
-              />
-
-              <ShareGroup
-                rows={["Локальные работы", "Подключение и дозаказы", "Аварийные работы"]}
+              <div className="gen-volume">
+                <ConfigNumberField
+                  label="Среднее окно"
+                  value={draft.windowMinutes}
+                  onChange={value => setDraft(current => ({ ...current, windowMinutes: value }))}
+                  sliderMin={60}
+                  sliderMax={360}
+                  inputMin={60}
+                  inputMax={600}
+                  snapStep={15}
+                  suffix="мин"
+                />
+              </div>
+            </div>
+            <ShareGroup
+              rows={["Локальные", "Подключение", "Аварийные"]}
+              total={draft.jobs}
+              unit="шт."
+              counts={jobKindCounts}
+              onChange={setJobKindCounts}
+            />
+            <div className="gen-share-pair">
+              <CappedShare
+                label="Срочные"
                 total={draft.jobs}
                 unit="шт."
-                counts={jobKindCounts}
-                onChange={setJobKindCounts}
+                count={urgentCount}
+                onCount={count => {
+                  const next = Math.max(0, Math.min(draft.jobs, count));
+                  urgentRatio.current = draft.jobs > 0 ? next / draft.jobs : 0;
+                  setUrgentCount(next);
+                }}
               />
-              <div className="zone-subfields-grid">
-                <CappedShare
-                  label="Срочные"
-                  total={draft.jobs}
-                  unit="шт."
-                  count={urgentCount}
-                  onCount={count => {
-                    const next = Math.max(0, Math.min(draft.jobs, count));
-                    urgentRatio.current = draft.jobs > 0 ? next / draft.jobs : 0;
-                    setUrgentCount(next);
-                  }}
-                />
-                <CappedShare
-                  label="С ограничением транспорта"
-                  total={draft.jobs}
-                  unit="шт."
-                  count={vehicleCount}
-                  onCount={count => {
-                    const next = Math.max(0, Math.min(draft.jobs, count));
-                    vehicleRatio.current = draft.jobs > 0 ? next / draft.jobs : 0;
-                    setVehicleCount(next);
-                  }}
-                />
-              </div>
-
-              <div className="generator-seed-row">
-                <label>
-                  <span>Зерно</span>
-                  <input
-                    type="number"
-                    value={seed}
-                    onChange={e => setSeed(Number(e.target.value))}
-                    className="seed-input"
-                  />
-                </label>
-              </div>
+              <CappedShare
+                label="Ограничение ТС"
+                total={draft.jobs}
+                unit="шт."
+                count={vehicleCount}
+                onCount={count => {
+                  const next = Math.max(0, Math.min(draft.jobs, count));
+                  vehicleRatio.current = draft.jobs > 0 ? next / draft.jobs : 0;
+                  setVehicleCount(next);
+                }}
+              />
             </div>
-
-            {heavyRun && <p className="config-warning">Большой объём данных: расчёт дорожной матрицы займёт дополнительное время.</p>}
-
-            <button type="button" className="generator-demo-btn" onClick={onDemo}>
-              <Sparkles size={15} /> Загрузить показательный набор · 12 инженеров / 51 заявка
-            </button>
-            <button
-              className="generator-primary-btn wide"
-              onClick={handleRunGenerate}
-            >
-              <Sparkles size={15} /> Сгенерировать набор данных
-            </button>
           </div>
-        </article>
 
-        {/* RIGHT COLUMN: Importer Dropzone + Dataset Output */}
-        <div className="generator-output-stack">
-          {/* Top: Dropzone / Importer Card */}
-          <article className="panel generator-importer-card">
-            <div className="panel-header">
-              <div>
-                <h2>Импорт CSV / JSON</h2>
-              </div>
+          <div className="generator-form-col">
+            <h3>События дня</h3>
+            <div className="gen-event-counts">
+              <CompactCount label="Отмены" value={cancelEvents} onChange={setCancelEvents} min={0} max={20} />
+              <CompactCount label="Недоступность" value={unavailableEvents} onChange={setUnavailableEvents} min={0} max={20} />
+              <CompactCount label="Срочные заявки" value={urgentEvents} onChange={setUrgentEvents} min={0} max={20} />
             </div>
-            <div className="importer-card-body">
+            <label className="gen-compact-count gen-seed-field">
+              <span>Зерно</span>
               <input
-                ref={fileInputRef}
-                type="file"
-                accept=".csv,.json,text/csv,application/json"
-                style={{ display: "none" }}
-                onChange={e => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    void onImportFile?.(file);
-                    e.target.value = "";
-                  }
-                }}
+                type="number"
+                value={seed}
+                aria-label="Зерно"
+                onChange={event => setSeed(Number(event.target.value))}
               />
-              <div
-                className={`generator-dropzone ${isDragging ? "drag-active" : ""}`}
-                onDragOver={e => { e.preventDefault(); setIsDragging(true); }}
-                onDragLeave={e => { e.preventDefault(); setIsDragging(false); }}
-                onDrop={e => {
-                  e.preventDefault();
-                  setIsDragging(false);
-                  if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                    void onImportFile?.(e.dataTransfer.files[0]);
-                  }
-                }}
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <Upload size={32} className="dropzone-icon" />
-                <strong>Перетащите файл сюда или выберите его</strong>
-                <div className="dropzone-badges">
-                  <span className="dropzone-badge"><Clipboard size={12} /> Вставка <kbd>Ctrl+V</kbd></span>
-                </div>
-                <button
-                  type="button"
-                  className="dropzone-select-btn"
-                  onClick={e => {
-                    e.stopPropagation();
-                    fileInputRef.current?.click();
-                  }}
-                >
-                  <FileUp size={14} /> Выбрать файл на компьютере
-                </button>
-              </div>
-
-              {importStatus && (
-                <div className="importer-status-row">
-                  <RefreshCw size={14} className={importStatus.includes("Геокодирование") ? "spin-active" : ""} />
-                  <span>{importStatus}</span>
-                </div>
-              )}
-            </div>
-          </article>
-
-          {/* Bottom: Current Dataset Summary & Actions */}
-          <article className="panel generator-output">
-            <div className="panel-header">
-              <div>
-                <h2>Текущий набор данных</h2>
-              </div>
-            </div>
-            {hasData ? (
-              <div className="generator-result">
-                <div className="generator-facts">
-                  <span><b>{currentJobs.length}</b>заявок</span>
-                  <span><b>{currentEngineers.length}</b>инженеров</span>
-                  <span><b>{currentEvents.length}</b>события</span>
-                </div>
-
-                {currentDataset && (
-                  <div className="generator-stat-pills">
-                    <div className="generator-stat-pill">
-                      <span>Навыки заявок:</span>
-                      <b>
-                        Локальные: {currentDataset.stats.jobsBySkill["Локальные работы"] ?? 0} ·
-                        Подключение: {currentDataset.stats.jobsBySkill["Работы на подключение и дозаказы"] ?? 0} ·
-                        Аварийные: {currentDataset.stats.jobsBySkill["Аварийные работы"] ?? 0}
-                      </b>
-                    </div>
-                    <div className="generator-stat-pill">
-                      <span>Транспорт инженеров:</span>
-                      <b>
-                        Авто: {currentDataset.stats.engineersByVehicle["Автомобиль"] ?? 0} ·
-                        Пешеход: {currentDataset.stats.engineersByVehicle["Пешеход"] ?? 0} ·
-                        Вело: {currentDataset.stats.engineersByVehicle["Велосипед"] ?? 0} ·
-                        Обществ.: {currentDataset.stats.engineersByVehicle["Общественный транспорт"] ?? 0}
-                      </b>
-                    </div>
-                    <div className="generator-stat-pill">
-                      <span>Окна SLA:</span>
-                      <b>{minWindow}–{maxWindow} мин (среднее {meanWindow} мин) · Срочных: {currentDataset.stats.urgentJobsCount}</b>
-                    </div>
-                  </div>
-                )}
-
-                <div className="generator-actions">
-                  <button type="button" onClick={() => downloadBlob("jobs.csv", jobsToTzCsv(currentJobs))}>
-                    <Download /> Заявки (CSV)
-                  </button>
-                  <button type="button" onClick={() => downloadBlob("engineers.csv", engineersToTzCsv(currentEngineers))}>
-                    <Download /> Инженеры (CSV)
-                  </button>
-                  {currentEvents.length > 0 && (
-                    <button type="button" onClick={() => downloadBlob("replan_events.csv", eventsToTzCsv(currentEvents))}>
-                      <Download /> События (CSV)
-                    </button>
-                  )}
-                  {currentDataset && (
-                    <button type="button" onClick={() => downloadAllTzCsvs(currentDataset)}>
-                      <Download /> Скачать все 3 CSV
-                    </button>
-                  )}
-                  {currentDataset && (
-                    <button type="button" onClick={() => downloadTzJson(currentDataset)}>
-                      <FileJson /> JSON
-                    </button>
-                  )}
-                </div>
-
-                <button type="button" className="generator-plan-link" onClick={onPlan}>
-                  <Route /> Рассчитать маршруты ({currentJobs.length} заявок)
-                </button>
-                <button type="button" className="generator-clear-link" onClick={onClear}>
-                  Очистить набор
-                </button>
-              </div>
-            ) : (
-              <div className="generator-empty">
-                <Database />
-                <strong>Данные ещё не загружены и не сгенерированы</strong>
-                <p>Загрузите CSV или JSON либо задайте параметры слева и нажмите «Сгенерировать».</p>
-              </div>
-            )}
-          </article>
-        </div>
-      </div>
-
-      {hasData && (
-        <article className="panel generator-preview-panel">
-          <div className="panel-header">
-            <div>
-              <h2>Таблицы набора</h2>
-            </div>
-            <div className="generator-tabs">
-              <button
-                type="button"
-                className={previewTab === "jobs" ? "active" : ""}
-                onClick={() => setPreviewTab("jobs")}
-              >
-                1. Заявки ({currentJobs.length})
-              </button>
-              <button
-                type="button"
-                className={previewTab === "engineers" ? "active" : ""}
-                onClick={() => setPreviewTab("engineers")}
-              >
-                2. Инженеры ({currentEngineers.length})
-              </button>
-              <button
-                type="button"
-                className={previewTab === "events" ? "active" : ""}
-                onClick={() => setPreviewTab("events")}
-              >
-                3. События перепланирования ({currentEvents.length})
-              </button>
-            </div>
+            </label>
           </div>
+        </div>
+        )}
+        {paramsOpen && heavyRun && <p className="config-warning">Большой объём: расчёт дорожной матрицы займёт дополнительное время.</p>}
+        {showImportStatus && (
+          <p className="generator-status-line">
+            <RefreshCw size={13} className={importStatus?.includes("Геокодирование") ? "spin-active" : ""} />
+            {importStatus}
+          </p>
+        )}
+      </article>
 
-          <div className="generator-table-wrap">
-            {previewTab === "jobs" && (
-              <table className="generator-preview-table">
-                <thead>
-                  <tr>
-                    <th>ID заявки</th>
-                    <th>Название задачи</th>
-                    <th>Адрес</th>
-                    <th>Координаты</th>
-                    <th>Длительность</th>
-                    <th>Окно начала</th>
-                    <th>Приоритет</th>
-                    <th>Требуемый навык</th>
-                    <th>Требуемое оборудование</th>
-                    <th>Требуемый транспорт</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(showAllRows ? currentJobs : currentJobs.slice(0, 30)).map(job => (
-                    <tr key={job.id}>
-                      <td><b>{job.id}</b></td>
-                      <td>{job.workType ?? job.kind}</td>
-                      <td>{job.address}</td>
-                      <td>{job.coordinates[1].toFixed(5)}, {job.coordinates[0].toFixed(5)}</td>
-                      <td>{job.serviceMinutes} мин</td>
-                      <td>{job.time}</td>
-                      <td>
-                        <span className={`generator-badge ${jobPriorityLevel(job) === 2 ? "urgent" : "normal"}`}>
-                          {jobPriorityLevel(job) === 2 ? "Срочная" : "Обычная"}
-                        </span>
-                      </td>
-                      <td><span className="generator-badge skill">{job.kind}</span></td>
-                      <td><span className="generator-badge equip">{job.equipment}</span></td>
-                      <td>{job.requiredTransport ? <span className="generator-badge vehicle">{job.requiredTransport}</span> : "Не ограничен"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+      <article
+        className={`panel generator-stage ${isDragging ? "drag-active" : ""} ${hasData ? "has-data" : ""}`}
+        onDragOver={event => { event.preventDefault(); setIsDragging(true); }}
+        onDragLeave={() => setIsDragging(false)}
+        onDrop={event => {
+          event.preventDefault();
+          setIsDragging(false);
+          handleDropFile(event.dataTransfer.files?.[0]);
+        }}
+      >
+        {hasData ? (
+          <>
+            <div className="generator-stage-bar">
+              <div className="generator-stage-summary">
+                <strong>{currentJobs.length} заявок</strong>
+                <span>{currentEngineers.length} инженеров</span>
+                <span>{currentEvents.length} событий</span>
+                {currentDataset && <span>окно {minWindow}–{maxWindow} мин, среднее {meanWindow}</span>}
+              </div>
+              <div className="generator-stage-actions">
+                <button type="button" className="generator-primary-btn" onClick={onPlan}>
+                  <Route size={14} /> Рассчитать маршруты
+                </button>
+                <button type="button" className="generator-ghost-btn" onClick={() => { onClear(); setParamsOpen(true); }}>Очистить</button>
+              </div>
+            </div>
+            {currentDataset && (
+              <p className="generator-stage-meta">
+                {joinCounts(currentDataset.stats.jobsBySkill)}
+                {" · "}
+                {joinCounts(currentDataset.stats.jobsByEquipment, 5)}
+              </p>
             )}
-
-            {previewTab === "engineers" && (
-              <table className="generator-preview-table">
-                <thead>
-                  <tr>
-                    <th>ID инженера</th>
-                    <th>Имя</th>
-                    <th>Адрес старта</th>
-                    <th>Координаты старта</th>
-                    <th>Смена</th>
-                    <th>Транспорт</th>
-                    <th>Число навыков</th>
-                    <th>Навыки</th>
-                    <th>Оборудование</th>
-                    <th>Уровень</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentEngineers.map(engineer => (
-                    <tr key={engineer.id}>
-                      <td><b>{engineer.id}</b></td>
-                      <td>{engineer.name}</td>
-                      <td>{(engineer as Engineer & { address?: string }).address ?? "Москва"}</td>
-                      <td>{engineer.start[1].toFixed(5)}, {engineer.start[0].toFixed(5)}</td>
-                      <td>{minutesLabel(engineer.shiftStart)}–{minutesLabel(engineer.shiftEnd)}</td>
-                      <td><span className="generator-badge vehicle">{engineer.transport}</span></td>
-                      <td>{engineer.skills.length}</td>
-                      <td>
-                        {engineer.skills.map(s => (
-                          <span key={s} className="generator-badge skill">{s}</span>
-                        ))}
-                      </td>
-                      <td>
-                        {engineer.equipment.map(eq => (
-                          <span key={eq} className="generator-badge equip">{eq}</span>
-                        ))}
-                      </td>
-                      <td>{(engineer as Engineer & { level?: string }).level ?? (engineer.skills.length === 1 ? "новичок" : engineer.skills.length === 2 ? "специалист" : "профи")}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
+            <div className="generator-stage-tools">
+              <div className="generator-tabs" role="tablist">
+                <button type="button" className={previewTab === "jobs" ? "active" : ""} onClick={() => setPreviewTab("jobs")}>
+                  Заявки ({currentJobs.length})
+                </button>
+                <button type="button" className={previewTab === "engineers" ? "active" : ""} onClick={() => setPreviewTab("engineers")}>
+                  Инженеры ({currentEngineers.length})
+                </button>
+                <button type="button" className={previewTab === "events" ? "active" : ""} onClick={() => setPreviewTab("events")}>
+                  События ({currentEvents.length})
+                </button>
+              </div>
+              <div className="generator-export">
+                <button type="button" onClick={() => downloadBlob("jobs.csv", jobsToTzCsv(currentJobs))}>CSV заявок</button>
+                <button type="button" onClick={() => downloadBlob("engineers.csv", engineersToTzCsv(currentEngineers))}>CSV инженеров</button>
+                {currentEvents.length > 0 && (
+                  <button type="button" onClick={() => downloadBlob("replan_events.csv", eventsToTzCsv(currentEvents))}>CSV событий</button>
+                )}
+                {currentDataset && <button type="button" onClick={() => downloadAllTzCsvs(currentDataset)}>Все CSV</button>}
+                {currentDataset && <button type="button" onClick={() => downloadTzJson(currentDataset)}>JSON</button>}
+              </div>
+            </div>
 
             {previewTab === "events" && (
-              <table className="generator-preview-table">
-                <thead>
-                  <tr>
-                    <th>Тип события</th>
-                    <th>Время события</th>
-                    <th>ID сущности</th>
-                    <th>Название задачи</th>
-                    <th>Адрес</th>
-                    <th>Окно / Длительность</th>
-                    <th>Приоритет</th>
-                    <th>Требуемый навык</th>
-                    <th>Требуемое оборудование</th>
-                    <th>Требуемый транспорт</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentEvents.map((ev, index) => {
-                    const j = ev.job;
-                    return (
-                      <tr key={index}>
+              <div className="generator-event-composer">
+                <label>
+                  <span>Тип</span>
+                  <select value={newEventType} onChange={event => setNewEventType(event.target.value as TzReplanEvent["type"])}>
+                    <option value="отмена заявки">Отмена заявки</option>
+                    <option value="недоступность инженера">Недоступность инженера</option>
+                    <option value="срочная заявка">Срочная заявка</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Время</span>
+                  <input type="time" value={newEventTime} onChange={event => setNewEventTime(event.target.value)} />
+                </label>
+                <button
+                  type="button"
+                  className="generator-primary-btn"
+                  disabled={!currentJobs.length || !currentEngineers.length}
+                  onClick={() => {
+                    onAddEvent(createTzReplanEvent({
+                      type: newEventType,
+                      time: newEventTime || "11:20",
+                      jobs: currentJobs,
+                      engineers: currentEngineers,
+                      events: currentEvents,
+                      seed: seed + currentEvents.length * 97,
+                    }));
+                  }}
+                >
+                  <Plus size={14} /> Добавить событие
+                </button>
+              </div>
+            )}
+
+            <div className="generator-table-wrap">
+              {previewTab === "jobs" && (
+                <table className="generator-preview-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Задача</th>
+                      <th>Адрес</th>
+                      <th>Координаты</th>
+                      <th>Длительность</th>
+                      <th>Окно</th>
+                      <th>Приоритет</th>
+                      <th>Навык</th>
+                      <th>Оборудование</th>
+                      <th>Транспорт</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(showAllRows ? currentJobs : currentJobs.slice(0, 30)).map(job => (
+                      <tr key={job.id}>
+                        <td><b>{job.id}</b></td>
+                        <td>{job.workType ?? job.kind}</td>
+                        <td>{job.address}</td>
+                        <td>{job.coordinates[1].toFixed(5)}, {job.coordinates[0].toFixed(5)}</td>
+                        <td>{job.serviceMinutes} мин</td>
+                        <td>{job.time}</td>
                         <td>
-                          <span className={`generator-badge ${ev.type === "срочная заявка" ? "urgent" : "normal"}`}>
-                            {ev.type}
+                          <span className={`generator-badge ${jobPriorityLevel(job) === 2 ? "urgent" : "normal"}`}>
+                            {jobPriorityLevel(job) === 2 ? "Срочная" : "Обычная"}
                           </span>
                         </td>
-                        <td><b>{ev.time}</b></td>
-                        <td><b>{ev.entityId}</b></td>
-                        <td>{j ? (j.workType ?? j.kind) : "—"}</td>
-                        <td>{j ? j.address : "—"}</td>
-                        <td>{j ? `${j.time} (${j.serviceMinutes} мин)` : "—"}</td>
-                        <td>{j ? <span className="generator-badge urgent">{jobPriorityLevel(j) === 2 ? "Срочная" : "Обычная"}</span> : "—"}</td>
-                        <td>{j ? <span className="generator-badge skill">{j.kind}</span> : "—"}</td>
-                        <td>{j ? <span className="generator-badge equip">{j.equipment}</span> : "—"}</td>
-                        <td>{j?.requiredTransport ? <span className="generator-badge vehicle">{j.requiredTransport}</span> : j ? "Не ограничен" : "—"}</td>
+                        <td><span className="generator-badge skill">{job.kind}</span></td>
+                        <td><span className="generator-badge equip">{job.equipment}</span></td>
+                        <td>{job.requiredTransport ? <span className="generator-badge vehicle">{job.requiredTransport}</span> : "Не ограничен"}</td>
                       </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            )}
-          </div>
+                    ))}
+                  </tbody>
+                </table>
+              )}
 
-          {previewTab === "jobs" && currentJobs.length > 30 && (
-            <div style={{ marginTop: 10, textAlign: "center" }}>
-              <button
-                type="button"
-                className="plain-button"
-                onClick={() => setShowAllRows(prev => !prev)}
-              >
-                {showAllRows ? "Свернуть до 30 заявок" : `Показать все ${currentJobs.length} заявок`}
-              </button>
+              {previewTab === "engineers" && (
+                <table className="generator-preview-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Имя</th>
+                      <th>Адрес старта</th>
+                      <th>Координаты</th>
+                      <th>Смена</th>
+                      <th>Транспорт</th>
+                      <th>Навыки</th>
+                      <th>Оборудование</th>
+                      <th>Уровень</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentEngineers.map(engineer => (
+                      <tr key={engineer.id}>
+                        <td><b>{engineer.id}</b></td>
+                        <td>{engineer.name}</td>
+                        <td>{(engineer as Engineer & { address?: string }).address ?? "Москва"}</td>
+                        <td>{engineer.start[1].toFixed(5)}, {engineer.start[0].toFixed(5)}</td>
+                        <td>{minutesLabel(engineer.shiftStart)}–{minutesLabel(engineer.shiftEnd)}</td>
+                        <td><span className="generator-badge vehicle">{engineer.transport}</span></td>
+                        <td>
+                          {engineer.skills.map(skill => (
+                            <span key={skill} className="generator-badge skill">{skill}</span>
+                          ))}
+                        </td>
+                        <td>
+                          {engineer.equipment.map(item => (
+                            <span key={item} className="generator-badge equip">{item}</span>
+                          ))}
+                        </td>
+                        <td>{(engineer as Engineer & { level?: string }).level ?? (engineer.skills.length === 1 ? "новичок" : engineer.skills.length === 2 ? "специалист" : "профи")}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+
+              {previewTab === "events" && (
+                currentEvents.length === 0 ? (
+                  <p className="generator-event-empty">Событий нет. Задайте количество в параметрах и сгенерируйте набор либо добавьте событие здесь.</p>
+                ) : (
+                    <table className="generator-preview-table">
+                      <thead>
+                        <tr>
+                          <th>Тип</th>
+                          <th>Время</th>
+                          <th>ID</th>
+                          <th>Задача</th>
+                          <th>Адрес</th>
+                          <th>Окно</th>
+                          <th>Приоритет</th>
+                          <th>Навык</th>
+                          <th>Оборудование</th>
+                          <th>Транспорт</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {currentEvents.map((ev, index) => {
+                          const job = ev.job;
+                          return (
+                            <tr key={`${ev.type}-${ev.entityId}-${index}`}>
+                              <td>
+                                <span className={`generator-badge ${ev.type === "срочная заявка" ? "urgent" : "normal"}`}>
+                                  {ev.type}
+                                </span>
+                              </td>
+                              <td><b>{ev.time}</b></td>
+                              <td><b>{ev.entityId}</b></td>
+                              <td>{job ? (job.workType ?? job.kind) : "—"}</td>
+                              <td>{job ? job.address : "—"}</td>
+                              <td>{job ? `${job.time} (${job.serviceMinutes} мин)` : "—"}</td>
+                              <td>{job ? <span className="generator-badge urgent">{jobPriorityLevel(job) === 2 ? "Срочная" : "Обычная"}</span> : "—"}</td>
+                              <td>{job ? <span className="generator-badge skill">{job.kind}</span> : "—"}</td>
+                              <td>{job ? <span className="generator-badge equip">{job.equipment}</span> : "—"}</td>
+                              <td>{job?.requiredTransport ? <span className="generator-badge vehicle">{job.requiredTransport}</span> : job ? "Не ограничен" : "—"}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                )
+              )}
             </div>
-          )}
-        </article>
-      )}
+            {previewTab === "jobs" && currentJobs.length > 30 && (
+              <button type="button" className="generator-more-rows" onClick={() => setShowAllRows(prev => !prev)}>
+                {showAllRows ? "Показать первые 30" : `Показать все ${currentJobs.length}`}
+              </button>
+            )}
+          </>
+        ) : (
+          <button type="button" className="generator-empty" onClick={openFilePicker}>
+            <Database />
+            <strong>Набора ещё нет</strong>
+            <p>Задайте параметры сверху и нажмите «Сгенерировать», либо перетащите сюда CSV или JSON. Вставка файла с клавиатуры тоже работает.</p>
+          </button>
+        )}
+      </article>
     </section>
   );
 }
@@ -1536,8 +1539,30 @@ export default function Dashboard() {
     setSelectedJobId(null);
     setSelectedEngineerId(null);
     setSolverError("");
-    setImportStatus(`Сгенерирован набор данных: ${tzData.jobs.length} заявок, ${tzData.engineers.length} инженеров, 3 события перепланирования. Набор готов к расчёту.`);
+    setImportStatus(`Сгенерирован набор: ${tzData.jobs.length} заявок, ${tzData.engineers.length} инженеров, ${tzData.events.length} ${tzData.events.length === 1 ? "событие" : tzData.events.length >= 2 && tzData.events.length <= 4 ? "события" : "событий"} перепланирования.`);
   }, [draft]);
+  const addGeneratedEvent = useCallback((event: TzReplanEvent) => {
+    setGeneratedTz(current => {
+      if (current) return { ...current, events: [...current.events, event] };
+      return {
+        jobs: importedJobs,
+        engineers: importedEngineers,
+        events: [event],
+        speedKmh: draft.speedKmh,
+        stats: {
+          totalJobs: importedJobs.length,
+          totalEngineers: importedEngineers.length,
+          jobsBySkill: {},
+          jobsByEquipment: {},
+          engineersByLevel: {},
+          engineersByVehicle: {},
+          engineersBySkill: {},
+          urgentJobsCount: 0,
+          constrainedTransportJobsCount: 0,
+        },
+      };
+    });
+  }, [draft.speedKmh, importedEngineers, importedJobs]);
   const clearDataset = useCallback(() => {
     setImportedJobs([]);
     setImportedEngineers([]);
@@ -1709,6 +1734,7 @@ export default function Dashboard() {
         generatedFrom={generatedFrom}
         generatedTz={generatedTz}
         onGenerate={createGenerated}
+        onAddEvent={addGeneratedEvent}
         onClear={clearDataset}
         onDemo={() => { void handleImport(new File([JSON.stringify(demoScenario)], "demo-scenario.json", { type: "application/json" })); }}
         onPlan={() => {

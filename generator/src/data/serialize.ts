@@ -1,13 +1,7 @@
 import { CATALOG } from "./catalog";
-import { TZ_SKILLS, type Dataset, type Engineer, type Job, type ReplanEvent } from "../engine/types";
+import { ALL_SKILLS, SKILL_EQUIPMENT, type Dataset, type Engineer, type Job, type ReplanEvent } from "../engine/types";
 
 const SEP = ";";
-
-export const SKILL_EQUIPMENT: Record<string, string> = {
-  "Локальные работы": "Диагностический комплект",
-  "Работы на подключение и дозаказы": "ONT",
-  "Аварийные работы": "Рефлектометр",
-};
 
 function csvCell(value: string | number | undefined): string {
   const s = value === undefined ? "" : String(value);
@@ -163,7 +157,7 @@ export function eventsToCsv(events: ReplanEvent[]): string {
 export function catalogSkillsToCsv(): string {
   return csvFile(
     ["Код", "Требуемый навык"],
-    TZ_SKILLS.map((name, index) => [index + 1, name]),
+    ALL_SKILLS.map((name, index) => [index + 1, name]),
   );
 }
 

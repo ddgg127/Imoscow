@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Database, RotateCcw, Route } from "lucide-react";
 import { executionAtTime, executionLabels, matchesEditorQuery, parseTime, timeInput } from "@/lib/data-editor";
 import { engineerSpeedKmh } from "@/lib/transport-speed";
+import { ALL_SKILLS } from "@/lib/domain";
 import { regions, type Engineer, type Job, type Region } from "@/lib/vrptw";
 
 type Props = {
@@ -25,7 +26,7 @@ type Props = {
 
 const PAGE_SIZE = 50;
 const transports = ["Автомобиль", "Пешком", "Велосипед", "Общественный транспорт"];
-const skills = ["Локальные работы", "Подключение и модернизация", "Аварийно-восстановительные работы"];
+const skills = [...ALL_SKILLS, "Подключение и модернизация", "Аварийно-восстановительные работы"];
 const statuses = Object.entries(executionLabels) as Array<[NonNullable<Job["executionStatus"]>, string]>;
 const list = (value: string) => [...new Set(value.split(/[,;\n]+/).map(item => item.trim()).filter(Boolean))];
 

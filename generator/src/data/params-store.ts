@@ -11,6 +11,9 @@ const KEYS: Array<keyof GenerateParams> = [
   "pro",
   "urgentShare",
   "vehicleConstraintShare",
+  "cancelEvents",
+  "unavailableEvents",
+  "urgentEvents",
   "seed",
 ];
 

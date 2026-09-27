@@ -4,6 +4,27 @@ export const TZ_SKILLS = [
   "Аварийные работы",
 ] as const;
 
+export const EXTRA_SKILLS = [
+  "Монтаж СКС",
+  "Видеонаблюдение",
+  "Электропитание",
+] as const;
+
+export const ALL_SKILLS = [...TZ_SKILLS, ...EXTRA_SKILLS] as const;
+
+export const SKILL_EQUIPMENT_POOLS: Record<string, readonly string[]> = {
+  "Локальные работы": ["Диагностический комплект", "Кабельный тестер", "Wi-Fi анализатор", "Мультиметр"],
+  "Работы на подключение и дозаказы": ["ONT", "Сварочный аппарат", "Оптический кросс", "Монтажный набор GPON"],
+  "Аварийные работы": ["Рефлектометр", "Трассоискатель", "Аварийный комплект", "Тепловизор"],
+  "Монтаж СКС": ["Обжимной инструмент", "Тестер витой пары", "Кабельный органайзер"],
+  "Видеонаблюдение": ["Комплект IP-камеры", "PoE-инжектор", "Видеорегистратор"],
+  "Электропитание": ["ИБП-тестер", "Клещи токовые", "Набор для шкафа питания"],
+};
+
+export const SKILL_EQUIPMENT: Record<string, string> = Object.fromEntries(
+  Object.entries(SKILL_EQUIPMENT_POOLS).map(([skill, pool]) => [skill, pool[0] ?? skill]),
+);
+
 export const VEHICLES = [
   "Автомобиль",
   "Пешеход",
@@ -19,7 +40,7 @@ export type Priority = (typeof PRIORITIES)[number];
 export const ENGINEER_LEVELS = ["новичок", "специалист", "профи"] as const;
 export type EngineerLevel = (typeof ENGINEER_LEVELS)[number];
 
-export type SkillCount = 1 | 2 | 3;
+export type SkillCount = 1 | 2 | 3 | 4;
 
 export type Place = {
   address: string;
@@ -88,6 +109,9 @@ export type GenerateParams = {
   pro: number;
   urgentShare: number;
   vehicleConstraintShare: number;
+  cancelEvents: number;
+  unavailableEvents: number;
+  urgentEvents: number;
   seed: number;
 };
 
@@ -102,5 +126,8 @@ export const DEFAULT_GENERATE_PARAMS: GenerateParams = {
   pro: 20,
   urgentShare: 15,
   vehicleConstraintShare: 25,
+  cancelEvents: 1,
+  unavailableEvents: 1,
+  urgentEvents: 1,
   seed: 42,
 };

@@ -25,9 +25,36 @@ test("TZ generator honors exact counts, mean window and two priority levels", ()
     assert.ok(data.jobs.every(job => data.engineers.some(engineer => compatible(engineer, job))), "every generated job has a resource-compatible local engineer");
     assert.deepEqual(new Set(data.jobs.map(job => job.region)), new Set(data.engineers.map(engineer => engineer.region)));
     assert.equal(data.events.length, 3);
-    assert.equal(data.events[2].job.priority, 2);
+    assert.ok(data.events.some(event => event.type === "отмена заявки"));
+    assert.ok(data.events.some(event => event.type === "недоступность инженера"));
+    const urgentEvent = data.events.find(event => event.type === "срочная заявка");
+    assert.equal(urgentEvent?.job?.priority, 2);
     assert.match(jobsToTzCsv(data.jobs), /Срочная|Обычная/);
     assert.match(eventsToTzCsv(data.events), /Срочная/);
     assert.deepEqual(generateTzDataset({ engineers, jobs, windowMinutes, speedKmh: 24, urgentShare, vehicleConstraintShare, seed: 42 }).jobs, data.jobs);
+    assert.ok(new Set(data.jobs.map(job => job.equipment)).size >= 3, "jobs use more than a single tool");
+    assert.ok(new Set(data.engineers.flatMap(engineer => engineer.equipment)).size >= 6, "engineers carry varied kits");
   }
+});
+
+test("TZ generator creates configurable replan events and extra skills", () => {
+  const data = generateTzDataset({
+    engineers: 18,
+    jobs: 80,
+    windowMinutes: 180,
+    speedKmh: 24,
+    cancelEvents: 2,
+    unavailableEvents: 1,
+    urgentEvents: 3,
+    extraSkillShare: 22,
+    seed: 7,
+  });
+  assert.equal(data.events.filter(event => event.type === "отмена заявки").length, 2);
+  assert.equal(data.events.filter(event => event.type === "недоступность инженера").length, 1);
+  assert.equal(data.events.filter(event => event.type === "срочная заявка").length, 3);
+  assert.equal(new Set(data.events.map(event => event.time)).size, data.events.length);
+  assert.ok(data.jobs.some(job => job.kind === "Монтаж СКС" || job.kind === "Видеонаблюдение" || job.kind === "Электропитание"));
+  assert.ok(data.engineers.some(engineer => engineer.skills.some(skill => skill === "Монтаж СКС" || skill === "Видеонаблюдение" || skill === "Электропитание")));
+  assert.ok(data.jobs.every(job => data.engineers.some(engineer => compatible(engineer, job))));
+  assert.ok(new Set(data.events.filter(event => event.type === "срочная заявка").map(event => event.job?.id)).size === 3);
 });

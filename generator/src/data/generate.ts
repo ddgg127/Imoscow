@@ -1,5 +1,9 @@
 import {
+  ALL_SKILLS,
   DEFAULT_GENERATE_PARAMS,
+  EXTRA_SKILLS,
+  SKILL_EQUIPMENT,
+  SKILL_EQUIPMENT_POOLS,
   type Dataset,
   type Engineer,
   type EngineerLevel,
@@ -106,11 +110,9 @@ function takePlace(rng: Rng, used: Set<string>, prefer: BuildingKind) {
   return { address: building.address, lat: building.lat, lon: building.lon };
 }
 
-const SKILL_EQUIPMENT: Record<string, string> = {
-  "Локальные работы": "Диагностический комплект",
-  "Работы на подключение и дозаказы": "ONT",
-  "Аварийные работы": "Рефлектометр",
-};
+function uniqueStrings(items: readonly string[]): string[] {
+  return [...new Set(items)];
+}
 
 const SPEC_PAIRS: Array<[string, string]> = [
   [TZ_SKILLS[0], TZ_SKILLS[1]],
@@ -118,14 +120,43 @@ const SPEC_PAIRS: Array<[string, string]> = [
   [TZ_SKILLS[1], TZ_SKILLS[2]],
 ];
 
-function skillsForEngineer(level: EngineerLevel, indexWithinLevel: number): string[] {
-  if (level === "новичок") {
-    return [TZ_SKILLS[indexWithinLevel % 3]];
+function kitForSkills(skills: readonly string[], level: EngineerLevel, rng: Rng): string[] {
+  const tools: string[] = [];
+  for (const skill of skills) {
+    const pool = SKILL_EQUIPMENT_POOLS[skill] ?? [SKILL_EQUIPMENT[skill] ?? skill];
+    if (level === "новичок") {
+      tools.push(pool[0]!);
+      if (pool[1] && rng() < 0.4) tools.push(pool[1]);
+    } else if (level === "специалист") {
+      tools.push(pool[0]!);
+      if (pool[1]) tools.push(pool[1]);
+      if (pool[2] && rng() < 0.55) tools.push(pool[2]);
+    } else {
+      tools.push(...pool);
+    }
   }
-  if (level === "специалист") {
-    return [...SPEC_PAIRS[indexWithinLevel % 3]];
-  }
-  return [...TZ_SKILLS];
+  return uniqueStrings(tools);
+}
+
+function extraSkillsFor(level: EngineerLevel, index: number, rng: Rng): string[] {
+  if (level === "новичок") return [];
+  const first = EXTRA_SKILLS[index % EXTRA_SKILLS.length];
+  if (level === "специалист") return rng() < 0.62 ? [first] : [];
+  const second = EXTRA_SKILLS[(index + 1) % EXTRA_SKILLS.length];
+  return rng() < 0.48 ? [first, second] : [first];
+}
+
+function skillsForEngineer(level: EngineerLevel, indexWithinLevel: number, rng: Rng): string[] {
+  if (level === "новичок") return [TZ_SKILLS[indexWithinLevel % 3]];
+  if (level === "специалист") return uniqueStrings([...SPEC_PAIRS[indexWithinLevel % 3], ...extraSkillsFor(level, indexWithinLevel, rng)]);
+  return uniqueStrings([...TZ_SKILLS, ...extraSkillsFor(level, indexWithinLevel, rng)]);
+}
+
+function localTool(rng: Rng, skill: string, engineers: Engineer[]): string {
+  const pool = SKILL_EQUIPMENT_POOLS[skill] ?? [SKILL_EQUIPMENT[skill] ?? skill];
+  const capable = engineers.filter((engineer) => engineer.skills.includes(skill));
+  const held = uniqueStrings(capable.flatMap((engineer) => (engineer.equipment ?? []).filter((tool) => pool.includes(tool))));
+  return pick(rng, held.length ? held : [pool[0]!]);
 }
 
 function vehicleForJob(rng: Rng, engineers: Engineer[], skill: string): Vehicle {
@@ -188,7 +219,7 @@ export function generateDataset(raw: Partial<GenerateParams> = {}): Dataset {
   const engineers: Engineer[] = levels.map(({ level, indexWithinLevel }, i) => {
     const place = takePlace(rng, usedPlaces, "residential");
     const shift = SHIFTS[i % SHIFTS.length];
-    const skills = skillsForEngineer(level, indexWithinLevel);
+    const skills = skillsForEngineer(level, indexWithinLevel, rng);
     return {
       id: `E${String(i + 1).padStart(3, "0")}`,
       name: uniqueName(rng, usedNames),
@@ -196,36 +227,55 @@ export function generateDataset(raw: Partial<GenerateParams> = {}): Dataset {
       shiftStart: shift[0],
       shiftEnd: shift[1],
       skills,
-      equipment: skills.map((s) => SKILL_EQUIPMENT[s]),
+      equipment: kitForSkills(skills, level, rng),
       vehicle: VEHICLES[i % VEHICLES.length],
       level,
     };
   });
+  coverSkills(engineers, rng);
+
+  const extraTitles: Record<string, string[]> = {
+    "Монтаж СКС": ["Прокладка витой пары в офисе", "Сборка патч-панели этажа", "Тестирование линии категории 6"],
+    "Видеонаблюдение": ["Установка IP-камеры на фасаде", "Настройка видеорегистратора", "Замена камеры в подъезде"],
+    "Электропитание": ["Замена ИБП в шкафу узла", "Ревизия щита питания этажа", "Подключение резервного питания"],
+  };
+  const extraBudget = Math.round(jobs.filter((job) => job.skills[0] !== TZ_SKILLS[2]).length * 0.18);
+  let extraConverted = 0;
+  for (const job of jobs) {
+    if (extraConverted >= extraBudget) break;
+    if (job.skills[0] === TZ_SKILLS[2]) continue;
+    const extrasHeld = uniqueStrings(engineers.flatMap((engineer) => engineer.skills.filter((skill) => (EXTRA_SKILLS as readonly string[]).includes(skill))));
+    if (!extrasHeld.length || rng() > 0.35) continue;
+    const skill = pick(rng, extrasHeld);
+    job.skills = [skill];
+    job.title = pick(rng, extraTitles[skill] ?? [job.title]);
+    extraConverted += 1;
+  }
 
   for (const job of jobs) {
+    job.equipment = localTool(rng, job.skills[0] ?? TZ_SKILLS[0], engineers);
     if (rng() * 100 < params.vehicleConstraintShare) {
       job.vehicle = vehicleForJob(rng, engineers, job.skills[0]);
     }
   }
-  coverSkills(engineers, rng);
 
   return {
     meta: {
       seed: params.seed,
       generatedAt: new Date().toISOString(),
       params,
-      catalog: { skills: TZ_SKILLS.length, tasks: CATALOG.tasks.length },
+      catalog: { skills: ALL_SKILLS.length, tasks: CATALOG.tasks.length },
       notes: [
-        "У заявки ровно один навык из справочника ТЗ: локальные работы, подключение и дозаказы, аварийные работы.",
-        "У инженера 1, 2 или 3 навыка того же справочника: новичок, специалист, профи. Один тип транспорта.",
+        "У заявки один требуемый навык и конкретный инструмент из пула этого навыка.",
+        "Инженеры получают набор инструментов по уровню: новичок узкий комплект, профи полный пул плюс смежные навыки.",
         "Требуемый транспорт у заявки заполнен только если ограничение задано.",
-        "События перепланирования: отмена заявки, недоступность инженера, новая срочная заявка.",
+        "События перепланирования создаются генератором: отмена заявки, недоступность инженера, срочная заявка.",
         "Адреса — реальные здания OSM. Маршрут начинается в точке старта, возврат туда не требуется.",
       ],
     },
     jobs,
     engineers,
-    events: buildEvents(rng, jobs, engineers, usedPlaces),
+    events: buildEvents(rng, jobs, engineers, usedPlaces, params),
   };
 }
 
@@ -237,49 +287,92 @@ function tzSkillOf(task: CatalogTask): (typeof TZ_SKILLS)[number] {
 }
 
 function coverSkills(engineers: Engineer[], rng: Rng): void {
-  for (const skill of TZ_SKILLS) {
+  for (const skill of ALL_SKILLS) {
     if (engineers.some((item) => item.skills.includes(skill))) continue;
-    const host = engineers[intBetween(rng, 0, engineers.length - 1)];
-    if (host.skills.length < 3) host.skills.push(skill);
-    else host.skills[0] = skill;
+    const host = [...engineers].sort((a, b) => b.skills.length - a.skills.length)[0] ?? engineers[intBetween(rng, 0, engineers.length - 1)];
+    if (!host) continue;
+    if (!host.skills.includes(skill)) host.skills.push(skill);
+    const pool = SKILL_EQUIPMENT_POOLS[skill] ?? [SKILL_EQUIPMENT[skill] ?? skill];
+    host.equipment = uniqueStrings([...(host.equipment ?? []), ...pool.slice(0, host.level === "новичок" ? 1 : 2)]);
   }
 }
 
-function buildEvents(rng: Rng, jobs: Job[], engineers: Engineer[], usedPlaces: Set<string>) {
+function spreadTimes(rng: Rng, count: number): string[] {
+  const used = new Set<number>();
+  const minutes: number[] = [];
+  for (let i = 0; i < count; i++) {
+    let value = 9 * 60 + intBetween(rng, 0, 7 * 60);
+    value = Math.round(value / 5) * 5;
+    let guard = 0;
+    while (used.has(value) && guard < 48) {
+      value = ((value + 15 - 9 * 60) % (8 * 60)) + 9 * 60;
+      guard += 1;
+    }
+    used.add(value);
+    minutes.push(value);
+  }
+  minutes.sort((a, b) => a - b);
+  return minutes.map(minutesToHm);
+}
+
+function buildEvents(rng: Rng, jobs: Job[], engineers: Engineer[], usedPlaces: Set<string>, params: GenerateParams) {
+  const cancelN = Math.max(0, Math.min(jobs.length, Math.round(params.cancelEvents)));
+  const unavailableN = Math.max(0, Math.min(engineers.length, Math.round(params.unavailableEvents)));
+  const urgentN = Math.max(0, Math.min(12, Math.round(params.urgentEvents)));
+  const times = spreadTimes(rng, cancelN + unavailableN + urgentN);
+  const events: Dataset["events"] = [];
+  let timeIndex = 0;
+
   const ordinary = jobs.filter((item) => item.priority === "Обычная");
-  const cancelled = pick(rng, ordinary.length ? ordinary : jobs);
-  const missing = pick(rng, engineers);
-  const skill = pick(rng, TZ_SKILLS);
-  const place = takePlace(rng, usedPlaces, "workplace");
-  const durationMin = intBetween(rng, 30, 60);
-  const window = windowForDuration(rng, durationMin);
-  const urgent: Job = {
-    id: `U${String(jobs.length + 1).padStart(3, "0")}`,
-    title: "Срочный выезд",
-    ...place,
-    durationMin,
-    windowStart: window.start,
-    windowEnd: window.end,
-    priority: "Срочная",
-    skills: [skill],
-    skillCount: 1,
-    equipment: SKILL_EQUIPMENT[skill],
-    vehicle: rng() < 0.5 ? pick(rng, VEHICLES) : undefined,
-  };
-  return [
-    { type: "отмена заявки" as const, time: "08:30", jobId: cancelled.id },
-    { type: "недоступность инженера" as const, time: "08:40", engineerId: missing.id },
-    { type: "срочная заявка" as const, time: "08:45", job: urgent },
-  ];
+  const cancelPool = ordinary.length ? ordinary : jobs;
+  const usedJobs = new Set<string>();
+  for (let i = 0; i < cancelN; i++) {
+    const cancelled = cancelPool.find((item) => !usedJobs.has(item.id)) ?? cancelPool[i % cancelPool.length];
+    if (!cancelled) break;
+    usedJobs.add(cancelled.id);
+    events.push({ type: "отмена заявки", time: times[timeIndex++] ?? "10:00", jobId: cancelled.id });
+  }
+
+  const usedEngineers = new Set<string>();
+  for (let i = 0; i < unavailableN; i++) {
+    const missing = engineers.find((item) => !usedEngineers.has(item.id)) ?? engineers[i % engineers.length];
+    if (!missing) break;
+    usedEngineers.add(missing.id);
+    events.push({ type: "недоступность инженера", time: times[timeIndex++] ?? "11:00", engineerId: missing.id });
+  }
+
+  for (let i = 0; i < urgentN; i++) {
+    const skill = pick(rng, [...ALL_SKILLS]);
+    const place = takePlace(rng, usedPlaces, "workplace");
+    const durationMin = intBetween(rng, 30, 60);
+    const window = windowForDuration(rng, durationMin);
+    const urgent: Job = {
+      id: `U${String(jobs.length + i + 1).padStart(3, "0")}`,
+      title: "Срочный выезд",
+      ...place,
+      durationMin,
+      windowStart: window.start,
+      windowEnd: window.end,
+      priority: "Срочная",
+      skills: [skill],
+      skillCount: 1,
+      equipment: localTool(rng, skill, engineers),
+      vehicle: rng() < 0.5 ? pick(rng, VEHICLES) : undefined,
+    };
+    events.push({ type: "срочная заявка", time: times[timeIndex++] ?? "12:00", job: urgent });
+  }
+
+  events.sort((a, b) => a.time.localeCompare(b.time));
+  return events;
 }
 
 export function datasetSummary(data: Dataset): string {
   const { jobs, engineers } = data;
   const engC = countBy(engineers.map((e) => e.level));
   return [
-    `справочник навыков ТЗ: ${TZ_SKILLS.join("; ")}`,
+    `справочник навыков: ${ALL_SKILLS.join("; ")}`,
     `инженеры ${engineers.length}: новички ${engC.новичок ?? 0}, специалисты ${engC.специалист ?? 0}, профи ${engC.профи ?? 0}`,
-    `заявки ${jobs.length}: ${TZ_SKILLS.map((skill) => `${skill} ${jobs.filter((item) => item.skills[0] === skill).length}`).join(", ")}`,
+    `заявки ${jobs.length}: ${[...new Set(jobs.map((item) => item.skills[0]))].map((skill) => `${skill} ${jobs.filter((item) => item.skills[0] === skill).length}`).join(", ")}`,
     `срочных ${jobs.filter((j) => j.priority === "Срочная").length}, с требованием ТС ${jobs.filter((j) => j.vehicle).length}`,
     `адреса OSM: заявка «${jobs[0]?.address ?? "—"}», старт «${engineers[0]?.address ?? "—"}»`,
     `seed ${data.meta.seed}`,
