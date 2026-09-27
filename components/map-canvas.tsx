@@ -226,10 +226,10 @@ function captionText(status: RoutingState, progress: { ready: number; total: num
   return `Дорожные маршруты ${progress.ready}/${progress.total} · часть недоступна`;
 }
 
-function MapChrome({ caption, status, clockRef, onFit, onZoomIn, onZoomOut, onRetry }: { caption: string; status: RoutingState; clockRef?: Ref<HTMLSpanElement>; onFit: () => void; onZoomIn: () => void; onZoomOut: () => void; onRetry: () => void }) {
+function MapChrome({ caption, status, clockRef, onFit, onZoomIn, onZoomOut, onRetry, fitLabel = "Показать все маршруты" }: { caption: string; status: RoutingState; clockRef?: Ref<HTMLSpanElement>; onFit: () => void; onZoomIn: () => void; onZoomOut: () => void; onRetry: () => void; fitLabel?: string }) {
   return <>
     <div className="map-tools">
-      <button aria-label="Показать все маршруты" onClick={onFit}><Layers3 size={17} /></button>
+      <button aria-label={fitLabel} onClick={onFit}><Layers3 size={17} /></button>
       <button aria-label="Увеличить карту" onClick={onZoomIn}>+</button>
       <span />
       <button aria-label="Уменьшить карту" onClick={onZoomOut}>−</button>
@@ -260,6 +260,7 @@ type CanvasProps = {
   onSelectJob: (id: string) => void;
   onInspectJob: (id: string) => void;
   onRoutingState: (state: RoutingState) => void;
+  singleEngineerMode?: boolean;
 };
 
 function useVisibleMarkers(visibleJobs: Job[], engineers: Engineer[], routingEnabled: boolean, selectedEngineerId: string | null, selectedJobId: string | null) {
@@ -686,8 +687,8 @@ export function MapCanvas(props: CanvasProps) {
   }, [simulating, mapReady]);
   return <div className="map-canvas real-map" aria-label="Интерактивная карта маршрутов инженеров">
     <div ref={containerRef} className="maplibre-host" data-route-features={routeData.features.length} data-route-points={routeData.features.reduce((sum, feature) => sum + feature.geometry.coordinates.length, 0)} data-road-status={routeStatus} />
-    {selectedRouteEngineer && <div className="selected-route-summary" style={{ ["--route-color" as string]: selectedLeg ? "#f43f5e" : selectedRouteEngineer.color }}><span>{selectedLeg ? "Участок к выбранной заявке" : "Маршрут инженера"}</span><strong>{selectedRouteEngineer.name}</strong>{selectedLeg ? <><small>{selectedLeg.originLabel} → {selectedLeg.destinationLabel}</small><small>Прибытие {minutesLabel(selectedLeg.stop.arrival)} · участок {selectedLeg.stop.distanceKm.toFixed(1).replace(".", ",")} км</small></> : <small>{selectedRoutePlan?.stops.length ?? 0} заявок · {selectedRoutePlan ? `${selectedRoutePlan.distanceKm.toFixed(1).replace(".", ",")} км` : "маршрут не построен"}</small>}<small>{selectedRouteEngineer.transport} · скорость {engineerSpeedKmh(selectedRouteEngineer.transport, selectedRouteEngineer.speedKmh, carSpeedKmh)} км/ч</small><small>{roadSourceLabel(selectedRoadSource, routeStatus)}</small><button type="button" onClick={() => onSelectEngineer(selectedRouteEngineer.id)}>Показать все маршруты</button></div>}
-    <MapChrome caption={captionText(routeStatus, routeProgress)} status={routeStatus} clockRef={clockRef} onFit={() => { if (selectedEngineerId) onSelectEngineer(selectedEngineerId); else void fitVisible(); }} onZoomIn={() => mapRef.current?.zoomIn()} onZoomOut={() => mapRef.current?.zoomOut()} onRetry={retryRoads} />
+    {selectedRouteEngineer && <div className="selected-route-summary" style={{ ["--route-color" as string]: selectedLeg ? "#f43f5e" : selectedRouteEngineer.color }}><span>{selectedLeg ? "Участок к выбранной заявке" : "Маршрут инженера"}</span><strong>{selectedRouteEngineer.name}</strong>{selectedLeg ? <><small>{selectedLeg.originLabel} → {selectedLeg.destinationLabel}</small><small>Прибытие {minutesLabel(selectedLeg.stop.arrival)} · участок {selectedLeg.stop.distanceKm.toFixed(1).replace(".", ",")} км</small></> : <small>{selectedRoutePlan?.stops.length ?? 0} заявок · {selectedRoutePlan ? `${selectedRoutePlan.distanceKm.toFixed(1).replace(".", ",")} км` : "маршрут не построен"}</small>}<small>{selectedRouteEngineer.transport} · скорость {engineerSpeedKmh(selectedRouteEngineer.transport, selectedRouteEngineer.speedKmh, carSpeedKmh)} км/ч</small><small>{roadSourceLabel(selectedRoadSource, routeStatus)}</small>{!props.singleEngineerMode && <button type="button" onClick={() => onSelectEngineer(selectedRouteEngineer.id)}>Показать все маршруты</button>}</div>}
+    <MapChrome caption={captionText(routeStatus, routeProgress)} status={routeStatus} clockRef={clockRef} fitLabel={props.singleEngineerMode ? "Показать мой маршрут" : "Показать все маршруты"} onFit={() => { if (props.singleEngineerMode) void fitVisible(); else if (selectedEngineerId) onSelectEngineer(selectedEngineerId); else void fitVisible(); }} onZoomIn={() => mapRef.current?.zoomIn()} onZoomOut={() => mapRef.current?.zoomOut()} onRetry={retryRoads} />
     <div ref={actionBoxRef} className="playback-action" hidden>
       <strong>Сейчас</strong>
       <p><span ref={actionTextRef} /><button type="button" className="playback-job-id" ref={actionJobRef} onClick={() => { const id = actionJobRef.current?.dataset.job; if (id) onInspectJob(id); }} /></p>

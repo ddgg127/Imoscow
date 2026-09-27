@@ -21,6 +21,8 @@ export function jobPriorityLevel(job: Pick<Job, "priority" | "urgency">): 1 | 2 
 export type Engineer = {
   id: string; initials: string; name: string; route: string; jobs: number; distance: string; load: number;
   color: string; region: Region; start: Coordinate; skills: string[]; equipment: string[]; transport: string;
+  /** Types available for the pre-shift issue decision; equipment is the one issued type. */
+  equipmentOptions?: string[];
   shiftStart: number; shiftEnd: number; speedKmh?: number;
   /** A day's fixed departure point; office kits are issued before shift, local kits beforehand. */
   startAddress?: string; startMode?: "office" | "local"; officeAddress?: string;
@@ -206,7 +208,7 @@ export function scaleEngineers(source: Engineer[], count: number, jobs: Job[] = 
       }
       if (bestRegion) quotas.set(bestRegion, (quotas.get(bestRegion) ?? 0) + 1);
     }
-    const coveredBy = source.map(engineer => relevant.map((job, index) => compatible(engineer, job) ? index : -1).filter(index => index >= 0));
+    const coveredBy = source.map(engineer => relevant.map((job, index) => compatible({ ...engineer, equipment: engineer.equipmentOptions ?? engineer.equipment }, job) ? index : -1).filter(index => index >= 0));
     const coverage = new Uint16Array(relevant.length);
     const chosen = new Set<number>();
     for (let slot = 0; slot < n; slot++) {

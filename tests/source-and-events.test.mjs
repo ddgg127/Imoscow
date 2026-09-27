@@ -37,17 +37,20 @@ test("demonstration crew count is independent of control-row ordering", () => {
 });
 
 test("transport is unrestricted only when the request has no explicit condition", () => {
-  for (const mode of ["Автомобиль", "Общественный транспорт", "Велосипед", "Пешком"]) assert.equal(transportAllowed({ requiredTransport: "" }, mode), true);
+  for (const mode of ["Автомобиль", "Общественный транспорт", "Велосипед", "Пешком", "Служебный вертолёт"]) assert.equal(transportAllowed({ requiredTransport: "" }, mode), true);
   for (const mode of ["Автомобиль", "Общественный транспорт", "Пешком"]) assert.equal(transportAllowed({ requiredTransport: "Велосипед" }, mode), false);
   assert.equal(transportAllowed({ requiredTransport: "Велосипед" }, "Велосипед"), true);
   assert.equal(transportAllowed({ requiredTransport: "Велосипед", allowedTransports: ["Велосипед", "Пешком"] }, "Пешком"), false);
   assert.equal(transportAllowed({ requiredTransport: "", allowedTransports: ["Велосипед", "Пешком"] }, "Пешком"), true);
-  const text = "Заявка;Адрес;Регион;Начало;Окончание;Тип работы;Оборудование;Транспорт;Долгота;Широта\nA;Тест;Восток;08:00;10:00;Локальные работы;Диагностический комплект;;37.78;55.71\nB;Тест;Восток;08:00;10:00;Локальные работы;Диагностический комплект;Велосипед;37.78;55.71";
+  assert.equal(transportAllowed({ requiredTransport: "Служебный вертолёт" }, "Автомобиль"), false);
+  assert.equal(transportAllowed({ requiredTransport: "Служебный вертолёт" }, "Служебный вертолёт"), true);
+  const text = "Заявка;Адрес;Регион;Начало;Окончание;Тип работы;Оборудование;Транспорт;Долгота;Широта\nA;Тест;Восток;08:00;10:00;Локальные работы;Диагностический комплект;;37.78;55.71\nB;Тест;Восток;08:00;10:00;Локальные работы;Диагностический комплект;Велосипед;37.78;55.71\nC;Тест;Восток;08:00;10:00;Локальные работы;Диагностический комплект;Служебный вертолет;37.78;55.71";
   const imported = importPlanText(text, "transport.csv", centers);
   assert.equal(imported.jobs[0].requiredTransport, "");
   assert.equal(imported.jobs[0].allowedTransports, undefined);
   assert.equal(imported.jobs[1].requiredTransport, "Велосипед");
   assert.equal(imported.jobs[1].allowedTransports, undefined);
+  assert.equal(imported.jobs[2].requiredTransport, "Служебный вертолёт");
 });
 
 const engineer = { id: "e", initials: "Е", name: "Инженер", route: "R", jobs: 0, distance: "", load: 0, color: "#000", region: "Восток", start: [0, 0], skills: ["Локальные работы", "Аварийно-восстановительные работы"], equipment: ["Диагностический комплект", "Рефлектометр"], transport: "Автомобиль", shiftStart: 480, shiftEnd: 1000 };
@@ -66,6 +69,57 @@ test("13:10 event locks the ongoing job and rejects its cancellation", () => {
   const merged = mergeTemporalResult(previous, suffix, prepared, [engineer], [...jobs, urgent], 24, travel);
   assert.deepEqual(merged.routes[0].stops[0], previous.routes[0].stops[0]);
   assert.throws(() => prepareTemporalReplan(previous, [engineer], [{ ...jobs[0], cancelled: true }, jobs[1]], [], { type: "cancel_job", time: 790, id: "A" }), /уже начата/);
+});
+
+test("engineer outage at the exact start of service keeps that visit assigned", () => {
+  const jobs = [job("A", 0, 480, 600, 60), job("B", 1, 700, 900)];
+  const previous = resultFromRouteOrder([engineer], jobs, [{ engineerId: "e", jobIds: ["A", "B"] }], { speedKmh: 24, travel });
+  const prepared = prepareTemporalReplan(previous, [engineer], jobs, ["e"], { type: "engineer_unavailable", time: 480, id: "e" });
+  assert.deepEqual([...prepared.lockedJobIds], ["A"]);
+  assert.deepEqual(prepared.remainingJobs.map(item => item.id), ["B"]);
+});
+
+test("outage during travel or waiting transfers the destination, while active service finishes", () => {
+  const jobs = [job("A", 0, 480, 600, 60), job("B", 10, 600, 800, 40), job("C", 10, 800, 950, 30)];
+  const previous = resultFromRouteOrder([engineer], jobs, [{ engineerId: "e", jobIds: ["A", "B", "C"] }], { speedKmh: 24, travel });
+  const [, destination] = previous.routes[0].stops;
+  assert.ok(destination.arrival > previous.routes[0].stops[0].end);
+  assert.ok(destination.start > destination.arrival);
+  for (const time of [previous.routes[0].stops[0].end + 1, destination.arrival]) {
+    const prepared = prepareTemporalReplan(previous, [engineer], jobs, ["e"], { type: "engineer_unavailable", time, id: "e" });
+    assert.deepEqual([...prepared.lockedJobIds], ["A"]);
+    assert.deepEqual(prepared.remainingJobs.map(item => item.id), ["B", "C"]);
+  }
+  const duringService = prepareTemporalReplan(previous, [engineer], jobs, ["e"], { type: "engineer_unavailable", time: destination.start + 1, id: "e" });
+  assert.deepEqual([...duringService.lockedJobIds], ["A", "B"]);
+  assert.deepEqual(duringService.remainingJobs.map(item => item.id), ["C"]);
+});
+
+test("second outage preserves completed work and assigns every remaining job at most once", () => {
+  const colleague = { ...engineer, id: "e2", name: "Коллега", start: [10, 0] };
+  const jobs = [job("A", 0, 480, 600, 60), job("B", 10, 600, 800, 40), job("C", 10, 800, 950, 30)];
+  const previous = resultFromRouteOrder([engineer, colleague], jobs, [{ engineerId: "e", jobIds: ["A", "B", "C"] }], { speedKmh: 24, travel });
+  const first = prepareTemporalReplan(previous, [engineer, colleague], jobs, ["e"], { type: "engineer_unavailable", time: 550, id: "e" });
+  const firstSuffix = resultFromRouteOrder(first.continuationEngineers, first.remainingJobs, [{ engineerId: "e2", jobIds: ["B", "C"] }], { speedKmh: 24, travel });
+  const afterFirst = mergeTemporalResult(previous, firstSuffix, first, [engineer, colleague], jobs, 24, travel);
+  const second = prepareTemporalReplan(afterFirst, [engineer, colleague], jobs, ["e", "e2"], { type: "engineer_unavailable", time: 650, id: "e2" });
+  const secondSuffix = resultFromRouteOrder([], second.remainingJobs, [], { speedKmh: 24, travel });
+  const afterSecond = mergeTemporalResult(afterFirst, secondSuffix, second, [engineer, colleague], jobs, 24, travel);
+  const ids = afterSecond.routes.flatMap(route => route.stops.map(stop => stop.jobId));
+  assert.equal(new Set(ids).size, ids.length);
+  assert.equal(afterSecond.jobs.find(item => item.id === "A").engineerId, "e");
+  assert.deepEqual(second.remainingJobs.map(item => item.id), ["C"]);
+});
+
+test("engineer outage without a replacement leaves future work visibly unassigned", () => {
+  const jobs = [job("A", 0, 480, 600, 60), job("B", 1, 700, 900)];
+  const previous = resultFromRouteOrder([engineer], jobs, [{ engineerId: "e", jobIds: ["A", "B"] }], { speedKmh: 24, travel });
+  const prepared = prepareTemporalReplan(previous, [engineer], jobs, ["e"], { type: "engineer_unavailable", time: 480, id: "e" });
+  assert.equal(prepared.continuationEngineers.length, 0);
+  const suffix = resultFromRouteOrder([], prepared.remainingJobs, [], { speedKmh: 24, travel });
+  const merged = mergeTemporalResult(previous, suffix, prepared, [engineer], jobs, 24, travel);
+  assert.equal(merged.jobs.find(item => item.id === "B").engineerId, null);
+  assert.equal(merged.jobs.find(item => item.id === "B").risk, true);
 });
 
 test("ordinary new work inserts only without moving agreed times", () => {

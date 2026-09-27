@@ -5,7 +5,7 @@ import { TZ_SKILLS, canonicalSkill as mapCanonicalSkill, equipmentFor as default
 export type ImportedPlan = { jobs: Job[]; engineers?: Engineer[]; speedKmh?: number; warnings: string[] };
 
 const regions: Region[] = ["Восток", "Юго-восток", "Югоцентр"];
-const transports = ["Автомобиль", "Общественный транспорт", "Велосипед", "Пешком"];
+const transports = ["Автомобиль", "Общественный транспорт", "Велосипед", "Пешком", "Служебный вертолёт"];
 const engineerColors = ["#6547e7", "#0f938b", "#e97931", "#4381d2", "#c44b8a", "#2f9e44", "#c9a227", "#db3f55"];
 
 function normalizeKey(key: string) {
@@ -46,6 +46,7 @@ function canonicalTransport(raw: string, fallback = "") {
   if (/пеш/i.test(raw)) return "Пешком";
   if (/вело/i.test(raw)) return "Велосипед";
   if (/обществен|метро|автобус/i.test(raw)) return "Общественный транспорт";
+  if (/вертол/i.test(raw)) return "Служебный вертолёт";
   if (/авто/i.test(raw)) return "Автомобиль";
   return transports.includes(raw) ? raw : raw.trim();
 }

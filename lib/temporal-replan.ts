@@ -58,10 +58,10 @@ export function prepareTemporalReplan(previous: OptimizationResult, engineers: E
     const route = routes.get(engineer.id);
     const stops = route?.stops ?? [];
     let lockCount = 0;
-    while (lockCount < stops.length && stops[lockCount].start < event.time) lockCount++;
-    // If a trip departed before the event, do not teleport the engineer or
-    // invalidate the already accepted destination. Complete that visit first.
-    if (lockCount < stops.length) {
+    while (lockCount < stops.length && stops[lockCount].start <= event.time) lockCount++;
+    // An unavailable engineer may finish an active visit, but a trip or a
+    // wait at the next address does not reserve that next job for them.
+    if (!unavailableIds.includes(engineer.id) && lockCount < stops.length) {
       const departure = lockCount ? stops[lockCount - 1].end : engineer.shiftStart;
       if (departure < event.time && event.time < stops[lockCount].arrival) lockCount++;
     }
@@ -118,6 +118,8 @@ export function mergeTemporalResult(previous: OptimizationResult, suffix: Optimi
     const durationMinutes = stops.length ? stops[stops.length - 1].end - engineer.shiftStart : 0;
     return { engineerId: engineer.id, stops, distanceKm, durationMinutes, load: Math.round(durationMinutes / Math.max(1, engineer.shiftEnd - engineer.shiftStart) * 100) };
   }).filter(route => route.stops.length);
+  const assignedJobIds = routes.flatMap(route => route.stops.map(stop => stop.jobId));
+  if (new Set(assignedJobIds).size !== assignedJobIds.length) throw new Error("После события одна заявка оказалась в нескольких маршрутах.");
   const assignment = new Map(routes.flatMap(route => route.stops.map(stop => [stop.jobId, { engineerId: route.engineerId, stop }] as const)));
   const suffixJobs = new Map(suffix.jobs.map(job => [job.id, job]));
   const previousJobs = new Map(previous.jobs.map(job => [job.id, job]));

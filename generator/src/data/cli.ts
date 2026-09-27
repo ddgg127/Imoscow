@@ -53,6 +53,9 @@ async function promptParams(base: GenerateParams): Promise<GenerateParams> {
     pro: await ask("Доля профи", base.pro),
     urgentShare: await ask("% заявок повышенного приоритета", base.urgentShare),
     vehicleConstraintShare: await ask("% заявок с требованием ТС", base.vehicleConstraintShare),
+    cancelEvents: await ask("Отмен заявок", base.cancelEvents),
+    unavailableEvents: await ask("Недоступных инженеров", base.unavailableEvents),
+    urgentEvents: await ask("Срочных заявок в событиях", base.urgentEvents),
     seed: await ask("Seed", base.seed),
   };
   await rl.close();
@@ -87,6 +90,9 @@ function fromArgs(base: GenerateParams): GenerateParams {
     pro: num("pro", d.pro),
     urgentShare: num("urgent", d.urgentShare),
     vehicleConstraintShare: num("vehicle", d.vehicleConstraintShare),
+    cancelEvents: num("cancel-events", d.cancelEvents),
+    unavailableEvents: num("unavailable-events", d.unavailableEvents),
+    urgentEvents: num("urgent-events", d.urgentEvents),
     seed: num("seed", d.seed),
   };
 }
@@ -105,7 +111,8 @@ async function main() {
   npm run generate -- --catalog-only --out datasets/catalog
 
 Флаги: --engineers --jobs --easy --medium --hard --novice --specialist --pro
-       --urgent --vehicle --seed --format json|csv|both --out <папка>
+       --urgent --vehicle --cancel-events --unavailable-events --urgent-events
+       --seed --format json|csv|both --out <папка>
        --catalog-only  только справочник задач и навыков
 
 Значения в [скобках] — последний успешный запуск (datasets/last-params.json).

@@ -45,7 +45,7 @@ test("manually completed work is excluded from a new baseline plan", () => {
 
 test("editor rejects invalid windows, duplicate ids and bad coordinates", () => {
   const jobs = [{ ...csvJobs[0] }, { ...csvJobs[1] }];
-  const engineers = [{ ...csvEngineers[0] }];
+  const engineers = [{ ...csvEngineers[0], equipment: [csvEngineers[0].equipment[0]] }];
   assert.equal(validateEditedData(jobs, engineers), null);
   assert.match(validateEditedData([{ ...jobs[0], windowEnd: jobs[0].windowStart }, jobs[1]], engineers), /окно/);
   assert.match(validateEditedData([jobs[0], { ...jobs[1], id: jobs[0].id }], engineers), /ID/);

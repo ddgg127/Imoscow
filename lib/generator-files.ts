@@ -1,5 +1,6 @@
 import { ALL_SKILLS, EXTRA_SKILLS, SKILL_EQUIPMENT, SKILL_EQUIPMENT_POOLS, TZ_SKILLS, VEHICLES, type TzSkill, type Vehicle } from "./domain.ts";
 import { applyAverageWindows, jobPriorityLevel, scaleEngineers, scaleJobs, type Engineer, type Job, type Region } from "./vrptw.ts";
+import { issueDailyEquipment } from "./equipment-issue.ts";
 import type { Coordinate } from "./map-providers.ts";
 import catalog from "../generator/src/data/moscow-buildings.json" with { type: "json" };
 
@@ -227,6 +228,31 @@ function localToolForSkill(rng: () => number, skill: string, region: Region, eng
   return pick(rng, held.length ? held : [pool[0]!]);
 }
 
+/** Synthetic requests should ask for a tool that a local engineer actually received. */
+function matchGeneratedJobsToIssuedKits(jobs: Job[], engineers: Engineer[]): void {
+  for (const job of jobs) {
+    const local = engineers.filter(engineer => engineer.region === job.region);
+    const candidates = local.flatMap(engineer => engineer.skills
+      .filter(skill => (SKILL_EQUIPMENT_POOLS[skill] ?? [SKILL_EQUIPMENT[skill] ?? skill]).includes(engineer.equipment[0] ?? ""))
+      .map(skill => ({ engineer, skill })));
+    candidates.sort((a, b) =>
+      Number(b.skill === job.kind) - Number(a.skill === job.kind)
+      || Number(b.engineer.equipment[0] === job.equipment) - Number(a.engineer.equipment[0] === job.equipment)
+      || Number(!job.requiredTransport || b.engineer.transport === job.requiredTransport) - Number(!job.requiredTransport || a.engineer.transport === job.requiredTransport)
+      || a.engineer.id.localeCompare(b.engineer.id));
+    const chosen = candidates[0];
+    if (!chosen) continue;
+    if (chosen.skill !== job.kind) {
+      job.kind = chosen.skill;
+      job.workType = titleForSkill(chosen.skill, Number.parseInt(job.id, 10) || 0);
+      job.tone = toneForSkill(chosen.skill);
+      job.workClass = workClassForSkill(chosen.skill);
+    }
+    job.equipment = chosen.engineer.equipment[0]!;
+    if (job.requiredTransport) job.requiredTransport = chosen.engineer.transport;
+  }
+}
+
 function coverZoneSkills(engineers: Engineer[], skills: readonly string[]): void {
   const zones: Region[] = ["Восток", "Юго-восток", "Югоцентр"];
   for (const zone of zones) {
@@ -391,6 +417,7 @@ export function createTzReplanEvent(options: {
   }
   const existingUrgent = events.filter(event => event.type === "срочная заявка" && event.job).map(event => event.job!);
   const job = makeUrgentEventJob(rng, [...jobs, ...existingUrgent], engineers, buildings, existingUrgent.length);
+  matchGeneratedJobsToIssuedKits([job], engineers);
   return { type: "срочная заявка", time: options.time, entityId: job.id, job };
 }
 
@@ -663,11 +690,15 @@ export function generateTzDataset(rawOptions: Partial<GenerateTzOptions> = {}): 
   applyExtraSkillJobs(draftedJobs, engineers, rng, extraSkillShare);
   const jobs: Job[] = applyAverageWindows(draftedJobs, targetWindow);
 
-  const events = buildReplanEvents(rng, jobs, engineers, mixedJobPool, {
+  const issuedEngineers = issueDailyEquipment(engineers, jobs);
+  matchGeneratedJobsToIssuedKits(jobs, issuedEngineers);
+
+  const events = buildReplanEvents(rng, jobs, issuedEngineers, mixedJobPool, {
     cancelEvents: rawOptions.cancelEvents,
     unavailableEvents: rawOptions.unavailableEvents,
     urgentEvents: rawOptions.urgentEvents,
   });
+  matchGeneratedJobsToIssuedKits(events.flatMap(event => event.job ? [event.job] : []), issuedEngineers);
 
   // Сбор статистики для информативных карточек
   const jobsBySkill: Record<string, number> = {};
@@ -690,7 +721,7 @@ export function generateTzDataset(rawOptions: Partial<GenerateTzOptions> = {}): 
 
   return {
     jobs,
-    engineers,
+    engineers: issuedEngineers.map(engineer => ({ ...engineer, equipmentOptions: engineer.equipment })),
     events,
     speedKmh,
     stats: {
@@ -878,7 +909,7 @@ export function generateDataset(sourceJobs: Job[], sourceEngineers: Engineer[], 
     return { ...job, engineerId: null, baselineEngineerId: null, status: job.cancelled ? "Отменена" : "Новая", executionStatus: "not_started" as const,
       urgency: elevated ? "urgent" as const : "normal" as const, priority: elevated ? 2 : 1 };
   });
-  return { jobs, engineers: scaleEngineers(sourceEngineers, options.engineers, jobs), speedKmh: options.speedKmh };
+  return { jobs, engineers: issueDailyEquipment(scaleEngineers(sourceEngineers, options.engineers, jobs), jobs), speedKmh: options.speedKmh };
 }
 
 const columns = ["recordType", "id", "region", "area", "address", "kind", "workType", "lon", "lat", "geocodeQuality", "windowStart", "windowEnd", "serviceMinutes", "normativeMinutes", "travelReserveMinutes", "estimatedTravelMinutes", "normSource", "equipment", "requiredTransport", "allowedTransports", "priority", "urgency", "workClass", "status", "executionStatus", "cancelled", "name", "initials", "skills", "transport", "shiftStart", "shiftEnd", "startAddress", "startMode", "officeAddress", "equipmentIssue", "color", "speedKmh"] as const;

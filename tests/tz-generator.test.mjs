@@ -22,7 +22,9 @@ test("TZ generator honors exact counts, mean window and two priority levels", ()
     assert.ok(data.jobs.every(job => job.priority === (job.urgency === "urgent" ? 2 : 1)));
     assert.ok(data.jobs.every(job => job.windowStart >= 480 && job.windowEnd <= 1320));
     assert.ok(data.jobs.every(job => job.geocodeVerified && job.coordinates.length === 2));
-    assert.ok(data.jobs.every(job => data.engineers.some(engineer => compatible(engineer, job))), "every generated job has a resource-compatible local engineer");
+    assert.ok(data.engineers.every(engineer => engineer.equipment.length === 1), "exactly one kit is issued per engineer");
+    assert.ok(data.jobs.filter(job => job.priority === 2).every(job => data.engineers.some(engineer => compatible(engineer, job))), "elevated work has an issued compatible kit");
+    assert.ok(data.jobs.filter(job => data.engineers.some(engineer => compatible(engineer, job))).length >= jobs * 0.9, "kit issue covers most generated work");
     assert.deepEqual(new Set(data.jobs.map(job => job.region)), new Set(data.engineers.map(engineer => engineer.region)));
     assert.equal(data.events.length, 3);
     assert.ok(data.events.some(event => event.type === "отмена заявки"));

@@ -64,7 +64,7 @@ export function validateEditedData(jobs: Job[], engineers: Engineer[]) {
   for (const [index, engineer] of engineers.entries()) {
     if (!engineer.id.trim() || ids.has(engineer.id)) return `Инженер ${index + 1}: пустой или повторяющийся ID.`;
     ids.add(engineer.id);
-    if (!engineer.name.trim() || !engineer.skills.length || !engineer.equipment.length) return `Инженер ${engineer.name || engineer.id}: укажите имя, навыки и оборудование.`;
+    if (!engineer.name.trim() || !engineer.skills.length || engineer.equipment.length !== 1 || !engineer.equipment[0].trim()) return `Инженер ${engineer.name || engineer.id}: укажите имя, навыки и один тип оборудования на смену.`;
     if (!validCoordinate(engineer.start)) return `Инженер ${engineer.name}: координаты базы вне допустимого диапазона.`;
     if (!validWindow(engineer.shiftStart, engineer.shiftEnd)) return `Инженер ${engineer.name}: некорректная смена.`;
     if (!Number.isFinite(engineerSpeedKmh(engineer.transport, engineer.speedKmh, 24))) return `Инженер ${engineer.name}: некорректная скорость.`;
