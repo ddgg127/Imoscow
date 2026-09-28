@@ -24,3 +24,17 @@ jobs:
       - run: npm run lint
       - run: python -m pytest solver_service -q
       - run: npm run build
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.19.0
+      - run: docker build -t fieldflow-qa .
+      - run: docker run -d --name fieldflow-qa --memory=512m --cpus=1 -p 3005:10000 -e PORT=10000 -e RENDER_GIT_COMMIT="$GITHUB_SHA" fieldflow-qa
+      - run: node scripts/check-deployment.mjs
+      - if: always()
+        run: docker logs fieldflow-qa || true
+      - if: always()
+        run: docker rm -f fieldflow-qa || true

@@ -11,12 +11,12 @@ services:
     autoDeployTrigger: commit
   - type: web
     name: fieldflow-web
-    runtime: node
+    runtime: docker
     plan: free
     region: frankfurt
-    buildCommand: npm ci --include=dev && npm run build
-    startCommand: npm run start:render
-    healthCheckPath: /
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/solver
     autoDeployTrigger: commit
     envVars:
       - key: NODE_VERSION
@@ -26,4 +26,4 @@ services:
       - key: DEPLOY_TARGET
         value: node
       - key: SOLVER_URL
-        value: https://fieldflow-ortools.onrender.com
+        value: http://127.0.0.1:8008
