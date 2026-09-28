@@ -3,27 +3,12 @@
 import { useMemo, useState } from "react";
 import { Search, X, Zap } from "lucide-react";
 import { jobPriorityLevel, type Engineer, type Job, type RoutePlan } from "@/lib/vrptw";
+import { getJobState } from "@/lib/job-presentation";
+import { JobStatus } from "@/components/job-status";
 
 export type TaskFilter = "all" | "in_progress" | "waiting" | "completed" | "unassigned" | "cancelled";
-export type JobState = Exclude<TaskFilter, "all">;
 
-export function getJobState(job: Job, started: boolean): JobState {
-  if (job.cancelled) return "cancelled";
-  if (job.executionStatus === "completed") return "completed";
-  if (job.executionStatus === "in_progress") return "in_progress";
-  if (started && !job.engineerId) return "unassigned";
-  return "waiting";
-}
-
-const stateLabels: Record<JobState, string> = {
-  in_progress: "В работе",
-  waiting: "Ожидает",
-  completed: "Завершена",
-  unassigned: "Не удаётся назначить",
-  cancelled: "Отменена",
-};
-
-export function AssignmentBoard({ jobs, engineers, routes, selectedJobId, selectedEngineerId, started, loading, onSelectJob, onSelectEngineer, onShowAll }: {
+export function AssignmentBoard({ jobs, engineers, routes, selectedJobId, selectedEngineerId, started, loading, filtersActive, resetVersion, onResetFilters, onSelectJob, onSelectEngineer, onShowAll }: {
   jobs: Job[];
   engineers: Engineer[];
   routes: RoutePlan[];
@@ -31,12 +16,18 @@ export function AssignmentBoard({ jobs, engineers, routes, selectedJobId, select
   selectedEngineerId: string | null;
   started: boolean;
   loading: boolean;
+  filtersActive: boolean;
+  resetVersion: number;
+  onResetFilters: () => void;
   onSelectJob: (id: string) => void;
   onSelectEngineer: (id: string) => void;
   onShowAll: () => void;
 }) {
-  const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState<TaskFilter>("all");
+  const [search, setSearch] = useState({ query: "", filter: "all" as TaskFilter, version: resetVersion });
+  const query = search.version === resetVersion ? search.query : "";
+  const filter = search.version === resetVersion ? search.filter : "all";
+  const setQuery = (value: string) => setSearch({ query: value, filter, version: resetVersion });
+  const setFilter = (value: TaskFilter) => setSearch({ query, filter: value, version: resetVersion });
   const byEngineer = useMemo(() => new Map(engineers.map(engineer => [engineer.id, engineer])), [engineers]);
   const positionByJob = useMemo(() => new Map(routes.flatMap(route => route.stops.map((stop, index) => [stop.jobId, `${index + 1}/${route.stops.length}`] as const))), [routes]);
   const jobStates = useMemo(() => new Map(jobs.map(job => [job.id, getJobState(job, started)] as const)), [jobs, started]);
@@ -56,10 +47,10 @@ export function AssignmentBoard({ jobs, engineers, routes, selectedJobId, select
 
   const filters: { id: TaskFilter; label: string; className: string }[] = [
     { id: "all", label: "Все", className: "btn-all" },
-    { id: "in_progress", label: "В работе", className: "btn-in-progress" },
+    { id: "in_progress", label: "Выполняются", className: "btn-in-progress" },
     { id: "waiting", label: "Ожидают", className: "btn-waiting" },
     { id: "completed", label: "Завершены", className: "btn-completed" },
-    { id: "unassigned", label: "Не удаётся назначить", className: "btn-unassigned" },
+    { id: "unassigned", label: "Не назначены", className: "btn-unassigned" },
     { id: "cancelled", label: "Отменены", className: "btn-cancelled" },
   ];
 
@@ -69,6 +60,7 @@ export function AssignmentBoard({ jobs, engineers, routes, selectedJobId, select
       <div className="assignment-filters" role="group" aria-label="Фильтры состояния заявок">
         {filters.map(item => <button type="button" key={item.id} className={`filter-btn ${item.className}${filter === item.id ? " active" : ""}`} aria-pressed={filter === item.id} onClick={() => setFilter(item.id)}>{item.label} <b>{counts[item.id]}</b></button>)}
       </div>
+      {(query.trim() || filter !== "all" || filtersActive) && <button type="button" className="reset-filters-button" onClick={() => { setSearch({ query: "", filter: "all", version: resetVersion }); onResetFilters(); }}><X size={14} />Сбросить фильтры</button>}
     </div>
     <div className="assignment-table-head"><span>Заявка</span><span>Назначенный инженер</span></div>
     <div className="assignment-table" role="list" aria-label="Заявки и назначенные инженеры">
@@ -77,13 +69,13 @@ export function AssignmentBoard({ jobs, engineers, routes, selectedJobId, select
         const state = jobStates.get(job.id) ?? "waiting";
         return <div className="assignment-row" role="listitem" key={job.id}>
           <button type="button" className={`assignment-job${selectedJobId === job.id ? " selected" : ""}`} onClick={() => onSelectJob(job.id)} title={`${job.address} · ${job.kind}`} aria-label={`Открыть заявку № ${job.id}, ${job.address}`}>
-            <span className={`assignment-tone ${job.tone}`} aria-hidden="true" />
-            <span className="assignment-cell-copy"><strong>№ {job.id}{jobPriorityLevel(job) === 2 && <Zap className="assignment-urgent-icon" aria-label="Повышенный приоритет" />}</strong><small>{job.time} · {stateLabels[state]}</small><small title={job.address}>{job.address}</small></span>
+            <span className={`assignment-tone status-${state}`} aria-hidden="true" />
+            <span className="assignment-cell-copy"><strong>№ {job.id}{jobPriorityLevel(job) === 2 && <Zap className="assignment-urgent-icon" aria-label="Повышенный приоритет" />}</strong><small title={job.address}>{job.address}</small><small>{job.time}</small><JobStatus job={job} started={started} /></span>
           </button>
           {engineer && !job.cancelled ? <button type="button" className={`assignment-engineer${selectedEngineerId === engineer.id ? " selected" : ""}`} onClick={() => onSelectEngineer(engineer.id)} title={`Показать маршрут: ${engineer.name}`} aria-label={`Показать маршрут инженера ${engineer.name} для заявки № ${job.id}`}>
             <span className="assignment-avatar" style={{ background: `${engineer.color}20`, color: engineer.color }}>{engineer.initials}</span>
             <span className="assignment-cell-copy"><strong>{engineer.name.replace(/^Инженер\s+/i, "")}</strong><small>{positionByJob.get(job.id) ?? "—"} в маршруте</small></span>
-          </button> : <span className="assignment-unassigned">{job.cancelled ? "Отменена" : loading ? "Расчёт…" : "Не назначен"}</span>}
+          </button> : <span className="assignment-unassigned">{job.cancelled ? "Отменена" : state === "completed" ? "Работа закрыта" : loading ? "Расчёт…" : "Не назначен"}</span>}
         </div>;
       })}
       {!shown.length && <div className="assignment-no-results">По этому запросу заявок нет.</div>}

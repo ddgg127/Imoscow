@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { AlertTriangle, BarChart3, Check, ChevronDown, Clipboard, Clock3, Compass, Contrast, Database, Download, FileJson, FileUp, Layers3, MapPin, Menu, MoreHorizontal, Play, Plus, RefreshCw, Route, Search, ShieldAlert, Sliders, Sparkles, SunMoon, Table2, Upload, Users, UsersRound, Waypoints, Wrench, X, Zap } from "lucide-react";
+import { AlertTriangle, BarChart3, Bell, LoaderCircle, Check, ChevronDown, Clipboard, Clock3, Compass, Contrast, Database, Download, FileJson, FileUp, Layers3, MapPin, Menu, MoreHorizontal, Play, Plus, RefreshCw, Route, Search, ShieldAlert, Sliders, Sparkles, SunMoon, Table2, Upload, Users, UsersRound, Waypoints, Wrench, X, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -11,6 +11,12 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { MapCanvas, type RoutingState } from "@/components/map-canvas";
 import { AssignmentBoard } from "@/components/assignment-board";
+import { HelpHint } from "@/components/help-hint";
+import { JobStatus } from "@/components/job-status";
+import { JobDetailsDialog } from "@/components/job-details-dialog";
+import { NotificationJournal, useNotificationJournal } from "@/components/notification-journal";
+import { getJobState, jobStateLabels } from "@/lib/job-presentation";
+import { reassignmentNotifications } from "@/lib/notification-journal";
 import { EngineerWorkspace, type EngineerAbsenceReason } from "@/components/engineer-workspace";
 import { EngineerTimeline } from "@/components/engineer-timeline";
 import { TimeDrum } from "@/components/time-drum";
@@ -26,7 +32,7 @@ import { createTzReplanEvent, downloadAllTzCsvs, downloadBlob, downloadGenerated
 import { importPlanFile } from "@/lib/import-data";
 import { absenceImpact, engineerAbsenceMoment, type AbsenceImpact, type AbsenceMoment } from "@/lib/engineer-absence";
 import { issueDailyEquipment } from "@/lib/equipment-issue";
-import { executionAtTime, executionLabels, parseTime, validateEditedData } from "@/lib/data-editor";
+import { executionAtTime, parseTime, validateEditedData } from "@/lib/data-editor";
 import { eventTimeError, FIRST_EVENT_MINUTE, unavailableAtTime, type AvailabilityChange } from "@/lib/event-time";
 import { solveVrptwServer, type SolverEngine } from "@/lib/server-solver";
 import { compareReplannedPlans, fallbackTravel, idleOptimization, jobPriorityLevel, minutesLabel, regions, resultFromRouteOrder, routeTimeBreakdown, scaleEngineers, scaleJobs, type Engineer, type Job, type OptimizationResult, type Region, type ReplanChange, type RoutePlan, type TravelMatrix } from "@/lib/vrptw";
@@ -129,7 +135,7 @@ function ConfigNumberField({ label, value, onChange, sliderMin = 1, sliderMax = 
   return <div className="config-field"><div className="config-field-head"><Label>{label}</Label><div className="config-input-wrap"><Input inputMode="numeric" value={text} aria-label={label} onChange={event => { const next = event.target.value.replace(/[^\d]/g, "").replace(/^0+(?=\d)/, ""); setText(next); if (next === "") return; onChange(clamp(next)); }} onBlur={() => { const next = clamp(text); onChange(next); setText(String(next)); }} /><span>{suffix}</span></div></div><div className="config-slider-wrap"><Slider min={sliderMin} max={sliderMax} step={1} value={[sliderValue]} className="w-full" onPointerDown={event => { shiftHeld.current = event.shiftKey; pointerActive.current = true; }} onPointerMove={event => { shiftHeld.current = event.shiftKey; }} onPointerUp={() => { pointerActive.current = false; }} onPointerCancel={() => { pointerActive.current = false; }} onValueChange={values => { const next = values[0]; if (typeof next === "number") applySlider(next); }} /><div className="config-slider-ticks" aria-hidden>{ticks.map(tick => <i key={tick} style={{ left: `${(tick - sliderMin) / (sliderMax - sliderMin) * 100}%` }} title={String(tick)} />)}</div></div><div className="config-field-meta"><span>{sliderMin}</span><small>{value > sliderMax ? `Диапазон до ${sliderMax}` : ""}</small><span>{sliderMax}</span></div></div>;
 }
 
-function JobTable({ jobs, engineers, onOpen, limit }: { jobs: Job[]; engineers: Engineer[]; onOpen: (id: string) => void; limit?: number }) { return <div className="job-table"><div className="job-row table-head"><span>Время</span><span>Заявка</span><span>Адрес</span><span>Инженер</span><span>Состояние</span><span>Статус SLA</span></div>{jobs.slice(0, limit ?? jobs.length).map(job => { const engineer = engineers.find(item => item.id === job.engineerId); const routeStatus = job.cancelled ? "Отменена" : job.executionStatus === "completed" && !engineer ? "Завершена" : engineer ? "В окне" : "Нет маршрута"; return <button className="job-row job-row-button" key={job.id} onClick={() => onOpen(job.id)}><span className="job-time">{job.time}</span><span><i className={`job-tone ${job.tone}`} /><b>{job.id}</b><small>{job.kind}</small></span><span><b>{job.area}</b><small>{job.address}</small></span><span className="assigned">{engineer ? <><i style={{ background: engineer.color }}>{engineer.initials}</i><b>{engineer.name}</b></> : <b>{routeStatus === "Завершена" ? "Работа закрыта" : "Не назначена"}</b>}</span><span className={`execution-pill ${job.executionStatus ?? "not_started"}`}>{executionLabels[job.executionStatus ?? "not_started"]}</span><span><Badge className={!engineer && routeStatus === "Нет маршрута" ? "sla risk" : "sla"}>{routeStatus === "Нет маршрута" ? <AlertTriangle /> : <Clock3 />}{routeStatus}</Badge></span></button>; })}</div>; }
+function JobTable({ jobs, engineers, onOpen, limit, started }: { started: boolean; jobs: Job[]; engineers: Engineer[]; onOpen: (id: string) => void; limit?: number }) { return <div className="job-table"><div className="job-row table-head"><span>Время</span><span>Заявка</span><span>Адрес</span><span>Инженер</span><span>Состояние</span><span>Статус SLA</span></div>{jobs.slice(0, limit ?? jobs.length).map(job => { const engineer = engineers.find(item => item.id === job.engineerId); const routeStatus = job.cancelled ? "Отменена" : job.executionStatus === "completed" ? "Завершена" : engineer ? "В окне" : started ? "Нет маршрута" : "После расчёта"; return <button className="job-row job-row-button" key={job.id} onClick={() => onOpen(job.id)}><span className="job-time">{job.time}</span><span><i className={`job-tone ${job.tone}`} /><b>{job.id}</b><small>{job.kind}</small></span><span><b>{job.area}</b><small>{job.address}</small></span><span className="assigned">{engineer ? <><i style={{ background: engineer.color }}>{engineer.initials}</i><b>{engineer.name}</b></> : <b>{routeStatus === "Завершена" ? "Работа закрыта" : "Не назначена"}</b>}</span><JobStatus job={job} started={started} /><span><Badge className={!engineer && routeStatus === "Нет маршрута" ? "sla risk" : "sla"}>{routeStatus === "Нет маршрута" ? <AlertTriangle /> : <Clock3 />}{routeStatus}</Badge></span></button>; })}</div>; }
 function InstantSearch({ value, onChange, placeholder, children }: { value: string; onChange: (value: string) => void; placeholder: string; children?: ReactNode }) {
   return <div className="instant-search"><div className="instant-search-field"><Search /><input type="text" role="searchbox" value={value} onChange={event => onChange(event.target.value)} placeholder={placeholder} aria-label={placeholder} autoComplete="off" />{value && <button type="button" onClick={() => onChange("")} aria-label="Очистить поиск"><X /></button>}</div>{value.trim() && children}</div>;
 }
@@ -140,22 +146,21 @@ function matchesFacets(selected: string[], strict: boolean, values: Record<strin
   const matches = (entry: string) => { const [key, value] = entry.split("\u0000"); return values[key]?.includes(value) ?? false; };
   return strict ? selected.every(matches) : selected.some(matches);
 }
-function FacetFilters({ groups, selected, onSelected, strict, onStrict, count, total }: { groups: FacetGroup[]; selected: string[]; onSelected: (values: string[]) => void; strict: boolean; onStrict: (value: boolean) => void; count: number; total: number }) {
+function FacetFilters({ groups, selected, onSelected, strict, onStrict, count, total, resetActive, onReset }: { resetActive: boolean; onReset: () => void; groups: FacetGroup[]; selected: string[]; onSelected: (values: string[]) => void; strict: boolean; onStrict: (value: boolean) => void; count: number; total: number }) {
   const [openGroup, setOpenGroup] = useState<string | null>(null);
-  return <section className="facet-filters" aria-label="Фильтры"><div className="facet-head"><div><strong>Фильтры</strong><span>Показано {count} из {total}</span></div><label className="facet-strict"><input type="checkbox" checked={strict} onChange={event => onStrict(event.target.checked)} /> Строгий фильтр <small>{strict ? "все выбранные" : "хотя бы один"}</small></label>{selected.length > 0 && <button type="button" onClick={() => onSelected([])}>Сбросить</button>}</div><div className="facet-groups">{groups.map(group => <details key={group.key} className="facet-group" open={openGroup === group.key} onToggle={event => { if (event.currentTarget.open) setOpenGroup(group.key); else if (openGroup === group.key) setOpenGroup(null); }}><summary>{group.label}{selected.filter(value => value.startsWith(`${group.key}\u0000`)).length > 0 && <b>{selected.filter(value => value.startsWith(`${group.key}\u0000`)).length}</b>}</summary><div className="facet-options">{group.values.map(value => { const id = `${group.key}\u0000${value}`; return <label key={id}><input type="checkbox" checked={selected.includes(id)} onChange={event => onSelected(event.target.checked ? [...selected, id] : selected.filter(item => item !== id))} /><span>{value}</span></label>; })}</div></details>)}</div>{selected.length > 0 && <p className="facet-selected">{selected.map(value => { const [key, label] = value.split("\u0000"); return <button type="button" key={value} onClick={() => onSelected(selected.filter(item => item !== value))} aria-label={`Убрать фильтр ${label}`}>{groups.find(group => group.key === key)?.label}: {label} ×</button>; })}</p>}</section>;
+  return <section className="facet-filters" aria-label="Фильтры"><div className="facet-head"><div><strong>Фильтры</strong><span>Показано {count} из {total}</span></div><label className="facet-strict"><input type="checkbox" checked={strict} onChange={event => onStrict(event.target.checked)} /> Строгий фильтр <small>{strict ? "все выбранные" : "хотя бы один"}</small></label>{resetActive && <button type="button" className="reset-filters-button" onClick={() => { onReset(); setOpenGroup(null); }}><X size={14} />Сбросить фильтры</button>}</div><div className="facet-groups">{groups.map(group => <details key={group.key} className="facet-group" open={openGroup === group.key} onToggle={event => { if (event.currentTarget.open) setOpenGroup(group.key); else if (openGroup === group.key) setOpenGroup(null); }}><summary>{group.label}{selected.filter(value => value.startsWith(`${group.key}\u0000`)).length > 0 && <b>{selected.filter(value => value.startsWith(`${group.key}\u0000`)).length}</b>}</summary><div className="facet-options">{group.values.map(value => { const id = `${group.key}\u0000${value}`; return <label key={id}><input type="checkbox" checked={selected.includes(id)} onChange={event => onSelected(event.target.checked ? [...selected, id] : selected.filter(item => item !== id))} /><span>{value}</span></label>; })}</div></details>)}</div>{selected.length > 0 && <p className="facet-selected">{selected.map(value => { const [key, label] = value.split("\u0000"); return <button type="button" key={value} onClick={() => onSelected(selected.filter(item => item !== value))} aria-label={`Убрать фильтр ${label}`}>{groups.find(group => group.key === key)?.label}: {label} ×</button>; })}</p>}</section>;
 }
-function RequestsView({ jobs, engineers, onOpen, onAdd, onImport, importStatus }: { jobs: Job[]; engineers: Engineer[]; onOpen: (id: string) => void; onAdd: () => void; onImport: (file: File) => void; importStatus: string }) {
+function RequestsView({ jobs, engineers, onOpen, onAdd, onImport, importStatus, started }: { started: boolean; jobs: Job[]; engineers: Engineer[]; onOpen: (id: string) => void; onAdd: () => void; onImport: (file: File) => void; importStatus: string }) {
   const [selected, setSelected] = useSavedFilter<string[]>("requests-selected-v2", []); const [strict, setStrict] = useSavedFilter("requests-strict", false); const [showAll, setShowAll] = useSavedFilter("requests-all", false); const [query, setQuery] = useSavedFilter("requests-query", ""); const [fromTime, setFromTime] = useSavedFilter("requests-from", ""); const [toTime, setToTime] = useSavedFilter("requests-to", ""); const [normFrom, setNormFrom] = useSavedFilter("requests-norm-from", ""); const [normTo, setNormTo] = useSavedFilter("requests-norm-to", "");
-  const unassigned = jobs.filter(job => !job.cancelled && job.executionStatus !== "completed" && !job.engineerId).length;
+  const unassigned = jobs.filter(job => getJobState(job, started) === "unassigned").length;
   const cancelled = jobs.filter(job => job.cancelled).length;
-  const completed = jobs.filter(job => !job.cancelled && job.executionStatus === "completed").length;
   const assigned = jobs.filter(job => !job.cancelled && job.engineerId).length;
-  const groups: FacetGroup[] = [{ key: "kind", label: "Навык / работа", values: facetOptions(jobs.map(job => job.kind)) }, { key: "equipment", label: "Оборудование", values: facetOptions(jobs.map(job => job.equipment)) }, { key: "transport", label: "Транспорт", values: facetOptions(jobs.map(job => job.requiredTransport)) }, { key: "status", label: "Статус маршрута", values: ["В окне", "Нет маршрута", "Отменена", "Завершена"] }, { key: "execution", label: "Выполнение", values: Object.values(executionLabels) }, { key: "priority", label: "Приоритет", values: ["Обычный", "Повышенный"] }];
+  const groups: FacetGroup[] = [{ key: "kind", label: "Навык / работа", values: facetOptions(jobs.map(job => job.kind)) }, { key: "equipment", label: "Оборудование", values: facetOptions(jobs.map(job => job.equipment)) }, { key: "transport", label: "Транспорт", values: facetOptions(jobs.map(job => job.requiredTransport)) }, { key: "status", label: "Статус маршрута", values: ["В окне", "Нет маршрута", "Отменена", "Завершена"] }, { key: "execution", label: "Выполнение", values: Object.values(jobStateLabels) }, { key: "priority", label: "Приоритет", values: ["Обычный", "Повышенный"] }];
   const normalized = query.trim().toLocaleLowerCase("ru"); const fromMinutes = fromTime ? Number(fromTime.slice(0, 2)) * 60 + Number(fromTime.slice(3)) : null; const toMinutes = toTime ? Number(toTime.slice(0, 2)) * 60 + Number(toTime.slice(3)) : null; const minNorm = normFrom === "" ? null : Number(normFrom); const maxNorm = normTo === "" ? null : Number(normTo);
   const searched = jobs.filter(job => !normalized || job.id.toLocaleLowerCase("ru").includes(normalized) || (!Number.isNaN(parseInt(job.id, 10)) && String(parseInt(job.id, 10)) === normalized) || job.address.toLocaleLowerCase("ru").includes(normalized));
-  const filtered = searched.filter(job => matchesFacets(selected, strict, { kind: [job.kind], equipment: [job.equipment], transport: [job.requiredTransport], status: [job.cancelled ? "Отменена" : job.executionStatus === "completed" && !job.engineerId ? "Завершена" : job.engineerId ? "В окне" : "Нет маршрута"], execution: [executionLabels[job.executionStatus ?? "not_started"]], priority: [String(job.priority)] }) && (fromMinutes == null || job.windowStart >= fromMinutes) && (toMinutes == null || job.windowEnd <= toMinutes) && (minNorm == null || job.serviceMinutes >= minNorm) && (maxNorm == null || job.serviceMinutes <= maxNorm));
-  const resetRanges = () => { setFromTime(""); setToTime(""); setNormFrom(""); setNormTo(""); };
-  return <section className="page-view"><InstantSearch value={query} onChange={setQuery} placeholder="Номер заявки или адрес"><div className="instant-results">{searched.slice(0, 8).map(job => <button type="button" key={job.id} onClick={() => onOpen(job.id)}><span><b>{job.id}</b><small>{job.address}</small></span><em>{job.cancelled ? "Отменена" : job.time}</em></button>)}{!searched.length && <p>Совпадений не найдено</p>}</div></InstantSearch><div className="import-strip"><label className="plain-button import-button"><Upload />Загрузить CSV / JSON<input type="file" accept=".csv,.json,text/csv,application/json" onChange={event => { const file = event.target.files?.[0]; if (file) onImport(file); event.currentTarget.value = ""; }} /></label><span>{importStatus || "Файлы CSV заявок и инженеров или JSON набора."}</span></div><div className="view-summary"><article><span>Всего заявок</span><strong>{jobs.length}</strong><small>{jobs.filter(job => job.cancelled).length} отменено</small></article><article><span>Назначено</span><strong>{assigned}</strong><small>{jobs.length - cancelled ? (assigned / (jobs.length - cancelled) * 100).toFixed(1) : "0.0"}% от неотменённых</small></article><article><span>Без назначения</span><strong>{unassigned}</strong><small>требуют ручного распределения</small></article></div><FacetFilters groups={groups} selected={selected} onSelected={setSelected} strict={strict} onStrict={setStrict} count={filtered.length} total={jobs.length} /><section className="range-filters" aria-label="Диапазоны заявки"><label><span>Окно с</span><input type="time" value={fromTime} onChange={event => setFromTime(event.target.value)} /></label><label><span>Окно до</span><input type="time" value={toTime} onChange={event => setToTime(event.target.value)} /></label><label><span>Норматив от, мин</span><input type="number" min="0" value={normFrom} onChange={event => setNormFrom(event.target.value)} placeholder="0" /></label><label><span>Норматив до, мин</span><input type="number" min="0" value={normTo} onChange={event => setNormTo(event.target.value)} placeholder="240" /></label>{(fromTime || toTime || normFrom || normTo) && <button type="button" onClick={resetRanges}>Сбросить диапазоны</button>}</section><section className="panel queue-panel full-table"><div className="panel-header"><div><h2>Заявки</h2><p>{filtered.length} по фильтру</p></div><button className="plain-button" onClick={onAdd}><Plus />Добавить заявку</button></div>{filtered.length ? <JobTable jobs={filtered} engineers={engineers} onOpen={onOpen} limit={showAll ? undefined : 250} /> : <p className="facet-empty">По поиску и выбранным условиям заявок нет.</p>}{!showAll && filtered.length > 250 && <button type="button" className="facet-show-all" onClick={() => setShowAll(true)}>Показать все {filtered.length} заявок</button>}</section></section>;
+  const filtered = searched.filter(job => matchesFacets(selected, strict, { kind: [job.kind], equipment: [job.equipment], transport: [job.requiredTransport], status: [job.cancelled ? "Отменена" : job.executionStatus === "completed" && !job.engineerId ? "Завершена" : job.engineerId ? "В окне" : "Нет маршрута"], execution: [jobStateLabels[getJobState(job, started)]], priority: [jobPriorityLevel(job) === 2 ? "Повышенный" : "Обычный"] }) && (fromMinutes == null || job.windowStart >= fromMinutes) && (toMinutes == null || job.windowEnd <= toMinutes) && (minNorm == null || job.serviceMinutes >= minNorm) && (maxNorm == null || job.serviceMinutes <= maxNorm));
+  const resetFilters = () => { setSelected([]); setStrict(false); setQuery(""); setFromTime(""); setToTime(""); setNormFrom(""); setNormTo(""); };
+  return <section className="page-view"><InstantSearch value={query} onChange={setQuery} placeholder="Номер заявки или адрес"><div className="instant-results">{searched.slice(0, 8).map(job => <button type="button" key={job.id} onClick={() => onOpen(job.id)}><span><b>{job.id}</b><small>{job.address}</small></span><em>{job.cancelled ? "Отменена" : job.time}</em></button>)}{!searched.length && <p>Совпадений не найдено</p>}</div></InstantSearch><div className="import-strip"><label className="plain-button import-button"><Upload />Загрузить CSV / JSON<input type="file" accept=".csv,.json,text/csv,application/json" onChange={event => { const file = event.target.files?.[0]; if (file) onImport(file); event.currentTarget.value = ""; }} /></label><HelpHint label="Загрузка данных">Загрузите CSV заявок, CSV инженеров или JSON набора перед построением плана. Новые данные заменят соответствующую часть текущего набора; прежний план будет сброшен.</HelpHint><span>{importStatus || "Файлы CSV заявок и инженеров или JSON набора."}</span></div><div className="view-summary"><article><span>Всего заявок</span><strong>{jobs.length}</strong><small>{jobs.filter(job => job.cancelled).length} отменено</small></article><article><span>Назначено</span><strong>{assigned}</strong><small>{jobs.length - cancelled ? (assigned / (jobs.length - cancelled) * 100).toFixed(1) : "0.0"}% от неотменённых</small></article><article><span>Без назначения</span><strong>{unassigned}</strong><small>требуют ручного распределения</small></article></div><FacetFilters groups={groups} selected={selected} onSelected={setSelected} strict={strict} onStrict={setStrict} count={filtered.length} total={jobs.length} resetActive={Boolean(selected.length || strict || query.trim() || fromTime || toTime || normFrom || normTo)} onReset={resetFilters} /><section className="range-filters" aria-label="Диапазоны заявки"><label><span>Окно с</span><input type="time" value={fromTime} onChange={event => setFromTime(event.target.value)} /></label><label><span>Окно до</span><input type="time" value={toTime} onChange={event => setToTime(event.target.value)} /></label><label><span>Норматив от, мин</span><input type="number" min="0" value={normFrom} onChange={event => setNormFrom(event.target.value)} placeholder="0" /></label><label><span>Норматив до, мин</span><input type="number" min="0" value={normTo} onChange={event => setNormTo(event.target.value)} placeholder="240" /></label></section><section className="panel queue-panel full-table"><div className="panel-header"><div><h2>Заявки</h2><p>{filtered.length} по фильтру</p></div><button className="plain-button" onClick={onAdd}><Plus />Добавить заявку</button></div>{filtered.length ? <JobTable started={started} jobs={filtered} engineers={engineers} onOpen={onOpen} limit={showAll ? undefined : 250} /> : <p className="facet-empty">По поиску и выбранным условиям заявок нет.</p>}{!showAll && filtered.length > 250 && <button type="button" className="facet-show-all" onClick={() => setShowAll(true)}>Показать все {filtered.length} заявок</button>}</section></section>;
 }
 function EngineersView({ engineers, jobs, result, unavailableIds, absenceReasons, absenceMoments, simTime, onOpenDetails, onOpenRoute }: { engineers: Engineer[]; jobs: Job[]; result: OptimizationResult; unavailableIds: string[]; absenceReasons: Record<string, EngineerAbsenceReason>; absenceMoments: Record<string, AbsenceMoment>; simTime: number; onOpenDetails: (id: string) => void; onOpenRoute: (id: string) => void }) {
   const [showAll, setShowAll] = useSavedFilter("engineers-all", false);
@@ -178,7 +183,7 @@ function EngineersView({ engineers, jobs, result, unavailableIds, absenceReasons
       <article><span>На маршрутах</span><strong>{active}</strong><small>имеют назначенные работы</small></article>
       <article><span>Средняя загрузка</span><strong>{avg}%</strong><small>работа и дорога без ожидания</small></article>
     </div>
-    <FacetFilters groups={groups} selected={selected} onSelected={setSelected} strict={strict} onStrict={setStrict} count={filtered.length} total={engineers.length} />
+    <FacetFilters groups={groups} selected={selected} onSelected={setSelected} strict={strict} onStrict={setStrict} count={filtered.length} total={engineers.length} resetActive={Boolean(selected.length || strict || query.trim())} onReset={() => { setSelected([]); setStrict(false); setQuery(""); }} />
     {filtered.length > shown.length && <p className="list-cap">На экране {shown.length} из {filtered.length} инженеров. <button type="button" className="plain-button" onClick={() => setShowAll(true)}>Показать всех</button></p>}
     {!filtered.length && <p className="facet-empty">По выбранным условиям инженеров нет.</p>}
     <div className="engineer-card-grid">{shown.map(engineer => {
@@ -644,6 +649,7 @@ function GeneratorView({
             <button type="button" className="generator-ghost-btn" onClick={openFilePicker}>
               <Upload size={14} /> Импорт
             </button>
+            <HelpHint label="Загрузка данных">Загрузите CSV заявок и инженеров или JSON набора до расчёта маршрутов. Импорт сбрасывает прежний план; для готового сценария используйте JSON.</HelpHint>
             <button type="button" className="generator-ghost-btn" onClick={handleDemo}>
               Пример 12 / 51
             </button>
@@ -1018,162 +1024,10 @@ function ReplanImpactPanel({ changes }: { changes: ReplanChange[] }) {
   </section>;
 }
 
-function JobDetailsDialog({ job, executionStatus, engineer, plan, routes, actionNotice, onClose, onShowOnMap, onToggleCancelled }: { job: Job | null; executionStatus?: Job["executionStatus"]; engineer?: Engineer; plan?: RoutePlan; routes: RoutePlan[]; actionNotice: string; onClose: () => void; onShowOnMap: (id: string) => void; onToggleCancelled: (id: string) => void }) {
-  return <Dialog open={Boolean(job)} onOpenChange={open => !open && onClose()}>
-    <DialogContent className="explain-dialog job-inspect-dialog" showCloseButton={false}>
-      <DialogHeader>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
-          <DialogTitle>Заявка {job?.id}</DialogTitle>
-          <button
-            type="button"
-            className="selected-leg-close-btn"
-            onClick={() => onClose()}
-            title="Закрыть окно"
-            style={{ fontSize: "18px", padding: "4px 8px" }}
-          >
-            ✕
-          </button>
-        </div>
-        <DialogDescription className="sr-only">Параметры и статус заявки {job?.id}</DialogDescription>
-      </DialogHeader>
-      {job && <div className="job-inspect-body">
-        {/* 1. Hero Summary: Priority, State, Window, and Address */}
-        <div className="job-hero-card">
-          <div className="hero-top-badges">
-            <span className={`hero-priority-badge ${jobPriorityLevel(job) === 2 ? "urgent" : "normal"}`}>
-              {jobPriorityLevel(job) === 2 ? <Zap size={13} /> : null}
-              {jobPriorityLevel(job) === 2 ? "Срочная" : "Обычная"}
-            </span>
-            {routes && routes.length > 0 ? (
-              <span className={`hero-state-badge ${job.cancelled ? "cancelled" : (executionStatus ?? "not_started")}`}>
-                {job.cancelled
-                  ? "Отменена"
-                  : executionStatus === "completed"
-                  ? "Завершена"
-                  : executionStatus === "in_progress"
-                  ? "В работе"
-                  : "Ожидает"}
-              </span>
-            ) : (
-              <span className={`hero-state-badge ${job.cancelled ? "cancelled" : "not_scheduled"}`}>
-                {job.cancelled ? "Отменена" : "Новая"}
-              </span>
-            )}
-          </div>
-
-          <div className="hero-window-row">
-            <Clock3 size={20} className="hero-clock-icon" />
-            <div className="hero-window-text">
-              <small>ВРЕМЕННОЕ ОКНО</small>
-              <strong>{job.time}</strong>
-            </div>
-          </div>
-
-          <div className="hero-address-row">
-            <MapPin size={16} className="hero-pin-icon" />
-            <span>{job.address}</span>
-          </div>
-        </div>
-
-        {/* 2. Work Parameters Section */}
-        <div className="job-detail-section">
-          <h4 className="section-title">Параметры работ</h4>
-          <div className="job-detail-grid">
-            <div className="detail-item">
-              <small>Требуемый навык</small>
-              <strong className="detail-tag skill">{job.kind}</strong>
-            </div>
-            <div className="detail-item">
-              <small>Длительность работ</small>
-              <strong>{job.serviceMinutes} мин</strong>
-            </div>
-            <div className="detail-item">
-              <small>Расчётное время в пути</small>
-              <strong>
-                {job.engineerId
-                  ? `${job.estimatedTravelMinutes ?? 0} мин`
-                  : job.travelReserveMinutes
-                  ? `${job.travelReserveMinutes} мин`
-                  : "После назначения"}
-              </strong>
-            </div>
-          </div>
-        </div>
-
-        {/* 3. Resource Requirements Section */}
-        <div className="job-detail-section">
-          <h4 className="section-title">Ограничения заявки</h4>
-          <div className="job-detail-grid">
-            <div className="detail-item">
-              <small>Требуемый транспорт</small>
-              <strong className="detail-tag transport">
-                {job.requiredTransport ? job.requiredTransport : "Не ограничен"}
-              </strong>
-            </div>
-            <div className="detail-item">
-              <small>Приоритет заявки</small>
-              <strong>{jobPriorityLevel(job) === 2 ? "Срочная (высший)" : "Обычная"}</strong>
-            </div>
-            <div className="detail-item">
-              <small>Оснащение по навыку</small>
-              <strong className="detail-tag equip">{job.equipment}</strong>
-            </div>
-          </div>
-        </div>
-
-        {/* 4. Assignment Section */}
-        <div className="job-detail-section">
-          <h4 className="section-title">Исполнитель</h4>
-          {engineer && plan ? (
-            <div className="job-assigned-card">
-              <div className="assigned-engineer-header">
-                <span className="assigned-avatar" style={{ background: `${engineer.color}20`, color: engineer.color }}>
-                  {engineer.initials}
-                </span>
-                <div>
-                  <strong>{engineer.name}</strong>
-                  <small>ID: {engineer.id} · {engineer.transport}</small>
-                </div>
-              </div>
-              <div className="assigned-schedule-row">
-                <span>Остановка: <b>{plan.stops.findIndex(s => s.jobId === job.id) + 1} из {plan.stops.length}</b></span>
-                <span>Начало работ: <b>{minutesLabel(plan.stops.find(s => s.jobId === job.id)?.start ?? 0)}</b></span>
-                <span>Завершение: <b>{minutesLabel(plan.stops.find(s => s.jobId === job.id)?.end ?? 0)}</b></span>
-              </div>
-            </div>
-          ) : job.cancelled ? (
-            <div className="job-pending-assignment-note">
-              <div>
-                <strong>Заявка отменена диспетчером</strong>
-                <p>Заявка исключена из смены.</p>
-              </div>
-            </div>
-          ) : routes && routes.length > 0 ? (
-            <div className="job-unassigned-card">
-              <AlertTriangle size={18} />
-              <div>
-                <strong>Не удалось назначить</strong>
-                <p>{job.unassignedReason ?? "Не удалось встроить в текущую смену."}</p>
-              </div>
-            </div>
-          ) : (
-            <div className="job-pending-assignment-note">
-              <Clock3 size={16} />
-              <div>
-                <strong>Маршрут ещё не построен</strong>
-                <p>Исполнитель и время обслуживания определятся после запуска расчёта смены.</p>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>}
-      {actionNotice && <p role="alert" className="job-action-notice">{actionNotice}</p>}
-      <DialogFooter><Button variant="outline" onClick={() => { if (job) onToggleCancelled(job.id); }}>{job?.cancelled ? "Восстановить заявку" : "Отменить заявку"}</Button><Button variant="outline" disabled={!job?.engineerId} onClick={() => { if (job) { onClose(); onShowOnMap(job.id); } }}>Показать путь на карте</Button><Button onClick={() => onClose()}>Закрыть</Button></DialogFooter>
-    </DialogContent>
-  </Dialog>;
-}
-
 export default function Dashboard() {
+  const { entries: journalEntries, append: appendNotifications, storageError: journalStorageError } = useNotificationJournal();
+  const [journalOpen, setJournalOpen] = useState(false);
+  const [filterResetVersion, setFilterResetVersion] = useState(0);
   const [view, setView] = useState<ViewId>("generator"); const [region, setRegion] = useState<"Все зоны" | Region>("Все зоны"); const [compare, setCompare] = useState(false); const [replanned, setReplanned] = useState(false); const [urgentOpen, setUrgentOpen] = useState(false); const [mobileNavOpen, setMobileNavOpen] = useState(false); const [selectedJobId, setSelectedJobId] = useState<string | null>(null); const [detailsJobId, setDetailsJobId] = useState<string | null>(null); const [selectedEngineerId, setSelectedEngineerId] = useState<string | null>(null); const [selectedEngineerDetailsId, setSelectedEngineerDetailsId] = useState<string | null>(null); const [simTime, setSimTime] = useState(480); const [simPlaying, setSimPlaying] = useState(false); const [playbackMinutesPerSecond, setPlaybackMinutesPerSecond] = useState(1); const [theme, setTheme] = useState<ThemeId>("light"); const [themeOpen, setThemeOpen] = useState(false); const [routingState, setRoutingState] = useState<RoutingState>("idle"); const [extraJobs, setExtraJobs] = useState<Job[]>([]); const [importedJobs, setImportedJobs] = useState<Job[]>([]); const [importedEngineers, setImportedEngineers] = useState<Engineer[]>([]); const [unavailableEngineerIds, setUnavailableEngineerIds] = useState<string[]>([]); const [cancelledJobIds, setCancelledJobIds] = useState<string[]>([]); const [importStatus, setImportStatus] = useState(""); const [optimizing, setOptimizing] = useState(false); const [formError, setFormError] = useState(""); const [solverError, setSolverError] = useState(""); const [planResult, setPlanResult] = useState<OptimizationResult | null>(null); const [travel, setTravel] = useState<TravelMatrix | undefined>(undefined); const [matrixFallback, setMatrixFallback] = useState(false);
   const [draft, setDraft] = useState<PlanConfig>(defaultConfig); const [applied, setApplied] = useState<PlanConfig | null>(null); const [generated, setGenerated] = useState<GeneratedDataset | null>(null); const [generatedFrom, setGeneratedFrom] = useState<PlanConfig | null>(null);
   const [generatedTz, setGeneratedTz] = useState<GeneratedTzDataset | null>(null);
@@ -1214,6 +1068,9 @@ export default function Dashboard() {
   const started = Boolean(applied && planResult);
   const activeJobs = useMemo(() => applied ? composePlanJobs(baseJobs, applied.jobs, extraJobs, cancelledJobIds) : composePlanJobs(baseJobs, baseJobs.length, extraJobs, cancelledJobIds), [applied, baseJobs, extraJobs, cancelledJobIds]);
   const activeEngineers = useMemo(() => issuedEngineers ?? (applied ? scaleEngineers(baseEngineers, applied.engineers, activeJobs) : baseEngineers), [issuedEngineers, applied, baseEngineers, activeJobs]);
+  const recordPlanChanges = useCallback((before: OptimizationResult, after: OptimizationResult, time: number) => {
+    appendNotifications(reassignmentNotifications(before.jobs, after.jobs, activeEngineers, time));
+  }, [appendNotifications, activeEngineers]);
   const urgentSkills = useMemo(() => [...new Set(activeEngineers.flatMap(engineer => engineer.skills))], [activeEngineers]);
   const selectedUrgentSkill = urgentSkills.includes(urgentForm.kind) ? urgentForm.kind : urgentSkills.find(skill => skill === "Аварийные работы" || skill === "Аварийно-восстановительные работы") ?? urgentSkills[0] ?? urgentForm.kind;
   const availableEngineers = useMemo(() => activeEngineers.filter(engineer => !unavailableEngineerIds.includes(engineer.id)), [activeEngineers, unavailableEngineerIds]);
@@ -1351,6 +1208,7 @@ export default function Dashboard() {
       // explain whose old route was removed instead of showing an internal id.
       setReplanChanges(planResult ? compareReplannedPlans(planResult, solved.result, activeEngineers) : []);
       setPlanResult(solved.result);
+      if (planResult) recordPlanChanges(planResult, solved.result, Math.floor(simTime));
       if (preShift) { setPlanHistory([]); setAvailabilityChanges([]); }
       if (preShift) { setSimTime(480); setEventTimeText("08:00"); setSimPlaying(false); }
       setSolverEngine(solved.engine);
@@ -1365,13 +1223,13 @@ export default function Dashboard() {
     } finally {
       setOptimizing(false);
     }
-  }, [travel, planResult, activeEngineers, simTime, lastEventTime, issuedEngineers]);
+  }, [travel, planResult, activeEngineers, simTime, lastEventTime, issuedEngineers, recordPlanChanges]);
   const runTemporalEvent = useCallback(async (event: DispatchEvent, jobs: Job[], unavailableIds: string[]) => {
     const previous = planResult;
     if (!applied || !previous) return false;
     const timeError = eventTimeError(event.time, lastEventTime, simRange.end);
     if (timeError) { setSolverError(timeError); setDispatchNotice(timeError); return false; }
-    const saveScenario = (next: OptimizationResult) => setPlanResult(next);
+    const saveScenario = (next: OptimizationResult) => { setPlanResult(next); recordPlanChanges(previous, next, event.time); };
     const cancelled = event.type === "cancel_job" ? previous.jobs.find(job => job.id === event.id) : undefined;
     if (cancelled?.engineerId && event.type === "cancel_job") {
       try {
@@ -1382,6 +1240,7 @@ export default function Dashboard() {
         setShowReplanSummary(true); setLastCalculationMethod("cancel_local"); setLastEventTime(event.time);
         changeSimulationTime(event.time); setSimPlaying(false); setReplanned(true); setCompare(false); setSolverError("");
         setCancellationNotices(current => [...current, { engineerId: changed.engineerId, jobId: event.id, replacementId: changed.replacementId, time: event.time }]);
+        appendNotifications([{ kind: "cancelled", time: event.time, title: `Заявка №${event.id} отменена`, message: `Инженер ${activeEngineers.find(item => item.id === changed.engineerId)?.name ?? changed.engineerId} уведомлён. ${changed.replacementId ? `Вместо неё назначена №${changed.replacementId}.` : "Подходящей свободной заявки для замены нет."} Расписание коллег сохранено.`, engineerIds: [changed.engineerId] }]);
         setDispatchNotice(`Заявка №${event.id} отменена. Инженер уведомлён.${changed.replacementId ? ` Вместо неё назначена №${changed.replacementId}.` : " Подходящей свободной заявки для этого инженера нет."}`);
         return changed.result;
       } catch (error) { const message = error instanceof Error ? error.message : "Не удалось отменить заявку"; setSolverError(message); setJobActionNotice(message); setDispatchNotice(message); return false; }
@@ -1394,6 +1253,7 @@ export default function Dashboard() {
         setReplanChanges([{ kind: "event", key: `event-${event.id}`, message: `№${event.id} отменена в ${minutesLabel(event.time)}: её не было в рабочем маршруте, поэтому согласованные визиты и маршруты инженеров не изменились.`, necessity: "required" }]);
         setLastCalculationMethod("no_change"); setLastEventTime(event.time); changeSimulationTime(event.time); setSimPlaying(false); setReplanned(true); setSolverError("");
         setDispatchNotice(`Заявка №${event.id} отменена. Назначения и маршруты инженеров не изменились.`);
+        appendNotifications([{ kind: "cancelled", time: event.time, title: `Заявка №${event.id} отменена`, message: "У заявки не было назначенного инженера. Маршруты остальных заявок сохранены." }]);
         return unchanged;
       } catch (error) { const message = error instanceof Error ? error.message : "Не удалось отменить заявку"; setSolverError(message); setJobActionNotice(message); setDispatchNotice(message); return false; }
     }
@@ -1433,7 +1293,7 @@ export default function Dashboard() {
       setRoutingState("fallback");
       return false;
     } finally { setOptimizing(false); }
-  }, [applied, planResult, activeEngineers, travel, lastEventTime, simRange.end, changeSimulationTime]);
+  }, [applied, planResult, activeEngineers, travel, lastEventTime, simRange.end, changeSimulationTime, recordPlanChanges, appendNotifications]);
   const applyEditedData = useCallback(async () => {
     const error = validateEditedData(editorJobs, editorEngineers);
     if (error) { setEditorError(error); return; }
@@ -1470,6 +1330,7 @@ export default function Dashboard() {
     void runOptimize(engineers.filter(engineer => !editorUnavailableIds.includes(engineer.id)), jobs, config.speedKmh);
   }, [editorJobs, editorEngineers, editorUnavailableIds, draft, runOptimize, activeJobs, workdayStarted]);
   const startPlanning = useCallback(() => {
+    if (optimizing || routingState === "loading") return;
     if (editorDirty) { setEditorError("В таблице есть несохранённые изменения. Примените их или сбросьте перед новым расчётом."); setView("editor"); return; }
     if (!baseJobs.length || !baseEngineers.length) { setView("generator"); setImportStatus("Сначала сгенерируйте или загрузите заявки и инженеров."); return; }
     if (applied && planResult && ((lastEventTime ?? 0) > 480 || workdayStarted.current || simTime > 480)) { void runTemporalEvent({ type: "recalculate", time: Math.max(lastEventTime ?? 480, Math.floor(simTime)), id: "plan" }, planResult.jobs, unavailableEngineerIds); return; }
@@ -1481,7 +1342,7 @@ export default function Dashboard() {
     setIssuedEngineers(engineers);
     setEditorJobs(jobs); setEditorEngineers(engineers); setEditorUnavailableIds(unavailableEngineerIds); setEditorError("");
     void runOptimize(engineers.filter(engineer => !unavailableEngineerIds.includes(engineer.id)), jobs, config.speedKmh);
-  }, [draft, extraJobs, runOptimize, runTemporalEvent, baseEngineers, baseJobs, unavailableEngineerIds, cancelledJobIds, editorDirty, lastEventTime, applied, planResult, simTime, issuedEngineers, workdayStarted]);
+  }, [draft, extraJobs, runOptimize, runTemporalEvent, baseEngineers, baseJobs, unavailableEngineerIds, cancelledJobIds, editorDirty, lastEventTime, applied, planResult, simTime, issuedEngineers, workdayStarted, optimizing, routingState]);
   const createGenerated = useCallback((opts?: Partial<GenerateTzOptions>) => {
     const jobsCount = opts?.jobs ?? draft.jobs;
     const engCount = opts?.engineers ?? draft.engineers;
@@ -1573,6 +1434,7 @@ export default function Dashboard() {
     setImportStatus("Набор очищен. Сгенерируйте или загрузите данные заново.");
   }, []);
   const addUrgent = useCallback(async () => {
+    if (optimizing) return;
     setFormError("");
     if (!urgentForm.address.trim()) { setFormError("Укажите адрес заявки"); return; }
     const start = parseTime(urgentForm.start), end = parseTime(urgentForm.end), eventTime = parseTime(eventTimeText);
@@ -1616,7 +1478,7 @@ export default function Dashboard() {
     }
     setExtraJobs(nextExtras); setEditorJobs(current => [...current, job]); setUrgentOpen(false);
     setSelectedJobId(id); setDetailsJobId(id); setUrgentForm(current => ({ ...current, address: "", longitude: "", latitude: "" }));
-  }, [urgentForm, selectedUrgentSkill, eventTimeText, applied, extraJobs, planResult, runTemporalEvent, baseJobs, unavailableEngineerIds]);
+  }, [urgentForm, selectedUrgentSkill, eventTimeText, applied, extraJobs, planResult, runTemporalEvent, baseJobs, unavailableEngineerIds, optimizing]);
   const handleImport = useCallback(async (file: File) => {
     setImportStatus(`Читаем ${file.name}…`);
     try {
@@ -1651,6 +1513,7 @@ export default function Dashboard() {
     }
   }, [baseJobs]);
   const toggleEngineerAvailability = useCallback(async (id: string) => {
+    if (optimizing) return;
     const becomingUnavailable = !unavailableEngineerIds.includes(id);
     const next = becomingUnavailable ? [...unavailableEngineerIds, id] : unavailableEngineerIds.filter(item => item !== id);
     const time = parseTime(eventTimeText);
@@ -1660,11 +1523,16 @@ export default function Dashboard() {
       if (!await runTemporalEvent({ type: "engineer_unavailable", time, id }, jobs, next)) return;
       setAvailabilityChanges(current => [...current, { engineerId: id, time, unavailable: becomingUnavailable }]);
     }
+    if (becomingUnavailable) {
+      const engineer = activeEngineers.find(item => item.id === id);
+      const moment = engineer && planResult ? engineerAbsenceMoment(planResult, engineer, time) : null;
+      appendNotifications([{ kind: "left", time, title: `${engineer?.name ?? id}: исключён из смены`, message: moment?.phase === "service" ? `Завершит №${moment.currentJobId} к ${minutesLabel(moment.effectiveAt)}, затем выйдет. Будущие заявки проверены для переназначения.` : "Будущие заявки проверены для передачи другим инженерам.", engineerIds: [id] }]);
+    }
     setUnavailableEngineerIds(next); setEditorUnavailableIds(next); setSelectedEngineerDetailsId(null);
     setAbsenceReasons(current => { const updated = { ...current }; delete updated[id]; return updated; });
     setAbsenceMoments(current => { const updated = { ...current }; delete updated[id]; return updated; });
     setAbsenceNotices(current => current.filter(item => item.engineerId !== id));
-  }, [unavailableEngineerIds, applied, planResult, runTemporalEvent, eventTimeText]);
+  }, [unavailableEngineerIds, applied, planResult, runTemporalEvent, eventTimeText, appendNotifications, activeEngineers, optimizing]);
   const reportEngineerUnavailable = useCallback(async () => {
     const id = engineerPersonaId;
     const reason = pendingEngineerAction;
@@ -1695,8 +1563,9 @@ export default function Dashboard() {
     setAbsenceReasons(current => ({ ...current, [id]: reason }));
     setAbsenceMoments(current => ({ ...current, [id]: moment }));
     setAbsenceNotices(current => [...current, { engineerId: id, engineerName: engineer.name, reason, impact, moment }]);
+    appendNotifications([{ kind: reason, time: moment.reportedAt, title: `${engineer.name}: ${reason === "emergency" ? "ЧС" : "выход из смены"}`, message: `${moment.phase === "service" ? `Завершит №${moment.currentJobId} к ${minutesLabel(moment.effectiveAt)}, затем выйдет из смены.` : `Вне смены с ${minutesLabel(moment.effectiveAt)}.`} Передано другим инженерам: ${impact.reassigned.length}. ${impact.unassigned.length ? `Нет доступной замены для №${impact.unassigned.join(", №")}.` : "Заявок без доступной замены нет."}`, engineerIds: [id] }]);
     setEngineerSelectedJobId(null);
-  }, [engineerPersonaId, pendingEngineerAction, optimizing, unavailableEngineerIds, activeEngineers, simTime, lastEventTime, applied, planResult, runTemporalEvent]);
+  }, [engineerPersonaId, pendingEngineerAction, optimizing, unavailableEngineerIds, activeEngineers, simTime, lastEventTime, applied, planResult, runTemporalEvent, appendNotifications]);
   const toggleJobCancelled = useCallback(async (id: string) => {
     if (optimizing) return;
     const wasCancelled = Boolean((planResult?.jobs ?? activeJobs).find(job => job.id === id)?.cancelled);
@@ -1718,11 +1587,12 @@ export default function Dashboard() {
       if (!await runTemporalEvent({ type: wasCancelled ? "new_job" : "cancel_job", time, id }, jobs, unavailableEngineerIds)) return;
       if (wasCancelled) setDispatchNotice(`Заявка №${id} восстановлена в ${minutesLabel(time)} и проверена для включения в оставшийся план.`);
     }
+    appendNotifications(wasCancelled ? [{ kind: "restored", time, title: `Заявка №${id} восстановлена`, message: "Заявка возвращена для включения в план." }] : !applied || !planResult ? [{ kind: "cancelled", time, title: `Заявка №${id} отменена`, message: "Заявка исключена до построения плана." }] : []);
     setJobActionNotice("");
     setCancelledJobIds(next);
     setEditorJobs(current => current.map(job => job.id === id ? { ...job, cancelled: !wasCancelled } : job));
     setDetailsJobId(null);
-  }, [cancelledJobIds, applied, planResult, activeJobs, unavailableEngineerIds, runTemporalEvent, simTime, optimizing]);
+  }, [cancelledJobIds, applied, planResult, activeJobs, unavailableEngineerIds, runTemporalEvent, simTime, optimizing, appendNotifications]);
   const titles = { plan: ["План работ", ""], generator: ["Генератор", ""], requests: ["Заявки", ""], team: ["Инженеры", ""], analytics: ["Аналитика", ""], editor: ["Редактор данных", ""], about: ["О решении", ""], engineer: ["Моя смена", ""] } as const; const distanceDataReady = baseJobs.every(job => job.geocodeVerified === true) && (applied?.jobs ?? 0) <= baseJobs.length && (applied?.engineers ?? 0) <= baseEngineers.length && extraJobs.every(job => job.geocodeVerified === true) && !matrixFallback; const distanceReady = started && result.comparison.commonAssigned > 0 && result.comparison.distanceDeltaPercent != null && distanceDataReady; const distanceWarning = !started ? "" : !distanceDataReady ? ((applied?.jobs ?? 0) > baseJobs.length || (applied?.engineers ?? 0) > baseEngineers.length ? "Синтетические точки не геокодированы." : baseJobs.some(job => job.geocodeVerified !== true) ? "Часть адресов не геокодирована." : extraJobs.some(job => job.geocodeVerified !== true) ? "Координаты новой заявки требуют подтверждения." : activeEngineers.some(engineer => engineer.transport === "Общественный транспорт") ? "Для общественного транспорта расписание рассчитывается оценочно." : "Использовано приближённое расстояние.") : "";
   const routingLabel = optimizing || routingState === "loading" ? "Строим маршруты" : matrixFallback ? "Матрица оценочная" : routingState === "ready" ? "Дорожный граф подключён" : routingState === "idle" ? "Ожидание запуска" : "Часть дорог недоступна";
   const unservedElevated = started && !optimizing ? result.jobs.filter(job => jobPriorityLevel(job) === 2 && !job.cancelled && job.executionStatus !== "completed" && !job.engineerId) : [];
@@ -1732,14 +1602,15 @@ export default function Dashboard() {
       <div className="sidebar-brand-row"><Logo /><button className="mobile-nav-close" aria-label="Закрыть меню" onClick={() => setMobileNavOpen(false)}><X /></button></div>
       {view === "engineer" ? <nav aria-label="Навигация инженера"><button className="nav-item active" onClick={() => navigate("engineer")}><Route /><span>Моя смена</span></button></nav> : <nav aria-label="Основная навигация"><button className={`nav-item${view === "plan" ? " active" : ""}`} onClick={() => navigate("plan")}><Route /><span>Планирование</span></button><button className={`nav-item${view === "generator" ? " active" : ""}`} onClick={() => navigate("generator")}><Sparkles /><span>Генератор</span></button><button className={`nav-item${view === "requests" ? " active" : ""}`} onClick={() => navigate("requests")}><Wrench /><span>Заявки</span><b>{plannedJobs.length}</b></button><button className={`nav-item${view === "team" ? " active" : ""}`} onClick={() => navigate("team")}><UsersRound /><span>Инженеры</span></button><button className={`nav-item${view === "analytics" ? " active" : ""}`} onClick={() => navigate("analytics")}><BarChart3 /><span>Аналитика</span></button><button className={`nav-item${view === "editor" ? " active" : ""}`} onClick={() => navigate("editor")}><Table2 /><span>Редактор данных</span>{editorDirty && <b>●</b>}</button><button className={`nav-item${view === "about" ? " active" : ""}`} onClick={() => navigate("about")}><Compass /><span>О решении</span></button></nav>}
       <div className="sidebar-bottom"><button className="nav-item theme-nav" onClick={() => setThemeOpen(open => !open)}><SunMoon /><span>Тема</span></button><button type="button" className="profile profile-switch" aria-label={view === "engineer" ? "Перейти в окно диспетчера" : "Перейти в окно инженера"} onClick={() => { if (view === "engineer") navigate("plan"); else { setEngineerPersonaId(current => current && activeEngineers.some(item => item.id === current) ? current : null); setEngineerSelectedJobId(null); navigate("engineer"); } }}><span>{view === "engineer" ? engineerPersona?.initials ?? "ИН" : "ДК"}</span><div><strong>{view === "engineer" ? engineerPersona?.name ?? "Инженер" : "Диспетчер"}</strong><small>{view === "engineer" ? "Открыть диспетчера" : "Открыть инженера"}</small></div><MoreHorizontal size={17} /></button></div>
-    </aside><section className="workspace" id="plan"><header className="topbar"><button className="mobile-menu" aria-label="Открыть меню" aria-expanded={mobileNavOpen} onClick={() => setMobileNavOpen(true)}><Menu /></button><div><h1>{titles[view][0]}</h1>{titles[view][1] ? <p>{titles[view][1]}</p> : null}</div><div className="top-actions"><button className="theme-button" onClick={() => setThemeOpen(open => !open)}><Contrast /><span>{themes.find(item => item.id === theme)?.name}</span><ChevronDown /></button></div></header>
+    </aside><section className="workspace" id="plan"><header className="topbar"><button className="mobile-menu" aria-label="Открыть меню" aria-expanded={mobileNavOpen} onClick={() => setMobileNavOpen(true)}><Menu /></button><div><h1>{titles[view][0]}</h1>{titles[view][1] ? <p>{titles[view][1]}</p> : null}</div><div className="top-actions"><button type="button" className="journal-button" aria-label={`Журнал уведомлений: ${journalEntries.length} записей`} onClick={() => setJournalOpen(true)}><Bell size={18} /><span>Уведомления</span>{journalEntries.length > 0 && <b>{journalEntries.length}</b>}</button><button className="theme-button" onClick={() => setThemeOpen(open => !open)}><Contrast /><span>{themes.find(item => item.id === theme)?.name}</span><ChevronDown /></button></div></header>
     {themeOpen && <div className="theme-menu" role="menu">{themes.map(item => <button key={item.id} className={theme === item.id ? "active" : ""} onClick={() => { setTheme(item.id); setThemeOpen(false); }}><span className="theme-swatches">{item.colors.map(color => <i key={color} style={{ background: color }} />)}</span><b>{item.name}</b>{theme === item.id && <Check />}</button>)}</div>}
+    {optimizing && <div className="calculation-notice" role="status" aria-live="polite"><LoaderCircle className="loading-spinner" size={18} /><span>Рассчитываем план…</span></div>}
     {view !== "engineer" && dispatchNotice && <div className="impact-banner engineer-absence-notice" role="alert"><span><AlertTriangle /></span><div><strong>Уведомление диспетчеру</strong><p>{dispatchNotice}</p></div><button type="button" onClick={() => setDispatchNotice("")}>Скрыть</button></div>}
     {view !== "engineer" && absenceNotices.map(notice => <div key={notice.engineerId} className="impact-banner engineer-absence-notice" role="alert"><span><ShieldAlert /></span><div><strong>{notice.engineerName}: {notice.reason === "emergency" ? "сообщил о ЧС" : "вышел из смены"}</strong><p>Событие в {minutesLabel(notice.moment.reportedAt)} · {notice.moment.phase === "service" ? `завершит №${notice.moment.currentJobId} к ${minutesLabel(notice.moment.effectiveAt)} и выйдет` : `вне смены с ${minutesLabel(notice.moment.effectiveAt)}`} · выполнено до события: {notice.moment.completedBefore}.</p><p>Передано другим инженерам: {notice.impact.reassigned.length}{notice.impact.reassigned.length ? ` — ${notice.impact.reassigned.slice(0, 5).map(item => `№${item.jobId} → ${item.engineerName}`).join("; ")}` : ""}.</p>{notice.impact.reassigned.length > 5 && <details><summary>Показать остальные {notice.impact.reassigned.length - 5} назначений</summary><p>{notice.impact.reassigned.slice(5).map(item => `№${item.jobId} → ${item.engineerName}`).join("; ")}</p></details>}<p>{notice.impact.unassigned.length ? `Нет доступной замены для ${notice.impact.unassigned.map(id => `№${id}`).join(", ")}. Требуется решение диспетчера.` : "Все затронутые будущие задания получили назначение либо уже выполнялись."}</p></div><button type="button" onClick={() => setAbsenceNotices(current => current.filter(item => item.engineerId !== notice.engineerId))}>Скрыть</button></div>)}
     {view === "engineer" && <EngineerWorkspace engineer={engineerPersona} jobs={playbackResult.jobs} route={engineerPersona ? routeByEngineer.get(engineerPersona.id) : undefined} allEngineers={activeEngineers} unavailableIds={playbackUnavailableIds} absenceReasons={absenceReasons} absenceMoments={absenceMoments} cancellationNotices={cancellationNotices} selectedJobId={engineerSelectedJobId} onSelectEngineer={setEngineerPersonaId} onSelectJob={setEngineerSelectedJobId} onReport={setPendingEngineerAction} reporting={optimizing} error={engineerActionError} simTime={simTime} simEnd={simRange.end} simPlaying={simPlaying} simSpeed={playbackMinutesPerSecond} onSimTime={changeSimulationTime} onSimPlaying={setSimPlaying} onSimSpeed={setPlaybackMinutesPerSecond} speedKmh={applied?.speedKmh ?? draft.speedKmh} onRoutingState={updateRoutingState} />}
-    {view === "plan" && <><div className="filter-row"><div className="region-select">{(["Все зоны", "Восток", "Юго-восток", "Югоцентр"] as const).map(item => <button key={item} className={region === item ? "selected" : ""} onClick={() => { setRegion(item); setSelectedEngineerId(null); setSelectedJobId(null); }}>{item}</button>)}</div><select aria-label="Инженер" className="engineer-quick-select" value={selectedEngineerId ?? ""} onChange={e => { const id = e.target.value; if (id) focusEngineer(id); else setSelectedEngineerId(null); }}><option value="">Все инженеры ({visibleEngineers.length})</option>{visibleEngineers.map(eng => <option key={eng.id} value={eng.id}>{eng.name} ({eng.id})</option>)}</select><div className="plan-state"><span className={routingState === "ready" ? "state-dot" : routingState === "loading" ? "state-dot changed" : routingState === "idle" ? "state-dot idle" : "state-dot risk-dot"} />{routingLabel}{started ? ` · ${solverLabels[solverEngine]}` : ""}</div><button className="plan-run-button" disabled={optimizing || routingState === "loading" || !baseJobs.length || !baseEngineers.length} onClick={startPlanning}><Play />{optimizing ? "Считаем…" : routingState === "loading" ? "Строим дороги…" : started ? "Пересчитать маршруты" : "Построить маршруты"}</button><button className="plain-button" style={{ border: "1px solid var(--border)", padding: "0 10px", borderRadius: "8px", height: "38px" }} onClick={() => setUrgentOpen(true)}><Zap size={14} /> Новая заявка</button>{started && <ExportButtons result={result} engineers={activeEngineers} solver={solverEngine} speedKmh={applied?.speedKmh ?? draft.speedKmh} />}</div>
+    {view === "plan" && <><div className="filter-row"><div className="region-select">{(["Все зоны", "Восток", "Юго-восток", "Югоцентр"] as const).map(item => <button key={item} className={region === item ? "selected" : ""} onClick={() => { setRegion(item); setSelectedEngineerId(null); setSelectedJobId(null); }}>{item}</button>)}</div><select aria-label="Инженер" className="engineer-quick-select" value={selectedEngineerId ?? ""} onChange={e => { const id = e.target.value; if (id) focusEngineer(id); else setSelectedEngineerId(null); }}><option value="">Все инженеры ({visibleEngineers.length})</option>{visibleEngineers.map(eng => <option key={eng.id} value={eng.id}>{eng.name} ({eng.id})</option>)}</select><div className="plan-state"><span className={routingState === "ready" ? "state-dot" : routingState === "loading" ? "state-dot changed" : routingState === "idle" ? "state-dot idle" : "state-dot risk-dot"} />{routingLabel}{started ? ` · ${solverLabels[solverEngine]}` : ""}</div><div className="plan-run-control"><button className="plan-run-button" disabled={optimizing || routingState === "loading" || !baseJobs.length || !baseEngineers.length} onClick={startPlanning}><span aria-hidden="true">{optimizing ? <LoaderCircle className="loading-spinner" /> : <Play />}</span>{optimizing ? "Рассчитываем план…" : routingState === "loading" ? "Строим дороги…" : started ? "Пересчитать маршруты" : "Построить маршруты"}</button><HelpHint label="Расчёт маршрутов">До начала смены распределяет оборудование и строит план. Во время смены пересчитывает оставшиеся задания на выбранное время события, сохраняя завершённые и начатые работы. Дождитесь окончания расчёта.</HelpHint></div><button disabled={optimizing} className="plain-button" style={{ border: "1px solid var(--border)", padding: "0 10px", borderRadius: "8px", height: "38px" }} onClick={() => setUrgentOpen(true)}><Zap size={14} /> Новая заявка</button>{started && <ExportButtons result={result} engineers={activeEngineers} solver={solverEngine} speedKmh={applied?.speedKmh ?? draft.speedKmh} />}</div>
       <div className="event-time-row">
-        <label className="event-time-control">Время события <input type="time" min={minutesLabel(FIRST_EVENT_MINUTE)} max={minutesLabel(simRange.end)} value={eventTimeText} onChange={event => changeEventTime(event.target.value)} onInput={event => changeEventTime(event.currentTarget.value)} onBlur={() => { const message = eventTimeError(parseTime(eventTimeText), null, simRange.end); if (message) { setDispatchNotice(message); setEventTimeText(minutesLabel(Math.floor(simTime))); } }} aria-label="Время события" /><small>Момент новой заявки, отмены или недоступности инженера. Уже начатые работы остаются на месте.</small></label>
+        <label className="event-time-control">Время события <input type="time" disabled={optimizing} min={minutesLabel(FIRST_EVENT_MINUTE)} max={minutesLabel(simRange.end)} value={eventTimeText} onChange={event => changeEventTime(event.target.value)} onInput={event => changeEventTime(event.currentTarget.value)} onBlur={() => { const message = eventTimeError(parseTime(eventTimeText), null, simRange.end); if (message) { setDispatchNotice(message); setEventTimeText(minutesLabel(Math.floor(simTime))); } }} aria-label="Время события" /></label><HelpHint label="Время события">Установите момент новой заявки, отмены, выхода инженера или пересчёта. Поле связано с временем просмотра на карте. Само изменение времени не меняет назначения; событие применяется после действия. Начатые и выполненные работы сохраняются.</HelpHint>
       </div>
       {!baseJobs.length && !baseEngineers.length && <div className="impact-banner"><span><Database /></span><div><strong>Набора данных нет</strong><p>Сгенерируйте заявки во вкладке «Генератор» или загрузите CSV / JSON. Новый набор полностью заменяет предыдущий.</p></div><button onClick={() => navigate("generator")}>Открыть генератор</button></div>}
 
@@ -1749,20 +1620,20 @@ export default function Dashboard() {
       {showReplanSummary && replanChanges.length > 0 && <section className="panel replan-compact" aria-label="Кратко об изменениях после перепланирования"><div><strong>Что изменилось после перепланирования</strong><p>{replanChanges.length} {changeWord(replanChanges.length)} · вынужденных событием: {replanChanges.filter(change => change.necessity === "required").length}. Подробности во вкладке «Аналитика».</p></div><button type="button" className="plain-button" onClick={() => navigate("analytics")}>Открыть аналитику</button><button type="button" className="plain-button" onClick={() => setShowReplanSummary(false)}>Скрыть</button></section>}
       <section className="content-grid assignment-layout">
         <article className="panel map-panel"><div className="panel-header"><div><h2>Карта маршрутов</h2><p>{visibleEngineers.length} инж. · {mapJobs.length} заявок · {region}{simulationOn ? ` · ${minutesLabel(simTime)}` : ""}</p></div></div><div className="map-stage"><MapCanvas visibleJobs={mapJobs} baselineJobs={mapJobs} engineers={activeEngineers} selectedEngineerId={selectedEngineerId} selectedJobId={selectedJobId} simTime={simulationOn ? simTime : null} simPlaying={simPlaying} simSpeed={playbackMinutesPerSecond} carSpeedKmh={applied?.speedKmh ?? draft.speedKmh} simEnd={simRange.end} onSimTime={changeSimulationTime} onSimPlaying={setSimPlaying} compare={compare} routingEnabled={started && Boolean(planResult)} routes={playbackResult.routes} baselineRoutes={visibleBaselineRoutes} onSelectEngineer={selectEngineer} onSelectJob={selectJob} onInspectJob={inspectJob} onRoutingState={updateRoutingState} />{simulationOn && <TimeDrum start={simRange.start} end={simRange.end} time={simTime} playing={simPlaying} speed={playbackMinutesPerSecond} onTime={changeSimulationTime} onPlaying={setSimPlaying} onSpeed={setPlaybackMinutesPerSecond} disabled={optimizing} />}</div></article>
-        <article className="panel routes-panel"><div className="panel-header"><div><h2>Заявки</h2></div></div><AssignmentBoard jobs={visibleJobs} engineers={activeEngineers} routes={playbackResult.routes} selectedJobId={selectedJobId} selectedEngineerId={selectedEngineerId} started={started} loading={optimizing} onSelectJob={selectJob} onSelectEngineer={focusEngineer} onShowAll={() => { setSelectedEngineerId(null); setSelectedJobId(null); setDetailsJobId(null); }} /></article>
+        <article className="panel routes-panel"><div className="panel-header"><div><h2>Заявки</h2></div></div><AssignmentBoard jobs={visibleJobs} engineers={activeEngineers} routes={playbackResult.routes} selectedJobId={selectedJobId} selectedEngineerId={selectedEngineerId} started={started} loading={optimizing} filtersActive={region !== "Все зоны" || selectedEngineerId !== null} resetVersion={filterResetVersion} onResetFilters={() => { setRegion("Все зоны"); setSelectedEngineerId(null); setSelectedJobId(null); setDetailsJobId(null); setFilterResetVersion(value => value + 1); }} onSelectJob={selectJob} onSelectEngineer={focusEngineer} onShowAll={() => { setSelectedEngineerId(null); setSelectedJobId(null); setDetailsJobId(null); }} /></article>
       </section>
       {focusedEngineer && (
         <EngineerTimeline
           engineer={focusedEngineer}
           route={routeByEngineer.get(focusedEngineer.id)}
-          jobs={baseJobs}
+          jobs={playbackResult.jobs}
           simTime={simulationOn ? simTime : null}
           onSelectJob={selectJob}
           onClose={() => setSelectedEngineerId(null)}
         />
       )}
-      <section className="panel queue-panel"><div className="panel-header"><div><h2>Ближайшие заявки</h2></div></div><JobTable jobs={plannedJobs.filter(job => !job.cancelled && (region === "Все зоны" || job.region === region))} engineers={activeEngineers} onOpen={selectJob} limit={12} /></section></>}
-    {view === "requests" && <RequestsView jobs={plannedJobs} engineers={activeEngineers} onOpen={selectJob} onAdd={() => setUrgentOpen(true)} onImport={file => void handleImport(file)} importStatus={importStatus} />}
+      <section className="panel queue-panel"><div className="panel-header"><div><h2>Ближайшие заявки</h2></div></div><JobTable started={started} jobs={plannedJobs.filter(job => !job.cancelled && (region === "Все зоны" || job.region === region))} engineers={activeEngineers} onOpen={selectJob} limit={12} /></section></>}
+    {view === "requests" && <RequestsView started={started} jobs={plannedJobs} engineers={activeEngineers} onOpen={selectJob} onAdd={() => setUrgentOpen(true)} onImport={file => void handleImport(file)} importStatus={importStatus} />}
     {view === "team" && <EngineersView engineers={activeEngineers} jobs={plannedJobs} result={playbackResult} unavailableIds={playbackUnavailableIds} absenceReasons={absenceReasons} absenceMoments={absenceMoments} simTime={simTime} onOpenDetails={setSelectedEngineerDetailsId} onOpenRoute={openEngineerOnMap} />}
     {view === "analytics" && <AnalyticsView result={result} engineers={activeEngineers} distanceReady={distanceReady} distanceWarning={distanceWarning} solver={solverEngine} speedKmh={applied?.speedKmh ?? draft.speedKmh} metrics={metricCards} travel={travel} replanChanges={replanChanges} />}
     {view === "generator" && (
@@ -1798,7 +1669,8 @@ export default function Dashboard() {
     <label><span>Начало окна</span><Input type="time" value={urgentForm.start} onChange={event => setUrgentForm(value => ({ ...value, start: event.target.value }))} /></label><label><span>Окончание окна</span><Input type="time" value={urgentForm.end} onChange={event => setUrgentForm(value => ({ ...value, end: event.target.value }))} /></label>
     <label><span>Требуемый транспорт</span><select value={urgentForm.transport} onChange={event => setUrgentForm(value => ({ ...value, transport: event.target.value }))}><option value="">Не ограничен</option><option>Автомобиль</option><option>Общественный транспорт</option><option>Велосипед</option><option>Пешком</option></select></label>
     <label><span>Приоритет</span><select value={urgentForm.urgency} onChange={event => setUrgentForm(value => ({ ...value, urgency: event.target.value as "normal" | "urgent" }))}><option value="urgent">Повышенный</option><option value="normal">Обычный</option></select></label>
-  </div>{formError && <p className="form-error">{formError}</p>}<DialogFooter><Button variant="outline" onClick={() => setUrgentOpen(false)}>Отмена</Button><Button onClick={() => void addUrgent()}><Zap />{started ? "Добавить и пересчитать" : "Добавить заявку"}</Button></DialogFooter></DialogContent></Dialog>
+  </div>{formError && <p className="form-error">{formError}</p>}<DialogFooter><Button variant="outline" onClick={() => setUrgentOpen(false)}>Отмена</Button><Button disabled={optimizing} onClick={() => void addUrgent()}><Zap />{started ? "Добавить и пересчитать" : "Добавить заявку"}</Button></DialogFooter></DialogContent></Dialog>
 <EngineerDetailsDialog engineer={detailsEngineer} route={detailsEngineer ? routeByEngineer.get(detailsEngineer.id) : undefined} unavailable={Boolean(detailsEngineer && playbackUnavailableIds.includes(detailsEngineer.id) && (!absenceMoments[detailsEngineer.id] || simTime >= absenceMoments[detailsEngineer.id].effectiveAt))} onClose={() => setSelectedEngineerDetailsId(null)} onOpenRoute={openEngineerOnMap} onToggleAvailability={toggleEngineerAvailability} />
-    <JobDetailsDialog job={detailsJobRaw} executionStatus={detailsJob?.executionStatus} engineer={selectedEngineer} plan={detailsJob?.engineerId ? routeByEngineer.get(detailsJob.engineerId) : undefined} routes={result.routes} actionNotice={jobActionNotice} onClose={() => { setDetailsJobId(null); setJobActionNotice(""); }} onShowOnMap={id => { const job = result.jobs.find(item => item.id === id); if (job) setRegion(job.region); setSelectedJobId(id); setSelectedEngineerId(job?.engineerId ?? null); setDetailsJobId(null); setView("plan"); }} onToggleCancelled={toggleJobCancelled} /></main>;
+    <NotificationJournal entries={journalEntries} open={journalOpen} onOpenChange={setJournalOpen} storageError={journalStorageError} />
+    <JobDetailsDialog job={detailsJobRaw} executionStatus={detailsJob?.executionStatus} engineer={selectedEngineer} plan={detailsJob?.engineerId ? routeByEngineer.get(detailsJob.engineerId) : undefined} started={started} loading={optimizing} actionNotice={jobActionNotice} onClose={() => { setDetailsJobId(null); setJobActionNotice(""); }} onShowOnMap={id => { const job = result.jobs.find(item => item.id === id); if (job) setRegion(job.region); setSelectedJobId(id); setSelectedEngineerId(job?.engineerId ?? null); setDetailsJobId(null); setView("plan"); }} onToggleCancelled={toggleJobCancelled} /></main>;
 }

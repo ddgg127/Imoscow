@@ -140,7 +140,8 @@ export function TimeDrum({ start, end, time, playing, speed, onTime, onPlaying, 
   const offset = ((initialTime - Math.floor(start / STEP) * STEP) / STEP) * ITEM;
 
   return (
-    <div className="time-drum" ref={hostRef} aria-label="Барабан времени смены">
+    <div className="time-drum" ref={hostRef} aria-label="Время просмотра">
+      <span className="time-drum-caption">Время<br />просмотра</span>
       <button
         className="time-drum-play"
         type="button"
@@ -195,7 +196,8 @@ export function TimeDrum({ start, end, time, playing, speed, onTime, onPlaying, 
         aria-valuemax={end}
         aria-valuenow={Math.round(initialTime)}
         aria-valuetext={minutesLabel(initialTime)}
-        aria-label="Время смены"
+        aria-label="Время просмотра"
+        aria-disabled={disabled}
         onPointerDown={event => {
           if (disabled) return;
           event.preventDefault();

@@ -3,6 +3,8 @@
 import { AlertTriangle, Clock3, LogOut, MapPin, Route, ShieldAlert } from "lucide-react";
 import { MapCanvas, type RoutingState } from "@/components/map-canvas";
 import { TimeDrum } from "@/components/time-drum";
+import { JobStatus } from "@/components/job-status";
+import { executionAtTime } from "@/lib/data-editor";
 import { actionAtSimTime } from "@/components/map-canvas";
 import { jobPriorityLevel, minutesLabel, type Engineer, type Job, type RoutePlan } from "@/lib/vrptw";
 import type { AbsenceMoment } from "@/lib/engineer-absence";
@@ -62,7 +64,7 @@ export function EngineerWorkspace(props: Props) {
       </div>
       <div className="engineer-content">
         <article className="panel engineer-map"><div className="panel-header"><div><h2>Мой маршрут</h2><p>{ownJobs.length} заявок · только маршрут {engineer.name}</p></div></div><div className="map-stage"><MapCanvas visibleJobs={ownJobs} baselineJobs={ownJobs} engineers={[engineer]} selectedEngineerId={engineer.id} selectedJobId={selectedJobId} simTime={route ? simTime : null} simPlaying={simPlaying} simSpeed={simSpeed} carSpeedKmh={speedKmh} simEnd={simEnd} onSimTime={onSimTime} onSimPlaying={onSimPlaying} compare={false} routingEnabled={Boolean(route)} routes={route ? [route] : []} baselineRoutes={[]} onSelectEngineer={() => onSelectJob(null)} onSelectJob={id => onSelectJob(id)} onInspectJob={id => onSelectJob(id)} onRoutingState={onRoutingState} singleEngineerMode />{route && <TimeDrum start={450} end={simEnd} time={simTime} playing={simPlaying} speed={simSpeed} onTime={onSimTime} onPlaying={onSimPlaying} onSpeed={onSimSpeed} disabled={reporting} />}</div></article>
-        <article className="panel engineer-task-list"><div className="panel-header"><div><h2>Мои задания</h2><p>По порядку маршрута</p></div></div>{route?.stops.length ? <div className="engineer-stops">{route.stops.map((stop, index) => { const job = ownJobs.find(item => item.id === stop.jobId); if (!job) return null; return <button type="button" key={stop.jobId} className={selectedJobId === stop.jobId ? "selected" : ""} onClick={() => onSelectJob(selectedJobId === stop.jobId ? null : stop.jobId)}><span className="engineer-stop-number">{index + 1}</span><span><strong>№{job.id} · {job.kind}</strong><small>{job.address}</small><small>{minutesLabel(stop.start)}–{minutesLabel(stop.end)} · {stop.end <= simTime ? "Завершено" : stop.start <= simTime ? "В работе" : "Ожидает"}</small></span></button>; })}</div> : <p className="engineer-empty">Назначенных заданий нет.</p>}</article>
+        <article className="panel engineer-task-list"><div className="panel-header"><div><h2>Мои задания</h2><p>По порядку маршрута</p></div></div>{route?.stops.length ? <div className="engineer-stops">{route.stops.map((stop, index) => { const job = ownJobs.find(item => item.id === stop.jobId); if (!job) return null; return <button type="button" key={stop.jobId} className={selectedJobId === stop.jobId ? "selected" : ""} onClick={() => onSelectJob(selectedJobId === stop.jobId ? null : stop.jobId)}><span className="engineer-stop-number">{index + 1}</span><span><strong>№{job.id} · {job.kind}</strong><small>{job.address}</small><small>{minutesLabel(stop.start)}–{minutesLabel(stop.end)}</small><JobStatus job={{ ...job, executionStatus: executionAtTime(job, stop, simTime) }} started={Boolean(route)} /></span></button>; })}</div> : <p className="engineer-empty">Назначенных заданий нет.</p>}</article>
       </div>
     </>}
   </section>;

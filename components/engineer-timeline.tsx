@@ -10,7 +10,7 @@ import {
   X,
   Zap,
 } from "lucide-react";
-import type { Engineer, Job, RoutePlan } from "@/lib/vrptw";
+import { jobPriorityLevel, type Engineer, type Job, type RoutePlan } from "@/lib/vrptw";
 
 function minutesLabel(minutes: number) {
   const h = Math.floor(minutes / 60);
@@ -129,7 +129,7 @@ export function EngineerTimeline({
               <div className="timeline-clips-track">
                 {route.stops.map((stop, idx) => {
                   const job = jobMap.get(stop.jobId);
-                  const isUrgent = (job?.priority ?? 1) >= 10;
+                  const isUrgent = job ? jobPriorityLevel(job) === 2 : false;
                   const travelMin = stop.travelMinutes ?? Math.round(stop.distanceKm * 2.5);
                   const travelStart = Math.max(timelineStart, stop.arrival - travelMin);
                   const travelLeft = Math.max(0, ((travelStart - timelineStart) / totalMinutes) * 100);
