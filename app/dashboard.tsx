@@ -28,14 +28,13 @@ import { absenceImpact, engineerAbsenceMoment, type AbsenceImpact, type AbsenceM
 import { issueDailyEquipment } from "@/lib/equipment-issue";
 import { executionAtTime, executionLabels, parseTime, validateEditedData } from "@/lib/data-editor";
 import { eventTimeError, FIRST_EVENT_MINUTE, unavailableAtTime, type AvailabilityChange } from "@/lib/event-time";
-import { solveCounterfactualServer, solveVrptwServer, type SolverEngine } from "@/lib/server-solver";
-import { compareReplannedPlans, explainAssignment, fallbackTravel, idleOptimization, jobPriorityLevel, minutesLabel, regions, resultFromRouteOrder, routeTimeBreakdown, scaleEngineers, scaleJobs, transportAllowed, type Engineer, type Job, type OptimizationResult, type Region, type ReplanChange, type RoutePlan, type TravelMatrix } from "@/lib/vrptw";
+import { solveVrptwServer, type SolverEngine } from "@/lib/server-solver";
+import { compareReplannedPlans, fallbackTravel, idleOptimization, jobPriorityLevel, minutesLabel, regions, resultFromRouteOrder, routeTimeBreakdown, scaleEngineers, scaleJobs, type Engineer, type Job, type OptimizationResult, type Region, type ReplanChange, type RoutePlan, type TravelMatrix } from "@/lib/vrptw";
 import { cancelJobLocally, cancelUnassignedJob, insertOrdinaryJob, mergeTemporalResult, prepareTemporalReplan, type DispatchEvent } from "@/lib/temporal-replan";
 
 type ThemeId = "light" | "dark" | "beeline" | "ocean" | "graphite" | "contrast";
 type ViewId = "plan" | "generator" | "requests" | "team" | "analytics" | "editor" | "about" | "engineer";
 type PlanConfig = { engineers: number; jobs: number; speedKmh: number; windowMinutes: number; highPriority?: boolean };
-type CounterfactualAssessment = { status: "loading" | "success" | "error"; summary?: string; error?: string; runtimeMs?: number };
 const defaultConfig: PlanConfig = { engineers: 12, jobs: 40, speedKmh: 24, windowMinutes: 240, highPriority: false };
 
 function useSavedFilter<T>(key: string, initial: T): [T, (value: T) => void] {
@@ -1019,82 +1018,7 @@ function ReplanImpactPanel({ changes }: { changes: ReplanChange[] }) {
   </section>;
 }
 
-function routeAssignments(routes: RoutePlan[]) {
-  return new Map(routes.flatMap(route => route.stops.map(stop => [stop.jobId, route.engineerId] as const)));
-}
-function signed(value: number, digits = 1) { return `${value > 0 ? "+" : value < 0 ? "−" : "±"}${Math.abs(value).toFixed(digits).replace(".", ",")}`; }
-function summarizeCounterfactual(current: OptimizationResult, forced: OptimizationResult, jobId: string, engineerId: string) {
-  const currentAssignments = routeAssignments(current.routes);
-  const forcedAssignments = routeAssignments(forced.routes);
-  const comparedJobIds = new Set([...currentAssignments.keys(), ...forcedAssignments.keys()]);
-  const changed = [...comparedJobIds].filter(id => currentAssignments.get(id) !== forcedAssignments.get(id)).length;
-  const forcedRoute = forced.routes.find(route => route.engineerId === engineerId);
-  const stop = forcedRoute?.stops.find(item => item.jobId === jobId);
-  const distanceDelta = forced.metrics.distanceKm - current.metrics.distanceKm;
-  const fleetDelta = forced.metrics.activeEngineers - current.metrics.activeEngineers;
-  const assignedDelta = forced.metrics.assigned - current.metrics.assigned;
-  const lateDelta = forced.metrics.late - current.metrics.late;
-  const verdict = assignedDelta < 0
-    ? `Сценарий хуже: теряется ${Math.abs(assignedDelta)} заявок.`
-    : fleetDelta > 0
-      ? `Сценарий хуже: требуется ${fleetDelta} дополнительный инженер.`
-      : lateDelta > 0
-        ? `Сценарий хуже: появляется ${lateDelta} дополнительных опозданий.`
-        : distanceDelta > 0.05
-          ? `Сценарий хуже: общий пробег увеличивается на ${distanceDelta.toFixed(1).replace(".", ",")} км.`
-          : changed > 1
-            ? `По целевой функции сценарий равноценен, но дестабилизирует план: меняются назначения ${changed} заявок; текущий вариант сохраняется по tie-break OR-Tools.`
-            : `По целевой функции сценарий равноценен; текущий инженер выбран по стабильному tie-break OR-Tools.`;
-  const effects = [
-    `пробег ${signed(distanceDelta)} км`,
-    `активные инженеры ${signed(fleetDelta, 0)}`,
-    `назначенные заявки ${signed(assignedDelta, 0)}`,
-    `опоздания ${signed(lateDelta, 0)}`,
-    `SLA среди назначенных ${signed(forced.metrics.slaPercent - current.metrics.slaPercent)} п.п.`,
-    `переназначений ${changed}`,
-  ];
-  return `${verdict} Если назначить принудительно: ${stop ? `прибытие ${minutesLabel(stop.arrival)}, работа ${minutesLabel(stop.start)}–${minutesLabel(stop.end)}; ` : ""}${effects.join("; ")}.`;
-}
-
-function summarizeUnassignedCounterfactual(current: OptimizationResult, forced: OptimizationResult, jobId: string, engineerName: string) {
-  const before = routeAssignments(current.routes);
-  const after = routeAssignments(forced.routes);
-  if (!after.has(jobId)) return "Принудительный расчёт не включил эту заявку; проверьте ограничения solver-а.";
-  const displaced = [...before.keys()].filter(id => !after.has(id));
-  const gained = [...after.keys()].filter(id => !before.has(id));
-  const count = forced.metrics.assigned - current.metrics.assigned;
-  const conclusion = count < 0
-    ? `Подтверждено: принудительное включение снижает покрытие на ${Math.abs(count)} заявку(и).`
-    : count === 0 && displaced.length
-      ? `При том же покрытии заявка вытеснит № ${displaced.slice(0, 5).join(", № ")}${displaced.length > 5 ? " и другие" : ""}; текущий набор выбран целевой функцией OR-Tools.`
-      : count > 0
-        ? `Принудительный расчёт нашёл на ${count} назначение(я) больше: исходный план был не лучшим найденным решением.`
-        : "Покрытие не меняется; различаются стоимость или порядок маршрута.";
-  return `${conclusion} Сценарий с ${engineerName}: назначено ${current.metrics.assigned} → ${forced.metrics.assigned}, без маршрута ${current.metrics.unassigned} → ${forced.metrics.unassigned}, активных инженеров ${current.metrics.activeEngineers} → ${forced.metrics.activeEngineers}, пробег ${signed(forced.metrics.distanceKm - current.metrics.distanceKm)} км${gained.length > 1 ? `, дополнительно вошли № ${gained.filter(id => id !== jobId).slice(0, 3).join(", № ")}` : ""}.`;
-}
-
-function JobDetailsDialog({ job, executionStatus, engineer, plan, baselineEngineer, baselinePlan, jobs, engineers, routes, result, travel, speedKmh, actionNotice, onClose, onShowOnMap, onToggleCancelled }: { job: Job | null; executionStatus?: Job["executionStatus"]; engineer?: Engineer; plan?: RoutePlan; baselineEngineer?: Engineer; baselinePlan?: RoutePlan; jobs: Job[]; engineers: Engineer[]; routes: RoutePlan[]; result: OptimizationResult; travel?: TravelMatrix; speedKmh: number; actionNotice: string; onClose: () => void; onShowOnMap: (id: string) => void; onToggleCancelled: (id: string) => void }) {
-  const byId = useMemo(() => new Map(jobs.map(item => [item.id, item])), [jobs]);
-  const explanation = useMemo(() => job && engineer && plan ? explainAssignment(job, engineer, plan, engineers, routes, jobs, speedKmh, travel) : null, [job, engineer, plan, engineers, routes, jobs, speedKmh, travel]);
-  const forcedCandidate = useMemo(() => baselineEngineer ?? (job?.unassignedCategory !== "no_executor" && job ? engineers.find(item => item.skills.includes(job.kind) && item.equipment.includes(job.equipment) && transportAllowed(job, item.transport)) : undefined), [baselineEngineer, job, engineers]);
-  const [counterfactuals, setCounterfactuals] = useState<Record<string, CounterfactualAssessment>>({});
-  const counterfactualIds = useMemo(() => explanation?.alternatives.filter(item => item.feasible).map(item => item.engineerId) ?? (!engineer && forcedCandidate ? [forcedCandidate.id] : []), [explanation, engineer, forcedCandidate]);
-  useEffect(() => {
-    let active = true;
-    void Promise.resolve().then(async () => {
-      if (!job || !travel || !counterfactualIds.length) { if (active) setCounterfactuals({}); return; }
-      setCounterfactuals(Object.fromEntries(counterfactualIds.map(id => [id, { status: "loading" as const }])));
-      await Promise.all(counterfactualIds.map(async engineerId => {
-        try {
-          const forced = await solveCounterfactualServer(engineers, jobs, speedKmh, travel, job.id, engineerId);
-          if (active) setCounterfactuals(current => ({ ...current, [engineerId]: { status: "success", summary: engineer ? summarizeCounterfactual(result, forced, job.id, engineerId) : summarizeUnassignedCounterfactual(result, forced, job.id, forcedCandidate?.name ?? engineerId), runtimeMs: forced.runtimeMs } }));
-        } catch (error) {
-          if (active) setCounterfactuals(current => ({ ...current, [engineerId]: { status: "error", error: error instanceof Error ? error.message : "Контрфактический расчёт недоступен" } }));
-        }
-      }));
-    });
-    return () => { active = false; };
-  }, [job, engineer, forcedCandidate, engineers, jobs, result, speedKmh, travel, counterfactualIds]);
+function JobDetailsDialog({ job, executionStatus, engineer, plan, routes, actionNotice, onClose, onShowOnMap, onToggleCancelled }: { job: Job | null; executionStatus?: Job["executionStatus"]; engineer?: Engineer; plan?: RoutePlan; routes: RoutePlan[]; actionNotice: string; onClose: () => void; onShowOnMap: (id: string) => void; onToggleCancelled: (id: string) => void }) {
   return <Dialog open={Boolean(job)} onOpenChange={open => !open && onClose()}>
     <DialogContent className="explain-dialog job-inspect-dialog" showCloseButton={false}>
       <DialogHeader>
@@ -1876,5 +1800,5 @@ export default function Dashboard() {
     <label><span>Приоритет</span><select value={urgentForm.urgency} onChange={event => setUrgentForm(value => ({ ...value, urgency: event.target.value as "normal" | "urgent" }))}><option value="urgent">Повышенный</option><option value="normal">Обычный</option></select></label>
   </div>{formError && <p className="form-error">{formError}</p>}<DialogFooter><Button variant="outline" onClick={() => setUrgentOpen(false)}>Отмена</Button><Button onClick={() => void addUrgent()}><Zap />{started ? "Добавить и пересчитать" : "Добавить заявку"}</Button></DialogFooter></DialogContent></Dialog>
 <EngineerDetailsDialog engineer={detailsEngineer} route={detailsEngineer ? routeByEngineer.get(detailsEngineer.id) : undefined} unavailable={Boolean(detailsEngineer && playbackUnavailableIds.includes(detailsEngineer.id) && (!absenceMoments[detailsEngineer.id] || simTime >= absenceMoments[detailsEngineer.id].effectiveAt))} onClose={() => setSelectedEngineerDetailsId(null)} onOpenRoute={openEngineerOnMap} onToggleAvailability={toggleEngineerAvailability} />
-    <JobDetailsDialog job={detailsJobRaw} executionStatus={detailsJob?.executionStatus} engineer={selectedEngineer} plan={detailsJob?.engineerId ? routeByEngineer.get(detailsJob.engineerId) : undefined} baselineEngineer={activeEngineers.find(item => item.id === detailsJob?.baselineEngineerId)} baselinePlan={result.baselineRoutes.find(route => route.engineerId === detailsJob?.baselineEngineerId)} jobs={result.jobs} engineers={availableEngineers} routes={result.routes} result={result} travel={travel} speedKmh={applied?.speedKmh ?? draft.speedKmh} actionNotice={jobActionNotice} onClose={() => { setDetailsJobId(null); setJobActionNotice(""); }} onShowOnMap={id => { const job = result.jobs.find(item => item.id === id); if (job) setRegion(job.region); setSelectedJobId(id); setSelectedEngineerId(job?.engineerId ?? null); setDetailsJobId(null); setView("plan"); }} onToggleCancelled={toggleJobCancelled} /></main>;
+    <JobDetailsDialog job={detailsJobRaw} executionStatus={detailsJob?.executionStatus} engineer={selectedEngineer} plan={detailsJob?.engineerId ? routeByEngineer.get(detailsJob.engineerId) : undefined} routes={result.routes} actionNotice={jobActionNotice} onClose={() => { setDetailsJobId(null); setJobActionNotice(""); }} onShowOnMap={id => { const job = result.jobs.find(item => item.id === id); if (job) setRegion(job.region); setSelectedJobId(id); setSelectedEngineerId(job?.engineerId ?? null); setDetailsJobId(null); setView("plan"); }} onToggleCancelled={toggleJobCancelled} /></main>;
 }

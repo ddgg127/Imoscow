@@ -13,3 +13,8 @@ test("solver reports Pydantic field paths", () => {
 test("solver retains a fallback for non-JSON service failures", () => {
   assert.equal(solverServiceError(502, null), "OR-Tools service 502");
 });
+
+test("persistent throttling gives a useful explanation instead of an unexplained 429", () => {
+  assert.match(solverServiceError(429, null), /Автоматические повторы/);
+  assert.match(solverServiceError(429, null), /Предыдущий план сохранён/);
+});

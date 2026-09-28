@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { type SolverPayload, type SolverResponse } from "@/lib/server-solver";
-import { solverServiceError } from "@/lib/solver-error";
+import { createSolverServiceClient } from "@/lib/solver-service";
+
+const solverClient = createSolverServiceClient();
 
 function validPayload(value: unknown): value is SolverPayload {
   if (!value || typeof value !== "object") return false;
@@ -22,30 +24,17 @@ function solverBase() {
   return (configured || (process.env.NODE_ENV === "development" ? "http://127.0.0.1:8008" : "")).replace(/\/$/, "");
 }
 
-async function callOrTools(payload: SolverPayload): Promise<SolverResponse> {
+async function callOrTools(payload: SolverPayload, signal: AbortSignal): Promise<SolverResponse> {
   const base = solverBase();
   if (!base) throw new Error("SOLVER_URL не настроен: расчёт без OR-Tools запрещён");
-  const controller = new AbortController();
-  // Free Render instances can need about a minute to wake after inactivity.
-  // Keep the request bounded, but do not reject the first real calculation
-  // before the mandatory OR-Tools service has had a chance to start.
-  const timeout = setTimeout(() => controller.abort(), 90_000);
-  try {
-    const response = await fetch(`${base}/solve`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload), signal: controller.signal });
-    if (!response.ok) throw new Error(solverServiceError(response.status, await response.json().catch(() => null)));
-    const result = await response.json() as SolverResponse;
-    if (result.engine !== "ortools") throw new Error("Внешний сервис не подтвердил движок OR-Tools");
-    return result;
-  } finally {
-    clearTimeout(timeout);
-  }
+  return solverClient.solve(base, payload, signal);
 }
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
   if (!validPayload(body)) return NextResponse.json({ error: "Некорректные данные solver" }, { status: 400 });
   try {
-    return NextResponse.json(await callOrTools(body));
+    return NextResponse.json(await callOrTools(body, request.signal));
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "OR-Tools недоступен", engine: "unavailable" }, { status: 503 });
   }
@@ -55,12 +44,10 @@ export async function GET() {
   const base = solverBase();
   if (!base) return NextResponse.json({ status: "unavailable", solver: "ortools", error: "SOLVER_URL не настроен" }, { status: 503 });
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 70_000);
+  const timeout = setTimeout(() => controller.abort(), 120_000);
   try {
-    const response = await fetch(`${base}/health`, { signal: controller.signal });
-    const health = await response.json() as { status?: string; solver?: string };
-    if (!response.ok || health.status !== "ok" || health.solver !== "ortools") throw new Error("OR-Tools health-check не подтверждён");
-    return NextResponse.json({ status: "ok", solver: "ortools" });
+    await solverClient.health(base, controller.signal);
+    return NextResponse.json({ status: "ok", solver: "ortools", deployment: process.env.RENDER_GIT_COMMIT ?? null });
   } catch (error) {
     return NextResponse.json({ status: "unavailable", solver: "ortools", error: error instanceof Error ? error.message : "Health-check failed" }, { status: 503 });
   } finally {

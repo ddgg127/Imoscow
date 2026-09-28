@@ -1,6 +1,7 @@
 type ValidationIssue = { loc?: unknown; msg?: unknown };
 
 export function solverServiceError(status: number, body: unknown): string {
+  if (status === 429) return "Сервис OR-Tools временно ограничил запросы. Автоматические повторы не помогли; повторите действие немного позже. Предыдущий план сохранён.";
   const detail = body && typeof body === "object" ? (body as { detail?: unknown }).detail : undefined;
   const explanation = typeof detail === "string"
     ? detail

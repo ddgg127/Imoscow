@@ -50,6 +50,44 @@ def test_health_and_solve_endpoint():
     assert not response.json()["droppedJobIds"]
 
 
+def test_concurrent_solves_share_one_cpu_slot_and_health_stays_available(monkeypatch):
+    import importlib
+    from concurrent.futures import ThreadPoolExecutor
+    from threading import Event, Lock
+
+    service = importlib.import_module("solver_service.app")
+    entered, release = Event(), Event()
+    state_lock = Lock()
+    state = {"active": 0, "peak": 0, "calls": 0}
+
+    def controlled_solve(data):
+        with state_lock:
+            state["active"] += 1
+            state["calls"] += 1
+            state["peak"] = max(state["peak"], state["active"])
+            first = state["calls"] == 1
+        if first:
+            entered.set()
+            assert release.wait(5)
+        with state_lock:
+            state["active"] -= 1
+        return service.SolveResponse(routes=[], droppedJobIds=[], runtimeMs=1, status="success")
+
+    monkeypatch.setattr(service, "solve_vrptw", controlled_solve)
+    with TestClient(app) as client, ThreadPoolExecutor(max_workers=3) as executor:
+        first = executor.submit(client.post, "/solve", json=payload())
+        assert entered.wait(5)
+        second = executor.submit(client.post, "/solve", json=payload())
+        try:
+            assert executor.submit(client.get, "/health").result(timeout=3).json()["status"] == "ok"
+        finally:
+            release.set()
+        assert first.result(timeout=5).status_code == 200
+        assert second.result(timeout=5).status_code == 200
+    assert state["calls"] == 2
+    assert state["peak"] == 1
+
+
 def test_solver_uses_idle_qualified_engineer_to_maximize_coverage():
     data = payload()
     # One engineer cannot serve both jobs inside these disjoint tight windows,

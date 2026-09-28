@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import math
 import time
+from threading import BoundedSemaphore
 from typing import Literal
 
-from fastapi import FastAPI, HTTPException
+from anyio import from_thread
+from fastapi import FastAPI, HTTPException, Request
 from ortools.constraint_solver import pywrapcp, routing_enums_pb2
 from pydantic import BaseModel, Field, model_validator
 
@@ -88,6 +90,7 @@ class SolveResponse(BaseModel):
 
 
 app = FastAPI(title="FieldFlow OR-Tools Solver", version="1.0.0")
+solve_capacity = BoundedSemaphore(1)
 
 
 def key(point: tuple[float, float]) -> str:
@@ -325,10 +328,15 @@ def solve_vrptw(data: SolveRequest) -> SolveResponse:
 
 
 @app.get("/health")
-def health() -> dict[str, str]:
+async def health() -> dict[str, str]:
     return {"status": "ok", "solver": "ortools"}
 
 
 @app.post("/solve", response_model=SolveResponse)
-def solve(data: SolveRequest) -> SolveResponse:
-    return solve_vrptw(data)
+def solve(data: SolveRequest, request: Request) -> SolveResponse:
+    # Disconnecting a browser does not stop a native OR-Tools search. Hold the
+    # slot until it finishes, so subsequent clicks cannot overload the instance.
+    with solve_capacity:
+        if from_thread.run(request.is_disconnected):
+            raise HTTPException(status_code=499, detail="request cancelled before calculation")
+        return solve_vrptw(data)

@@ -81,9 +81,9 @@ export async function solveVrptwServer(engineers: Engineer[], jobs: Job[], speed
   return { result, engine: "ortools" };
 }
 
-export async function solveCounterfactualServer(engineers: Engineer[], jobs: Job[], speedKmh: number, travel: TravelMatrix, jobId: string, engineerId: string): Promise<OptimizationResult> {
+export async function solveCounterfactualServer(engineers: Engineer[], jobs: Job[], speedKmh: number, travel: TravelMatrix, jobId: string, engineerId: string, signal?: AbortSignal): Promise<OptimizationResult> {
   const payload = createSolverPayload(engineers, jobs, speedKmh, travel, undefined, { [jobId]: engineerId });
-  const response = await fetch("/api/solver", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
+  const response = await fetch("/api/solver", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload), signal });
   const server = await response.json().catch(() => null) as (SolverResponse & { error?: string }) | null;
   if (!response.ok) throw new Error(server?.error ?? `OR-Tools API ${response.status}`);
   if (!validResponse(server)) throw new Error("Контрфактический расчёт не подтверждён OR-Tools");
