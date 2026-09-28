@@ -17,6 +17,11 @@ import { JobDetailsDialog } from "@/components/job-details-dialog";
 import { NotificationJournal, useNotificationJournal } from "@/components/notification-journal";
 import { getJobState, jobStateLabels } from "@/lib/job-presentation";
 import { reassignmentNotifications } from "@/lib/notification-journal";
+import { ScheduledEventsEditor, type EventEditorDraft } from "@/components/scheduled-events-editor";
+import { MileageExplanation } from "@/components/mileage-explanation";
+import { usePersistentWorkspace } from "@/components/use-persistent-workspace";
+import { saveTravel, restoreTravel } from "@/lib/workspace-storage";
+import { eventKey, nextDueEvent, planAtTime, invalidateFutureEvents, scheduledEventChange, type EventOutcomes } from "@/lib/scheduled-events";
 import { EngineerWorkspace, type EngineerAbsenceReason } from "@/components/engineer-workspace";
 import { EngineerTimeline } from "@/components/engineer-timeline";
 import { TimeDrum } from "@/components/time-drum";
@@ -28,18 +33,19 @@ import { loadRoadTravel } from "@/lib/road-travel";
 import { mapJobsForRegion } from "@/lib/map-region";
 import demoScenario from "@/data/demo-scenario.json";
 import { downloadPlan } from "@/lib/export-plan";
-import { createTzReplanEvent, downloadAllTzCsvs, downloadBlob, downloadGeneratedDataset, downloadTzJson, engineersToTzCsv, eventsToTzCsv, generateDataset, generateTzDataset, jobsToTzCsv, type GeneratedDataset, type GeneratedTzDataset, type GenerateTzOptions, type TzReplanEvent } from "@/lib/generator-files";
+import { downloadAllTzCsvs, downloadBlob, downloadGeneratedDataset, downloadTzJson, engineersToTzCsv, eventsToTzCsv, generateDataset, generateTzDataset, jobsToTzCsv, type GeneratedDataset, type GeneratedTzDataset, type GenerateTzOptions, type TzReplanEvent } from "@/lib/generator-files";
 import { importPlanFile } from "@/lib/import-data";
 import { absenceImpact, engineerAbsenceMoment, type AbsenceImpact, type AbsenceMoment } from "@/lib/engineer-absence";
 import { issueDailyEquipment } from "@/lib/equipment-issue";
 import { executionAtTime, parseTime, validateEditedData } from "@/lib/data-editor";
-import { eventTimeError, FIRST_EVENT_MINUTE, unavailableAtTime, type AvailabilityChange } from "@/lib/event-time";
+import { eventTimeError, unavailableAtTime, type AvailabilityChange } from "@/lib/event-time";
 import { solveVrptwServer, type SolverEngine } from "@/lib/server-solver";
-import { compareReplannedPlans, fallbackTravel, idleOptimization, jobPriorityLevel, minutesLabel, regions, resultFromRouteOrder, routeTimeBreakdown, scaleEngineers, scaleJobs, type Engineer, type Job, type OptimizationResult, type Region, type ReplanChange, type RoutePlan, type TravelMatrix } from "@/lib/vrptw";
+import { compareReplannedPlans, fallbackTravel, idleOptimization, jobPriorityLevel, minutesLabel, regions, resultFromRouteOrder, routeTimeBreakdown, scaleEngineers, scaleJobs, type Engineer, type Job, type OptimizationResult, type Region, type ReplanChange, type RoutePlan, type TravelMatrix, uniquePoints } from "@/lib/vrptw";
 import { cancelJobLocally, cancelUnassignedJob, insertOrdinaryJob, mergeTemporalResult, prepareTemporalReplan, type DispatchEvent } from "@/lib/temporal-replan";
 
 type ThemeId = "light" | "dark" | "beeline" | "ocean" | "graphite" | "contrast";
 type ViewId = "plan" | "generator" | "requests" | "team" | "analytics" | "editor" | "about" | "engineer";
+type GeneratorPreferences = { engineerCounts: number[]; jobKindCounts: number[]; urgentCount: number; vehicleCount: number; seed: number; cancelEvents: number; unavailableEvents: number; urgentEvents: number; previewTab: "jobs" | "engineers" | "events"; paramsOpen: boolean };
 type PlanConfig = { engineers: number; jobs: number; speedKmh: number; windowMinutes: number; highPriority?: boolean };
 const defaultConfig: PlanConfig = { engineers: 12, jobs: 40, speedKmh: 24, windowMinutes: 240, highPriority: false };
 
@@ -220,19 +226,20 @@ function EngineerDetailsDialog({ engineer, route, unavailable, onClose, onOpenRo
     </DialogContent>
   </Dialog>;
 }
-function AnalyticsView({ result, engineers, distanceReady, distanceWarning, solver, speedKmh, travel, metrics, replanChanges }: { result: OptimizationResult; engineers: Engineer[]; distanceReady: boolean; distanceWarning: string; solver: SolverEngine; speedKmh: number; travel?: TravelMatrix; metrics: ReactNode; replanChanges: ReplanChange[] }) {
+function AnalyticsView({ result, engineers, distanceReady, distanceWarning, estimated, calculated, solver, speedKmh, travel, metrics, replanChanges }: { result: OptimizationResult; engineers: Engineer[]; distanceReady: boolean; distanceWarning: string; estimated:boolean; calculated:boolean; solver: SolverEngine; speedKmh: number; travel?: TravelMatrix; metrics: ReactNode; replanChanges: ReplanChange[] }) {
   const maxJobs = Math.max(1, ...result.zones.map(item => item.jobs));
   const maxDistance = Math.max(1, ...result.zones.flatMap(zone => [zone.distance, zone.baselineDistance]));
   const baselineByEngineer = new Map(result.baselineRoutes.map(route => [route.engineerId, route]));
   const optimizedByEngineer = new Map(result.routes.map(route => [route.engineerId, route]));
   const activeEngineers = engineers.filter(engineer => baselineByEngineer.has(engineer.id) || optimizedByEngineer.has(engineer.id));
   return <section className="page-view"><div className="analytics-actions"><ExportButtons result={result} engineers={engineers} solver={solver} speedKmh={speedKmh} /></div>{metrics}
+    <MileageExplanation estimated={estimated} calculated={calculated} />
     <ReplanImpactPanel changes={replanChanges} />
     <p className={distanceReady ? "comparison-note ready" : "comparison-note"}>{`Сопоставимый пробег (${result.comparison.commonAssigned} общих заявок): ${formatDistance(result.comparison.baselineComparableDistanceKm ?? 0)} → ${formatDistance(result.comparison.optimizedComparableDistanceKm ?? 0)}. ${distanceReady ? "Расчёт выполнен по единой дорожной матрице." : distanceWarning}`}</p>
     <div className="analytics-grid">
       <article className="panel analytics-panel"><div className="panel-header"><div><h2>Заявки по зонам</h2></div></div><div className="zone-chart">{result.zones.map(zone => <div key={zone.name}><span>{zone.name}</span><div><i style={{ width: `${zone.jobs / maxJobs * 100}%` }} /></div><strong>{zone.jobs}</strong></div>)}</div></article>
       <article className="panel analytics-panel"><div className="panel-header"><div><h2>Выполнение в срок</h2></div></div><div className="sla-chart">{result.zones.map(zone => <div key={zone.name}><div className="sla-ring" style={{ ["--value" as string]: `${zone.sla * 3.6}deg` }}><strong>{zone.sla}%</strong></div><span>{zone.name}<small>{zone.assigned} из {zone.jobs} назначено</small></span></div>)}</div></article>
-      <article className="panel analytics-panel wide"><div className="panel-header"><div><h2>Сравнение планов по зонам</h2></div></div><div className="distance-bars">{result.zones.map(zone => <div key={zone.name}><span>{zone.name}</span><div className="distance-track"><i className="baseline" style={{ width: `${zone.baselineDistance / maxDistance * 100}%` }} /><i className="optimized" style={{ width: `${zone.distance / maxDistance * 100}%` }} /></div><strong>{zone.baselineAssigned} → {zone.assigned} заявок<br />{zone.baselineEngineers} → {zone.engineers} инж.<br />{formatDistance(zone.baselineDistance)} → {formatDistance(zone.distance)}</strong></div>)}</div><div className="analytics-legend"><span><i className="baseline" />Базовый план</span><span><i className="optimized" />VRPTW-план</span></div></article>
+      <article className="panel analytics-panel wide"><div className="panel-header"><div><h2>Сравнение планов по зонам</h2></div></div><div className="distance-bars">{result.zones.map(zone => <div key={zone.name}><span>{zone.name}</span><div className="distance-track"><i className="baseline" style={{ width: `${zone.baselineDistance / maxDistance * 100}%` }} /><i className="optimized" style={{ width: `${zone.distance / maxDistance * 100}%` }} /></div><strong>{zone.baselineAssigned} → {zone.assigned} заявок<br />{zone.baselineEngineers} → {zone.engineers} инж.<br />{formatDistance(zone.baselineDistance)} → {formatDistance(zone.distance)}</strong></div>)}</div><div className="analytics-legend"><span><i className="baseline" />Контрольный последовательный план</span><span><i className="optimized" />VRPTW-план</span></div></article>
       <article className="panel analytics-panel wide"><div className="panel-header"><div><h2>Маршруты по инженерам</h2></div></div><div className="comparison-table-wrap"><table className="comparison-table"><thead><tr><th>Инженер</th><th>Базовый · заявок</th><th>VRPTW · заявок</th><th>Базовый · км</th><th>VRPTW · км</th></tr></thead><tbody>{activeEngineers.map(engineer => { const base = baselineByEngineer.get(engineer.id); const optimized = optimizedByEngineer.get(engineer.id); return <tr key={engineer.id}><th scope="row">{engineer.name}<small>{engineer.region}</small></th><td>{base?.stops.length ?? "—"}</td><td>{optimized?.stops.length ?? "—"}</td><td>{base ? formatDistance(base.distanceKm) : "—"}</td><td>{optimized ? formatDistance(optimized.distanceKm) : "—"}</td></tr>; })}</tbody></table></div></article>
     </div>
     <PlanAnalysisView result={result} engineers={engineers} travel={travel} />
@@ -473,7 +480,7 @@ function GeneratorView({
   generatedFrom,
   generatedTz,
   onGenerate,
-  onAddEvent,
+  onAddEvent, onRemoveEvent, eventOutcomes, simTime, started, busy, preferences, onPreferences, eventDraft, onEventDraft,
   onDemo,
   onPlan,
   onClear,
@@ -488,7 +495,7 @@ function GeneratorView({
   generatedFrom: PlanConfig | null;
   generatedTz: GeneratedTzDataset | null;
   onGenerate: (opts?: Partial<GenerateTzOptions>) => void;
-  onAddEvent: (event: TzReplanEvent) => void;
+  onAddEvent: (event: TzReplanEvent, oldKey?: string) => void; onRemoveEvent: (key: string) => void; eventOutcomes: EventOutcomes; simTime: number; started: boolean; busy: boolean; preferences: GeneratorPreferences | null; onPreferences: (value:GeneratorPreferences) => void; eventDraft:EventEditorDraft | null; onEventDraft:(value:EventEditorDraft)=>void;
   onDemo: () => void;
   onPlan: () => void;
   onClear: () => void;
@@ -497,12 +504,12 @@ function GeneratorView({
   importedJobs?: Job[];
   importedEngineers?: Engineer[];
 }) {
-  const [engineerCounts, setEngineerCounts] = useState(() => sharesToCounts([30, 45, 25], draft.engineers));
-  const [jobKindCounts, setJobKindCounts] = useState(() => sharesToCounts([40, 35, 25], draft.jobs));
-  const [urgentCount, setUrgentCount] = useState(() => Math.round(draft.jobs * 0.15));
-  const [vehicleCount, setVehicleCount] = useState(() => Math.round(draft.jobs * 0.25));
-  const urgentRatio = useRef(0.15);
-  const vehicleRatio = useRef(0.25);
+  const [engineerCounts, setEngineerCounts] = useState(() => preferences?.engineerCounts ?? sharesToCounts([30, 45, 25], draft.engineers));
+  const [jobKindCounts, setJobKindCounts] = useState(() => preferences?.jobKindCounts ?? sharesToCounts([40, 35, 25], draft.jobs));
+  const [urgentCount, setUrgentCount] = useState(() => preferences?.urgentCount ?? Math.round(draft.jobs * 0.15));
+  const [vehicleCount, setVehicleCount] = useState(() => preferences?.vehicleCount ?? Math.round(draft.jobs * 0.25));
+  const urgentRatio = useRef(preferences && draft.jobs ? preferences.urgentCount / draft.jobs : 0.15);
+  const vehicleRatio = useRef(preferences && draft.jobs ? preferences.vehicleCount / draft.jobs : 0.25);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -516,15 +523,15 @@ function GeneratorView({
     setVehicleCount(Math.max(0, Math.min(draft.jobs, Math.round(draft.jobs * vehicleRatio.current))));
   }, [draft.jobs]);
 
-  const [seed, setSeed] = useState(42);
-  const [cancelEvents, setCancelEvents] = useState(1);
-  const [unavailableEvents, setUnavailableEvents] = useState(1);
-  const [urgentEvents, setUrgentEvents] = useState(1);
-  const [newEventType, setNewEventType] = useState<TzReplanEvent["type"]>("отмена заявки");
-  const [newEventTime, setNewEventTime] = useState("11:20");
-  const [previewTab, setPreviewTab] = useState<"jobs" | "engineers" | "events">("jobs");
+  const [seed, setSeed] = useState(preferences?.seed ?? 42);
+  const [cancelEvents, setCancelEvents] = useState(preferences?.cancelEvents ?? 1);
+  const [unavailableEvents, setUnavailableEvents] = useState(preferences?.unavailableEvents ?? 1);
+  const [urgentEvents, setUrgentEvents] = useState(preferences?.urgentEvents ?? 1);
+  const [previewTab, setPreviewTab] = useState<"jobs" | "engineers" | "events">(preferences?.previewTab ?? "jobs");
   const [showAllRows, setShowAllRows] = useState(false);
-  const [paramsOpen, setParamsOpen] = useState(() => !(generatedTz?.jobs.length || generated?.jobs.length || importedJobs?.length));
+  const [paramsOpen, setParamsOpen] = useState(() => preferences?.paramsOpen ?? !(generatedTz?.jobs.length || generated?.jobs.length || importedJobs?.length));
+
+  useEffect(() => { onPreferences({ engineerCounts, jobKindCounts, urgentCount, vehicleCount, seed, cancelEvents, unavailableEvents, urgentEvents, previewTab, paramsOpen }); }, [engineerCounts, jobKindCounts, urgentCount, vehicleCount, seed, cancelEvents, unavailableEvents, urgentEvents, previewTab, paramsOpen, onPreferences]);
 
   // Dropzone drag & drop state
   const [isDragging, setIsDragging] = useState(false);
@@ -600,7 +607,7 @@ function GeneratorView({
   const currentJobs = currentDataset ? currentDataset.jobs : (generated?.jobs ?? importedJobs ?? []);
   const currentEngineers = currentDataset ? currentDataset.engineers : (generated?.engineers ?? importedEngineers ?? []);
   const currentEvents = currentDataset?.events ?? [];
-  const hasData = currentJobs.length > 0;
+  const hasData = currentJobs.length > 0 || currentEngineers.length > 0;
   const eventTotal = cancelEvents + unavailableEvents + urgentEvents;
   const showImportStatus = Boolean(importStatus && /Геокодирование|Читаем|Ошибка|Не удалось/.test(importStatus));
 
@@ -792,13 +799,13 @@ function GeneratorView({
                 {currentDataset && <span>окно {minWindow}–{maxWindow} мин, среднее {meanWindow}</span>}
               </div>
               <div className="generator-stage-actions">
-                <button type="button" className="generator-primary-btn" onClick={onPlan}>
+                <button type="button" className="generator-primary-btn" disabled={busy} onClick={onPlan}>
                   <Route size={14} /> Рассчитать маршруты
                 </button>
-                <button type="button" className="generator-ghost-btn" onClick={() => { onClear(); setParamsOpen(true); }}>Очистить</button>
+                <button type="button" className="generator-ghost-btn" disabled={busy} onClick={onClear}>Удалить текущий сценарий</button>
               </div>
             </div>
-            {currentDataset && (
+            {currentDataset && Object.keys(currentDataset.stats.jobsBySkill).length>0 && (
               <p className="generator-stage-meta">
                 {joinCounts(currentDataset.stats.jobsBySkill)}
                 {" · "}
@@ -828,41 +835,9 @@ function GeneratorView({
               </div>
             </div>
 
-            {previewTab === "events" && (
-              <div className="generator-event-composer">
-                <label>
-                  <span>Тип</span>
-                  <select value={newEventType} onChange={event => setNewEventType(event.target.value as TzReplanEvent["type"])}>
-                    <option value="отмена заявки">Отмена заявки</option>
-                    <option value="недоступность инженера">Недоступность инженера</option>
-                    <option value="срочная заявка">Срочная заявка</option>
-                  </select>
-                </label>
-                <label>
-                  <span>Время</span>
-                  <input type="time" value={newEventTime} onChange={event => setNewEventTime(event.target.value)} />
-                </label>
-                <button
-                  type="button"
-                  className="generator-primary-btn"
-                  disabled={!currentJobs.length || !currentEngineers.length}
-                  onClick={() => {
-                    onAddEvent(createTzReplanEvent({
-                      type: newEventType,
-                      time: newEventTime || "11:20",
-                      jobs: currentJobs,
-                      engineers: currentEngineers,
-                      events: currentEvents,
-                      seed: seed + currentEvents.length * 97,
-                    }));
-                  }}
-                >
-                  <Plus size={14} /> Добавить событие
-                </button>
-              </div>
-            )}
+            {previewTab === "events" && <ScheduledEventsEditor jobs={currentJobs} engineers={currentEngineers} events={currentEvents} outcomes={eventOutcomes} time={simTime} started={started} busy={busy} draft={eventDraft} onDraft={onEventDraft} onSave={onAddEvent} onRemove={onRemoveEvent} />}
 
-            <div className="generator-table-wrap">
+            <div className="generator-table-wrap" hidden={previewTab === "events"}>
               {previewTab === "jobs" && (
                 <table className="generator-preview-table">
                   <thead>
@@ -943,51 +918,7 @@ function GeneratorView({
                 </table>
               )}
 
-              {previewTab === "events" && (
-                currentEvents.length === 0 ? (
-                  <p className="generator-event-empty">Событий нет. Задайте количество в параметрах и сгенерируйте набор либо добавьте событие здесь.</p>
-                ) : (
-                    <table className="generator-preview-table">
-                      <thead>
-                        <tr>
-                          <th>Тип</th>
-                          <th>Время</th>
-                          <th>ID</th>
-                          <th>Задача</th>
-                          <th>Адрес</th>
-                          <th>Окно</th>
-                          <th>Приоритет</th>
-                          <th>Навык</th>
-                          <th>Оборудование</th>
-                          <th>Транспорт</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {currentEvents.map((ev, index) => {
-                          const job = ev.job;
-                          return (
-                            <tr key={`${ev.type}-${ev.entityId}-${index}`}>
-                              <td>
-                                <span className={`generator-badge ${ev.type === "срочная заявка" ? "urgent" : "normal"}`}>
-                                  {ev.type}
-                                </span>
-                              </td>
-                              <td><b>{ev.time}</b></td>
-                              <td><b>{ev.entityId}</b></td>
-                              <td>{job ? (job.workType ?? job.kind) : "—"}</td>
-                              <td>{job ? job.address : "—"}</td>
-                              <td>{job ? `${job.time} (${job.serviceMinutes} мин)` : "—"}</td>
-                              <td>{job ? <span className="generator-badge urgent">{jobPriorityLevel(job) === 2 ? "Срочная" : "Обычная"}</span> : "—"}</td>
-                              <td>{job ? <span className="generator-badge skill">{job.kind}</span> : "—"}</td>
-                              <td>{job ? <span className="generator-badge equip">{job.equipment}</span> : "—"}</td>
-                              <td>{job?.requiredTransport ? <span className="generator-badge vehicle">{job.requiredTransport}</span> : job ? "Не ограничен" : "—"}</td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                )
-              )}
+
             </div>
             {previewTab === "jobs" && currentJobs.length > 30 && (
               <button type="button" className="generator-more-rows" onClick={() => setShowAllRows(prev => !prev)}>
@@ -1025,7 +956,7 @@ function ReplanImpactPanel({ changes }: { changes: ReplanChange[] }) {
 }
 
 export default function Dashboard() {
-  const { entries: journalEntries, append: appendNotifications, storageError: journalStorageError } = useNotificationJournal();
+  const { entries: journalEntries, append: appendNotifications, replace: replaceNotifications, storageError: journalStorageError } = useNotificationJournal();
   const [journalOpen, setJournalOpen] = useState(false);
   const [filterResetVersion, setFilterResetVersion] = useState(0);
   const [view, setView] = useState<ViewId>("generator"); const [region, setRegion] = useState<"Все зоны" | Region>("Все зоны"); const [compare, setCompare] = useState(false); const [replanned, setReplanned] = useState(false); const [urgentOpen, setUrgentOpen] = useState(false); const [mobileNavOpen, setMobileNavOpen] = useState(false); const [selectedJobId, setSelectedJobId] = useState<string | null>(null); const [detailsJobId, setDetailsJobId] = useState<string | null>(null); const [selectedEngineerId, setSelectedEngineerId] = useState<string | null>(null); const [selectedEngineerDetailsId, setSelectedEngineerDetailsId] = useState<string | null>(null); const [simTime, setSimTime] = useState(480); const [simPlaying, setSimPlaying] = useState(false); const [playbackMinutesPerSecond, setPlaybackMinutesPerSecond] = useState(1); const [theme, setTheme] = useState<ThemeId>("light"); const [themeOpen, setThemeOpen] = useState(false); const [routingState, setRoutingState] = useState<RoutingState>("idle"); const [extraJobs, setExtraJobs] = useState<Job[]>([]); const [importedJobs, setImportedJobs] = useState<Job[]>([]); const [importedEngineers, setImportedEngineers] = useState<Engineer[]>([]); const [unavailableEngineerIds, setUnavailableEngineerIds] = useState<string[]>([]); const [cancelledJobIds, setCancelledJobIds] = useState<string[]>([]); const [importStatus, setImportStatus] = useState(""); const [optimizing, setOptimizing] = useState(false); const [formError, setFormError] = useState(""); const [solverError, setSolverError] = useState(""); const [planResult, setPlanResult] = useState<OptimizationResult | null>(null); const [travel, setTravel] = useState<TravelMatrix | undefined>(undefined); const [matrixFallback, setMatrixFallback] = useState(false);
@@ -1043,7 +974,13 @@ export default function Dashboard() {
     transport: "",
     urgency: "urgent" as "normal" | "urgent",
   });
-  const [eventTimeText, setEventTimeText] = useState("08:00");
+  const [eventOutcomes,setEventOutcomes] = useState<EventOutcomes>({});
+  const [scheduledProcessing,setScheduledProcessing] = useState(false);
+  const scheduledLock = useRef(false);
+  const requestedTime = useRef<{ time:number; playing:boolean } | null>(null);
+  const [clearOpen,setClearOpen] = useState(false);
+  const [eventDraft,setEventDraft] = useState<EventEditorDraft | null>(null);
+  const [generatorPreferences,setGeneratorPreferences] = useState<GeneratorPreferences | null>(null);
   const [engineerPersonaId, setEngineerPersonaId] = useState<string | null>(null);
   const [engineerSelectedJobId, setEngineerSelectedJobId] = useState<string | null>(null);
   const [pendingEngineerAction, setPendingEngineerAction] = useState<EngineerAbsenceReason | null>(null);
@@ -1056,6 +993,7 @@ export default function Dashboard() {
   const [dispatchNotice, setDispatchNotice] = useState("");
   const [jobActionNotice, setJobActionNotice] = useState("");
   const workdayStarted = useRef(false);
+  const [dayStarted,setDayStarted] = useState(false);
   const [cancellationNotices, setCancellationNotices] = useState<Array<{ engineerId: string; jobId: string; replacementId: string | null; time: number }>>([]);
   const [engineerActionError, setEngineerActionError] = useState("");
   const [lastEventTime, setLastEventTime] = useState<number | null>(null);
@@ -1075,8 +1013,9 @@ export default function Dashboard() {
   const selectedUrgentSkill = urgentSkills.includes(urgentForm.kind) ? urgentForm.kind : urgentSkills.find(skill => skill === "Аварийные работы" || skill === "Аварийно-восстановительные работы") ?? urgentSkills[0] ?? urgentForm.kind;
   const availableEngineers = useMemo(() => activeEngineers.filter(engineer => !unavailableEngineerIds.includes(engineer.id)), [activeEngineers, unavailableEngineerIds]);
   const playbackUnavailableIds = useMemo(() => unavailableAtTime(unavailableEngineerIds, availabilityChanges, simTime), [unavailableEngineerIds, availabilityChanges, simTime]);
-  const result = planResult ?? idleOptimization(availableEngineers, activeJobs, applied?.speedKmh ?? draft.speedKmh, travel);
-  const playbackResult = started ? planHistory.find(snapshot => snapshot.time > simTime)?.before ?? result : result;
+  const latestResult = planResult ?? idleOptimization(availableEngineers, activeJobs, applied?.speedKmh ?? draft.speedKmh, travel);
+  const playbackResult = started ? planAtTime(latestResult, planHistory, simTime) : latestResult;
+  const result = playbackResult;
   const stopByJob = useMemo(() => new Map(playbackResult.routes.flatMap(route => route.stops.map(stop => [stop.jobId, stop] as const))), [playbackResult.routes]);
   const plannedJobs = useMemo(() => playbackResult.jobs.map(job => ({ ...job, executionStatus: executionAtTime(job, stopByJob.get(job.id), started ? simTime : null) })), [playbackResult.jobs, stopByJob, started, simTime]);
   const visibleJobs = useMemo(() => plannedJobs.filter(job => region === "Все зоны" || job.region === region || Boolean(selectedEngineerId && job.engineerId === selectedEngineerId)), [plannedJobs, region, selectedEngineerId]);
@@ -1097,13 +1036,78 @@ export default function Dashboard() {
     return { start, end };
   }, [visibleEngineers, activeEngineers, result.routes]);
   const simulationOn = started && Boolean(planResult);
-  const changeSimulationTime = useCallback((time: number) => { setSimTime(time); setEventTimeText(minutesLabel(Math.floor(time))); }, []);
-  const changeEventTime = useCallback((value: string) => {
-    setEventTimeText(value);
-    const time = parseTime(value);
-    if (!eventTimeError(time, null, simRange.end)) setSimTime(time);
-  }, [simRange.end]);
-  useEffect(() => { if (simulationOn && simTime > 480) workdayStarted.current = true; }, [simulationOn, simTime]);
+  const travelPointsKey = JSON.stringify(uniquePoints(activeEngineers, [...baseJobs,...extraJobs]));
+  const transportKey = JSON.stringify([...new Set(activeEngineers.map(engineer=>engineer.transport))]);
+  const travelSaved = useMemo(() => saveTravel(travel, JSON.parse(travelPointsKey), JSON.parse(transportKey)), [travel,travelPointsKey,transportKey]);
+  const workspaceSnapshot = useMemo(() => ({ view, region, compare, replanned, selectedJobId, detailsJobId, selectedEngineerId, selectedEngineerDetailsId, simTime, playbackMinutesPerSecond, theme, extraJobs, importedJobs, importedEngineers, unavailableEngineerIds, cancelledJobIds, importStatus, solverError, planResult, matrixFallback, draft, applied, generated, generatedFrom, generatedTz, editorJobs, editorEngineers, editorUnavailableIds, editorDirty, editorError, urgentForm, urgentOpen, engineerPersonaId, engineerSelectedJobId, absenceReasons, absenceMoments, availabilityChanges, absenceNotices, planHistory, issuedEngineers, dispatchNotice, jobActionNotice, cancellationNotices, engineerActionError, lastEventTime, lastCalculationMethod, solverEngine, replanChanges, showReplanSummary, eventOutcomes, generatorPreferences, eventDraft, dayStarted, journalEntries, travelSaved }), [view, region, compare, replanned, selectedJobId, detailsJobId, selectedEngineerId, selectedEngineerDetailsId, simTime, playbackMinutesPerSecond, theme, extraJobs, importedJobs, importedEngineers, unavailableEngineerIds, cancelledJobIds, importStatus, solverError, planResult, matrixFallback, draft, applied, generated, generatedFrom, generatedTz, editorJobs, editorEngineers, editorUnavailableIds, editorDirty, editorError, urgentForm, urgentOpen, engineerPersonaId, engineerSelectedJobId, absenceReasons, absenceMoments, availabilityChanges, absenceNotices, planHistory, issuedEngineers, dispatchNotice, jobActionNotice, cancellationNotices, engineerActionError, lastEventTime, lastCalculationMethod, solverEngine, replanChanges, showReplanSummary, eventOutcomes, generatorPreferences, eventDraft, dayStarted, journalEntries, travelSaved]);
+  const restoreWorkspace = useCallback((value:typeof workspaceSnapshot) => {
+    if (!value || !Array.isArray(value.importedJobs) || !Array.isArray(value.importedEngineers) || !Array.isArray(value.planHistory) || !value.draft || !["plan","generator","requests","team","analytics","editor","about","engineer"].includes(value.view)) throw new Error("Некорректное сохранение сценария");
+    const restoredTravel=restoreTravel(value.travelSaved,value.applied?.speedKmh ?? value.draft.speedKmh);
+    setView(value.view);
+    setRegion(value.region);
+    setCompare(value.compare);
+    setReplanned(value.replanned);
+    setSelectedJobId(value.selectedJobId);
+    setDetailsJobId(value.detailsJobId);
+    setSelectedEngineerId(value.selectedEngineerId);
+    setSelectedEngineerDetailsId(value.selectedEngineerDetailsId);
+    setSimTime(value.simTime);
+    setPlaybackMinutesPerSecond(value.playbackMinutesPerSecond);
+    setTheme(value.theme);
+    setExtraJobs(value.extraJobs);
+    setImportedJobs(value.importedJobs);
+    setImportedEngineers(value.importedEngineers);
+    setUnavailableEngineerIds(value.unavailableEngineerIds);
+    setCancelledJobIds(value.cancelledJobIds);
+    setImportStatus(value.importStatus);
+    setSolverError(value.solverError);
+    setPlanResult(value.planResult);
+    setMatrixFallback(value.matrixFallback);
+    setDraft(value.draft);
+    setApplied(value.applied);
+    setGenerated(value.generated);
+    setGeneratedFrom(value.generatedFrom);
+    setGeneratedTz(value.generatedTz);
+    setEditorJobs(value.editorJobs);
+    setEditorEngineers(value.editorEngineers);
+    setEditorUnavailableIds(value.editorUnavailableIds);
+    setEditorDirty(value.editorDirty);
+    setEditorError(value.editorError);
+    setUrgentForm(value.urgentForm);
+    setUrgentOpen(value.urgentOpen);
+    setEngineerPersonaId(value.engineerPersonaId);
+    setEngineerSelectedJobId(value.engineerSelectedJobId);
+    setAbsenceReasons(value.absenceReasons);
+    setAbsenceMoments(value.absenceMoments);
+    setAvailabilityChanges(value.availabilityChanges);
+    setAbsenceNotices(value.absenceNotices);
+    setPlanHistory(value.planHistory);
+    setIssuedEngineers(value.issuedEngineers);
+    setDispatchNotice(value.dispatchNotice);
+    setJobActionNotice(value.jobActionNotice);
+    setCancellationNotices(value.cancellationNotices);
+    setEngineerActionError(value.engineerActionError);
+    setLastEventTime(value.lastEventTime);
+    setLastCalculationMethod(value.lastCalculationMethod);
+    setSolverEngine(value.solverEngine);
+    setReplanChanges(value.replanChanges);
+    setShowReplanSummary(value.showReplanSummary);
+    setEventOutcomes(value.eventOutcomes);
+    setGeneratorPreferences(value.generatorPreferences); setEventDraft(value.eventDraft ?? null);
+    setDayStarted(value.dayStarted); replaceNotifications(value.journalEntries ?? []);
+    setTravel(restoredTravel); setSimPlaying(false); workdayStarted.current=value.dayStarted;
+    setRoutingState(value.planResult ? "ready" : "idle");
+  }, [replaceNotifications]);
+  const { ready:workspaceReady, error:workspaceStorageError, saveNow:saveWorkspaceNow } = usePersistentWorkspace(workspaceSnapshot,restoreWorkspace,!optimizing && !scheduledProcessing);
+  const changeSimulationTime = useCallback((time: number) => {
+    if (scheduledLock.current) return;
+    const due = started ? nextDueEvent(generatedTz?.events ?? [], eventOutcomes, time) : null;
+    if (due) { requestedTime.current = { time, playing: simPlaying }; setSimPlaying(false); setSimTime(parseTime(due.time)); }
+    else setSimTime(time);
+  }, [started, generatedTz?.events, eventOutcomes, simPlaying]);
+  useEffect(() => { if (simulationOn && simTime > 480 && !dayStarted) { workdayStarted.current = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setDayStarted(true); } }, [simulationOn, simTime, dayStarted]);
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
       if (!simulationOn) { setSimPlaying(false); return; }
@@ -1210,7 +1214,7 @@ export default function Dashboard() {
       setPlanResult(solved.result);
       if (planResult) recordPlanChanges(planResult, solved.result, Math.floor(simTime));
       if (preShift) { setPlanHistory([]); setAvailabilityChanges([]); }
-      if (preShift) { setSimTime(480); setEventTimeText("08:00"); setSimPlaying(false); }
+      if (preShift) { setSimTime(480); setSimPlaying(false); }
       setSolverEngine(solved.engine);
       setLastCalculationMethod("ortools");
       setReplanned(true);
@@ -1224,10 +1228,10 @@ export default function Dashboard() {
       setOptimizing(false);
     }
   }, [travel, planResult, activeEngineers, simTime, lastEventTime, issuedEngineers, recordPlanChanges]);
-  const runTemporalEvent = useCallback(async (event: DispatchEvent, jobs: Job[], unavailableIds: string[]) => {
-    const previous = planResult;
+  const runTemporalEvent = useCallback(async (event: DispatchEvent, jobs: Job[], unavailableIds: string[], context?: { previous:OptimizationResult; previousEventTime:number | null }) => {
+    const previous = context?.previous ?? planResult;
     if (!applied || !previous) return false;
-    const timeError = eventTimeError(event.time, lastEventTime, simRange.end);
+    const timeError = eventTimeError(event.time, context ? context.previousEventTime : lastEventTime, simRange.end);
     if (timeError) { setSolverError(timeError); setDispatchNotice(timeError); return false; }
     const saveScenario = (next: OptimizationResult) => { setPlanResult(next); recordPlanChanges(previous, next, event.time); };
     const cancelled = event.type === "cancel_job" ? previous.jobs.find(job => job.id === event.id) : undefined;
@@ -1238,7 +1242,7 @@ export default function Dashboard() {
         setPlanHistory(current => [...current, { time: event.time, before: previous }]);
         setReplanChanges(compareReplannedPlans(previous, changed.result, activeEngineers, event.time, event));
         setShowReplanSummary(true); setLastCalculationMethod("cancel_local"); setLastEventTime(event.time);
-        changeSimulationTime(event.time); setSimPlaying(false); setReplanned(true); setCompare(false); setSolverError("");
+        setSimTime(event.time); setSimPlaying(false); setReplanned(true); setCompare(false); setSolverError("");
         setCancellationNotices(current => [...current, { engineerId: changed.engineerId, jobId: event.id, replacementId: changed.replacementId, time: event.time }]);
         appendNotifications([{ kind: "cancelled", time: event.time, title: `Заявка №${event.id} отменена`, message: `Инженер ${activeEngineers.find(item => item.id === changed.engineerId)?.name ?? changed.engineerId} уведомлён. ${changed.replacementId ? `Вместо неё назначена №${changed.replacementId}.` : "Подходящей свободной заявки для замены нет."} Расписание коллег сохранено.`, engineerIds: [changed.engineerId] }]);
         setDispatchNotice(`Заявка №${event.id} отменена. Инженер уведомлён.${changed.replacementId ? ` Вместо неё назначена №${changed.replacementId}.` : " Подходящей свободной заявки для этого инженера нет."}`);
@@ -1251,7 +1255,7 @@ export default function Dashboard() {
         saveScenario(unchanged);
         setPlanHistory(current => [...current, { time: event.time, before: previous }]);
         setReplanChanges([{ kind: "event", key: `event-${event.id}`, message: `№${event.id} отменена в ${minutesLabel(event.time)}: её не было в рабочем маршруте, поэтому согласованные визиты и маршруты инженеров не изменились.`, necessity: "required" }]);
-        setLastCalculationMethod("no_change"); setLastEventTime(event.time); changeSimulationTime(event.time); setSimPlaying(false); setReplanned(true); setSolverError("");
+        setLastCalculationMethod("no_change"); setLastEventTime(event.time); setSimTime(event.time); setSimPlaying(false); setReplanned(true); setSolverError("");
         setDispatchNotice(`Заявка №${event.id} отменена. Назначения и маршруты инженеров не изменились.`);
         appendNotifications([{ kind: "cancelled", time: event.time, title: `Заявка №${event.id} отменена`, message: "У заявки не было назначенного инженера. Маршруты остальных заявок сохранены." }]);
         return unchanged;
@@ -1286,15 +1290,66 @@ export default function Dashboard() {
       setLastCalculationMethod(ordinaryInserted != null ? "insert" : "ortools"); setLastEventTime(event.time);
       setTravel(nextTravel); setMatrixFallback(loaded.provider === "fallback");
       setRoutingState("ready"); setReplanned(true); setCompare(false);
-      changeSimulationTime(event.time); setSimPlaying(false);
+      setSimTime(event.time); setSimPlaying(false);
       return merged;
     } catch (error) {
       setSolverError(error instanceof Error ? error.message : "Не удалось перепланировать оставшийся день");
       setRoutingState("fallback");
       return false;
     } finally { setOptimizing(false); }
-  }, [applied, planResult, activeEngineers, travel, lastEventTime, simRange.end, changeSimulationTime, recordPlanChanges, appendNotifications]);
+  }, [applied, planResult, activeEngineers, travel, lastEventTime, simRange.end, recordPlanChanges, appendNotifications]);
+  useEffect(() => {
+    if (!workspaceReady || !started || optimizing || scheduledProcessing || scheduledLock.current || !planResult) return;
+    const events=generatedTz?.events ?? [];
+    const event=nextDueEvent(events,eventOutcomes,simTime);
+    if (!event) return;
+    scheduledLock.current=true;
+    const target=requestedTime.current ?? { time:simTime, playing:simPlaying };
+    requestedTime.current=target;
+    const minute=parseTime(event.time), key=eventKey(event), previous=planResult;
+    // State transitions are driven by the asynchronous event runner.
+    const process=async () => {
+      setScheduledProcessing(true); setSimPlaying(false); setSimTime(minute);
+      let outcome:EventOutcomes[string];
+      try {
+        const change=scheduledEventChange(event,previous,activeEngineers,unavailableEngineerIds);
+        const updated=await runTemporalEvent(change.dispatch,change.jobs,change.unavailableIds,{ previous, previousEventTime:lastEventTime });
+        if (!updated) throw new Error("Перепланирование не выполнено. Проверьте сообщение расчёта и вернитесь до времени события и выполните ручной пересчёт, чтобы повторить его.");
+        setEditorJobs(updated.jobs);
+        if (event.type === "срочная заявка" && event.job) {
+          setExtraJobs(current=>[...current.filter(job=>job.id!==event.entityId),event.job!]);
+          appendNotifications([{ kind:"reassigned", time:minute, title:`Появилась срочная заявка №${event.entityId}`, message:`${event.job.address}. ${updated.jobs.find(job=>job.id===event.entityId)?.engineerId ? "Назначен инженер; оставшийся день пересчитан." : "Доступного назначения нет; заявка требует решения диспетчера."}` }]);
+        } else if (event.type === "отмена заявки") {
+          setCancelledJobIds(current=>current.includes(event.entityId) ? current : [...current,event.entityId]);
+        } else if (event.type === "недоступность инженера") {
+          const engineer=activeEngineers.find(item=>item.id===event.entityId)!;
+          const moment=engineerAbsenceMoment(previous,engineer,minute);
+          const impact=absenceImpact(previous,updated,engineer.id,minute,activeEngineers);
+          setUnavailableEngineerIds(change.unavailableIds); setEditorUnavailableIds(change.unavailableIds);
+          setAvailabilityChanges(current=>[...current,{ engineerId:engineer.id,time:moment.effectiveAt,unavailable:true }]);
+          setAbsenceReasons(current=>({...current,[engineer.id]:"left"}));
+          setAbsenceMoments(current=>({...current,[engineer.id]:moment}));
+          setAbsenceNotices(current=>[...current,{ engineerId:engineer.id,engineerName:engineer.name,reason:"left",impact,moment }]);
+          appendNotifications([{ kind:"left",time:minute,title:`${engineer.name}: вне смены`,message:`${moment.phase==="service" ? `Завершит №${moment.currentJobId} к ${minutesLabel(moment.effectiveAt)} и выйдет.` : "Инженер вышел из смены."} Переназначено: ${impact.reassigned.length}. Без замены: ${impact.unassigned.length}.`,engineerIds:[engineer.id] }]);
+        }
+        outcome={ status:"applied",time:minute,message:"Событие применено" };
+      } catch (error) {
+        const message=error instanceof Error ? error.message : "Не удалось применить событие";
+        outcome={ status:"failed",time:minute,message };
+        setDispatchNotice(`${event.time} · ${event.type}: ${message}`);
+        appendNotifications([{ kind:"unassigned",time:minute,title:`Событие ${event.time} не применено`,message:`${event.type}: ${message}` }]);
+      }
+      const outcomes={...eventOutcomes,[key]:outcome};
+      setEventOutcomes(outcomes);
+      const next=nextDueEvent(events,outcomes,target.time);
+      scheduledLock.current=false; setScheduledProcessing(false);
+      if (next) setSimTime(parseTime(next.time));
+      else { requestedTime.current=null; setSimTime(target.time); setSimPlaying(target.playing); }
+    };
+    void process();
+  }, [workspaceReady,started,optimizing,scheduledProcessing,planResult,generatedTz,eventOutcomes,simTime,simPlaying,activeEngineers,unavailableEngineerIds,lastEventTime,runTemporalEvent,appendNotifications]);
   const applyEditedData = useCallback(async () => {
+    if (optimizing || scheduledLock.current) return;
     const error = validateEditedData(editorJobs, editorEngineers);
     if (error) { setEditorError(error); return; }
     if (editorEngineers.every(engineer => editorUnavailableIds.includes(engineer.id))) { setEditorError("Для расчёта нужен хотя бы один доступный инженер."); return; }
@@ -1322,18 +1377,43 @@ export default function Dashboard() {
     const engineers = issueDailyEquipment(editorEngineers, jobs);
     setIssuedEngineers(engineers);
     setCancellationNotices([]); setDispatchNotice("");
-    setPlanResult(null); setLastEventTime(null); setPlanHistory([]); setImportedJobs(jobs); setImportedEngineers(engineers); setEditorJobs(jobs); setExtraJobs([]); setCancelledJobIds([]); setUnavailableEngineerIds(editorUnavailableIds); setAbsenceReasons({}); setAbsenceMoments({}); setAvailabilityChanges([]); setAbsenceNotices([]); setEngineerPersonaId(null);
+    setPlanResult(null); setEventOutcomes({}); setLastEventTime(null); setPlanHistory([]); setImportedJobs(jobs); setImportedEngineers(engineers); setEditorJobs(jobs); setExtraJobs([]); setCancelledJobIds([]); setUnavailableEngineerIds(editorUnavailableIds); setAbsenceReasons({}); setAbsenceMoments({}); setAvailabilityChanges([]); setAbsenceNotices([]); setEngineerPersonaId(null);
     setGenerated(null); setGeneratedFrom(null); setEditorDirty(false); setEditorError("");
     setSelectedJobId(null); setDetailsJobId(null); setSelectedEngineerId(null); setRegion("Все зоны");
     const config = { ...draft, jobs: jobs.length, engineers: engineers.length };
-    setDraft(config); setApplied(config); setSimTime(480); setEventTimeText("08:00"); setSimPlaying(false);
+    setDraft(config); setApplied(config); setSimTime(480); setSimPlaying(false);
     void runOptimize(engineers.filter(engineer => !editorUnavailableIds.includes(engineer.id)), jobs, config.speedKmh);
-  }, [editorJobs, editorEngineers, editorUnavailableIds, draft, runOptimize, activeJobs, workdayStarted]);
+  }, [editorJobs, editorEngineers, editorUnavailableIds, draft, runOptimize, activeJobs, workdayStarted, optimizing]);
+  const invalidateFutureScenario = useCallback(() => {
+    const retained=invalidateFutureEvents(eventOutcomes,planHistory,simTime);
+    const effectiveChanges=availabilityChanges.filter(change => change.time<=simTime || (absenceMoments[change.engineerId]?.reportedAt ?? Infinity)<=simTime);
+    setPlanHistory(retained.history); setEventOutcomes(retained.outcomes); setPlanResult(playbackResult);
+    const planningUnavailableIds=[...new Set([...playbackUnavailableIds,...Object.entries(absenceMoments).filter(([,moment])=>moment.reportedAt<=simTime).map(([id])=>id)])];
+    setUnavailableEngineerIds(planningUnavailableIds); setEditorUnavailableIds(planningUnavailableIds);
+    setAvailabilityChanges(effectiveChanges);
+    setAbsenceMoments(Object.fromEntries(Object.entries(absenceMoments).filter(([,moment])=>moment.reportedAt<=simTime)));
+    setAbsenceReasons(Object.fromEntries(Object.entries(absenceReasons).filter(([id])=>!absenceMoments[id] || absenceMoments[id].reportedAt<=simTime)));
+    setAbsenceNotices(current=>current.filter(notice=>notice.moment.reportedAt<=simTime));
+    setCancellationNotices(current=>current.filter(notice=>notice.time<=simTime));
+    replaceNotifications(journalEntries.filter(entry=>entry.time<=simTime));
+    const extras=playbackResult.jobs.filter(job=>!baseJobs.some(base=>base.id===job.id));
+    setExtraJobs(extras);
+    const flags=baseJobs.filter(base=>Boolean(playbackResult.jobs.find(job=>job.id===base.id)?.cancelled)!==Boolean(base.cancelled)).map(job=>job.id);
+    setCancelledJobIds(flags);
+    setLastEventTime(retained.history.length ? Math.max(...retained.history.map(snapshot=>snapshot.time)) : null);
+    setReplanChanges([]); setReplanned(false); setDispatchNotice(""); setJobActionNotice(""); setEngineerActionError(""); requestedTime.current=null;
+    return { previous:playbackResult, unavailableIds:planningUnavailableIds, extras, flags };
+  }, [eventOutcomes,planHistory,simTime,availabilityChanges,absenceMoments,absenceReasons,playbackResult,playbackUnavailableIds,baseJobs,journalEntries,replaceNotifications]);
   const startPlanning = useCallback(() => {
-    if (optimizing || routingState === "loading") return;
+    if (optimizing || scheduledLock.current || routingState === "loading") return;
     if (editorDirty) { setEditorError("В таблице есть несохранённые изменения. Примените их или сбросьте перед новым расчётом."); setView("editor"); return; }
     if (!baseJobs.length || !baseEngineers.length) { setView("generator"); setImportStatus("Сначала сгенерируйте или загрузите заявки и инженеров."); return; }
-    if (applied && planResult && ((lastEventTime ?? 0) > 480 || workdayStarted.current || simTime > 480)) { void runTemporalEvent({ type: "recalculate", time: Math.max(lastEventTime ?? 480, Math.floor(simTime)), id: "plan" }, planResult.jobs, unavailableEngineerIds); return; }
+    if (applied && planResult) {
+      const current=invalidateFutureScenario();
+      if (!workdayStarted.current && simTime<=480) void runOptimize(activeEngineers.filter(engineer=>!current.unavailableIds.includes(engineer.id)),current.previous.jobs,applied.speedKmh);
+      else void runTemporalEvent({ type:"recalculate", time:Math.floor(simTime), id:"plan" },current.previous.jobs,current.unavailableIds,{ previous:current.previous, previousEventTime:null });
+      return;
+    }
     const config = { ...draft };
     setApplied(config);
     setLastEventTime(null);
@@ -1342,8 +1422,10 @@ export default function Dashboard() {
     setIssuedEngineers(engineers);
     setEditorJobs(jobs); setEditorEngineers(engineers); setEditorUnavailableIds(unavailableEngineerIds); setEditorError("");
     void runOptimize(engineers.filter(engineer => !unavailableEngineerIds.includes(engineer.id)), jobs, config.speedKmh);
-  }, [draft, extraJobs, runOptimize, runTemporalEvent, baseEngineers, baseJobs, unavailableEngineerIds, cancelledJobIds, editorDirty, lastEventTime, applied, planResult, simTime, issuedEngineers, workdayStarted, optimizing, routingState]);
+  }, [draft, extraJobs, runOptimize, runTemporalEvent, baseEngineers, baseJobs, unavailableEngineerIds, cancelledJobIds, editorDirty, applied, planResult, simTime, issuedEngineers, workdayStarted, optimizing, routingState, invalidateFutureScenario, activeEngineers]);
   const createGenerated = useCallback((opts?: Partial<GenerateTzOptions>) => {
+    if (optimizing || scheduledLock.current) return;
+    replaceNotifications([]); setEventDraft(null);
     const jobsCount = opts?.jobs ?? draft.jobs;
     const engCount = opts?.engineers ?? draft.engineers;
     const windowMin = opts?.windowMinutes ?? draft.windowMinutes;
@@ -1365,7 +1447,7 @@ export default function Dashboard() {
     setEditorJobs(tzData.jobs);
     setEditorEngineers(initialEngineers);
     setIssuedEngineers(null);
-    setCancellationNotices([]); setDispatchNotice(""); workdayStarted.current = false; setSimTime(480); setEventTimeText("08:00"); setSimPlaying(false);
+    setCancellationNotices([]); setDispatchNotice(""); workdayStarted.current = false; setDayStarted(false); setSimTime(480); setSimPlaying(false);
     setEditorUnavailableIds([]);
     setEditorDirty(false);
     setEditorError("");
@@ -1374,7 +1456,7 @@ export default function Dashboard() {
     setUnavailableEngineerIds([]);
     setAbsenceReasons({}); setAbsenceMoments({}); setAvailabilityChanges([]); setAbsenceNotices([]); setPlanHistory([]); setEngineerPersonaId(null);
     setApplied(null);
-    setPlanResult(null);
+    setPlanResult(null); setEventOutcomes({});
     setLastEventTime(null);
     setTravel(undefined);
     setMatrixFallback(false);
@@ -1383,61 +1465,41 @@ export default function Dashboard() {
     setSelectedEngineerId(null);
     setSolverError("");
     setImportStatus(`Сгенерирован набор: ${tzData.jobs.length} заявок, ${tzData.engineers.length} инженеров, ${tzData.events.length} ${tzData.events.length === 1 ? "событие" : tzData.events.length >= 2 && tzData.events.length <= 4 ? "события" : "событий"} перепланирования.`);
-  }, [draft]);
-  const addGeneratedEvent = useCallback((event: TzReplanEvent) => {
+  }, [draft,optimizing,replaceNotifications]);
+  const addGeneratedEvent = useCallback((event:TzReplanEvent,oldKey?:string) => {
+    if (scheduledLock.current || optimizing) return;
+    if (started && parseTime(event.time)<Math.floor(simTime)) { setDispatchNotice("Сначала установите время просмотра до появления события."); return; }
+    if (started) invalidateFutureScenario();
     setGeneratedTz(current => {
-      if (current) return { ...current, events: [...current.events, event] };
-      return {
-        jobs: importedJobs,
-        engineers: importedEngineers,
-        events: [event],
-        speedKmh: draft.speedKmh,
-        stats: {
-          totalJobs: importedJobs.length,
-          totalEngineers: importedEngineers.length,
-          jobsBySkill: {},
-          jobsByEquipment: {},
-          engineersByLevel: {},
-          engineersByVehicle: {},
-          engineersBySkill: {},
-          urgentJobsCount: 0,
-          constrainedTransportJobsCount: 0,
-        },
-      };
+      const dataset=current ?? { jobs:importedJobs, engineers:importedEngineers, events:[], speedKmh:draft.speedKmh, stats:{ totalJobs:importedJobs.length,totalEngineers:importedEngineers.length,jobsBySkill:{},jobsByEquipment:{},engineersByLevel:{},engineersByVehicle:{},engineersBySkill:{},urgentJobsCount:0,constrainedTransportJobsCount:0 } };
+      return { ...dataset, events:[...dataset.events.filter(item=>eventKey(item)!==oldKey),event].sort((a,b)=>a.time.localeCompare(b.time)) };
     });
-  }, [draft.speedKmh, importedEngineers, importedJobs]);
+  }, [draft.speedKmh,importedEngineers,importedJobs,started,simTime,invalidateFutureScenario,optimizing]);
+  const removeGeneratedEvent = useCallback((key:string) => {
+    if (scheduledLock.current || optimizing) return;
+    const event=generatedTz?.events.find(item=>eventKey(item)===key);
+    if (!event || (started && parseTime(event.time)<=simTime)) return;
+    if (started) invalidateFutureScenario();
+    setGeneratedTz(current=>current ? { ...current,events:current.events.filter(event=>eventKey(event)!==key) } : null);
+  }, [generatedTz,simTime,started,invalidateFutureScenario,optimizing]);
   const clearDataset = useCallback(() => {
-    setImportedJobs([]);
-    setImportedEngineers([]);
-    setIssuedEngineers(null);
-    setGenerated(null);
-    setGeneratedFrom(null);
-    setGeneratedTz(null);
-    setEditorJobs([]);
-    setEditorEngineers([]);
-    setEditorUnavailableIds([]);
-    setEditorDirty(false);
-    setEditorError("");
-    setExtraJobs([]);
-    setCancelledJobIds([]);
-    setUnavailableEngineerIds([]);
-    setAbsenceReasons({}); setAbsenceMoments({}); setAvailabilityChanges([]); setAbsenceNotices([]); setPlanHistory([]); setEngineerPersonaId(null);
-    setApplied(null);
-    setPlanResult(null);
-    setTravel(undefined);
-    setMatrixFallback(false);
-    setReplanChanges([]);
-    setSelectedJobId(null);
-    setSelectedEngineerId(null);
-    setDetailsJobId(null);
-    setSolverError("");
-    setImportStatus("Набор очищен. Сгенерируйте или загрузите данные заново.");
-  }, []);
+    if (optimizing || scheduledLock.current) return;
+    const cleared:typeof workspaceSnapshot={ ...workspaceSnapshot, view:"generator",region:"Все зоны",compare:false,replanned:false,
+      importedJobs:[],importedEngineers:[],issuedEngineers:null,generated:null,generatedFrom:null,generatedTz:null,
+      editorJobs:[],editorEngineers:[],editorUnavailableIds:[],editorDirty:false,editorError:"",extraJobs:[],cancelledJobIds:[],unavailableEngineerIds:[],
+      absenceReasons:{},absenceMoments:{},availabilityChanges:[],absenceNotices:[],planHistory:[],engineerPersonaId:null,engineerSelectedJobId:null,
+      applied:null,planResult:null,eventOutcomes:{},travelSaved:null,matrixFallback:false,replanChanges:[],selectedJobId:null,selectedEngineerId:null,
+      detailsJobId:null,selectedEngineerDetailsId:null,solverError:"",lastEventTime:null,simTime:480,dayStarted:false,eventDraft:null,dispatchNotice:"",jobActionNotice:"",
+      cancellationNotices:[],engineerActionError:"",urgentOpen:false,journalEntries:[],importStatus:"Сценарий удалён. Сгенерируйте или загрузите данные заново." };
+    requestedTime.current=null; setPendingEngineerAction(null);
+    restoreWorkspace(cleared);
+    void saveWorkspaceNow(cleared);
+  }, [workspaceSnapshot,restoreWorkspace,saveWorkspaceNow,optimizing]);
   const addUrgent = useCallback(async () => {
-    if (optimizing) return;
+    if (optimizing || scheduledLock.current) return;
     setFormError("");
     if (!urgentForm.address.trim()) { setFormError("Укажите адрес заявки"); return; }
-    const start = parseTime(urgentForm.start), end = parseTime(urgentForm.end), eventTime = parseTime(eventTimeText);
+    const start = parseTime(urgentForm.start), end = parseTime(urgentForm.end), eventTime = Math.floor(simTime);
     if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) { setFormError("Проверьте временное окно"); return; }
     if (!Number.isFinite(eventTime) || end <= eventTime) { setFormError("Окно новой заявки должно заканчиваться после события"); return; }
     const manualLongitude = urgentForm.longitude.trim(), manualLatitude = urgentForm.latitude.trim();
@@ -1453,8 +1515,10 @@ export default function Dashboard() {
       try { coordinates = await new BackendGeocodingProvider("nominatim").geocode(urgentForm.address); } catch { /* Keep form open for correction. */ }
       if (!coordinates) { setFormError("Адрес не удалось определить. Уточните его или задайте координаты вручную; заявка пока не добавлена в план."); return; }
     }
-    const nextIndex = baseJobs.length + extraJobs.length + 1;
-    const id = String(nextIndex).padStart(4, "0");
+    const reservedIds=[...baseJobs,...extraJobs,...(generatedTz?.events.flatMap(event=>event.job ? [event.job] : []) ?? [])].map(job=>job.id);
+    let nextIndex=Math.max(0,...reservedIds.map(Number).filter(Number.isFinite))+1;
+    while(reservedIds.includes(String(nextIndex).padStart(4,"0"))) nextIndex++;
+    const id=String(nextIndex).padStart(4,"0");
     const emergency = selectedUrgentSkill === "Аварийно-восстановительные работы" || selectedUrgentSkill === "Аварийные работы";
     const connection = selectedUrgentSkill === "Подключение и модернизация" || selectedUrgentSkill === "Работы на подключение и дозаказы";
     const serviceMinutes = emergency ? 80 : connection ? 60 : 30;
@@ -1471,21 +1535,23 @@ export default function Dashboard() {
       normSource: emergency ? "экспертный норматив" : "демонстрационное допущение", urgency: urgentForm.urgency,
       workClass: emergency ? "emergency" : connection ? "connection" : "repair",
       source: "Форма диспетчера", status: "Новая", executionStatus: "not_started" };
-    const nextExtras = [...extraJobs, job];
-    if (applied && planResult) {
-      const jobs = [...planResult.jobs, job];
-      if (!await runTemporalEvent({ type: "new_job", time: eventTime, id }, jobs, unavailableEngineerIds)) return;
+    const current=applied && planResult ? invalidateFutureScenario() : null;
+    const nextExtras=[...(current?.extras ?? extraJobs),job];
+    if (current) {
+      const jobs=[...current.previous.jobs,job];
+      if (!await runTemporalEvent({ type:"new_job",time:eventTime,id },jobs,current.unavailableIds,{ previous:current.previous,previousEventTime:null })) return;
     }
     setExtraJobs(nextExtras); setEditorJobs(current => [...current, job]); setUrgentOpen(false);
     setSelectedJobId(id); setDetailsJobId(id); setUrgentForm(current => ({ ...current, address: "", longitude: "", latitude: "" }));
-  }, [urgentForm, selectedUrgentSkill, eventTimeText, applied, extraJobs, planResult, runTemporalEvent, baseJobs, unavailableEngineerIds, optimizing]);
+  }, [urgentForm, selectedUrgentSkill, simTime, applied, extraJobs, planResult, runTemporalEvent, baseJobs, generatedTz, invalidateFutureScenario, optimizing]);
   const handleImport = useCallback(async (file: File) => {
+    if (optimizing || scheduledLock.current) return;
     setImportStatus(`Читаем ${file.name}…`);
     try {
       const imported = await importPlanFile(file, regionCenters);
       const provider = new BackendGeocodingProvider("nominatim");
       const coordinates = new Map<string, Coordinate>();
-      const missing = [...new Set(imported.jobs.filter(job => !job.geocodeVerified).map(job => job.address))];
+      const missing = [...new Set([...imported.jobs,...(imported.events?.flatMap(event=>event.job ? [event.job] : []) ?? [])].filter(job => !job.geocodeVerified).map(job => job.address))];
       for (let index = 0; index < missing.length; index++) {
         const address = missing[index];
         setImportStatus(`Геокодирование ${index + 1}/${missing.length}: ${address}`);
@@ -1493,67 +1559,72 @@ export default function Dashboard() {
         if (index + 1 < missing.length) await new Promise(resolve => window.setTimeout(resolve, 1100));
       }
       const jobs = imported.jobs.map(job => coordinates.has(job.address) ? { ...job, coordinates: coordinates.get(job.address)!, geocodeVerified: true, geocodeQuality: "street" as const } : job);
+      const events=imported.events?.map(event=>event.job && coordinates.has(event.job.address) ? {...event,job:{...event.job,coordinates:coordinates.get(event.job.address)!,geocodeVerified:true,geocodeQuality:"street" as const}} : event);
+      if (events && !jobs.length && !imported.engineers?.length) {
+        if (started && events.some(event=>parseTime(event.time)<Math.floor(simTime))) { setImportStatus("Ошибка: события раньше времени просмотра. Сначала переместите шкалу до их появления."); return; }
+        if (started) invalidateFutureScenario();
+        setGeneratedTz(current=>({...current!,jobs:current?.jobs ?? baseJobs,engineers:current?.engineers ?? baseEngineers,events,speedKmh:draft.speedKmh,stats:current?.stats ?? {totalJobs:baseJobs.length,totalEngineers:baseEngineers.length,jobsBySkill:{},jobsByEquipment:{},engineersByLevel:{},engineersByVehicle:{},engineersBySkill:{},urgentJobsCount:0,constrainedTransportJobsCount:0}}));
+        setImportStatus(`${file.name}: загружено ${events.length} событий.`); return;
+      }
       const verified = jobs.filter(job => job.geocodeVerified).length;
       if (jobs.length) setImportedJobs(jobs);
       const importedCrew = imported.engineers?.length ? issueDailyEquipment(imported.engineers, jobs.length ? jobs : baseJobs) : undefined;
       if (importedCrew?.length) setImportedEngineers(importedCrew);
       if (jobs.length) setEditorJobs(jobs);
       if (importedCrew?.length) setEditorEngineers(importedCrew);
+      replaceNotifications([]); setEventDraft(null);
       setIssuedEngineers(null);
-      setCancellationNotices([]); setDispatchNotice(""); workdayStarted.current = false; setSimTime(480); setEventTimeText("08:00"); setSimPlaying(false);
+      setCancellationNotices([]); setDispatchNotice(""); workdayStarted.current = false; setDayStarted(false); setSimTime(480); setSimPlaying(false);
       setEditorUnavailableIds([]); setEditorDirty(false); setEditorError("");
-      setGeneratedTz(null);
+      setGeneratedTz(events ? {jobs,engineers:importedCrew ?? baseEngineers,events,speedKmh:imported.speedKmh ?? draft.speedKmh,stats:{totalJobs:jobs.length,totalEngineers:(importedCrew ?? baseEngineers).length,jobsBySkill:{},jobsByEquipment:{},engineersByLevel:{},engineersByVehicle:{},engineersBySkill:{},urgentJobsCount:0,constrainedTransportJobsCount:0}} : null);
       setGenerated(null); setGeneratedFrom(null);
       if (jobs.length) { setExtraJobs([]); setCancelledJobIds([]); setUnavailableEngineerIds([]); setAbsenceReasons({}); setAbsenceMoments({}); setAvailabilityChanges([]); setAbsenceNotices([]); setPlanHistory([]); setEngineerPersonaId(null); }
-      setApplied(null); setPlanResult(null); setLastEventTime(null); setTravel(undefined); setMatrixFallback(false); setReplanChanges([]); setSelectedJobId(null); setSelectedEngineerId(null); setRegion("Все зоны");
+      setApplied(null); setPlanResult(null); setEventOutcomes({}); setLastEventTime(null); setTravel(undefined); setMatrixFallback(false); setReplanChanges([]); setSelectedJobId(null); setSelectedEngineerId(null); setRegion("Все зоны");
       setDraft(current => ({ ...current, jobs: jobs.length || current.jobs, engineers: imported.engineers?.length || current.engineers, speedKmh: imported.speedKmh ?? current.speedKmh }));
       setImportStatus(`${file.name}: ${jobs.length ? `${jobs.length} заявок, координаты подтверждены ${verified}/${jobs.length}` : `${imported.engineers?.length ?? 0} инженеров`}${imported.warnings.length ? "; " + imported.warnings[0] : ""}.`);
     } catch (error) {
       setImportStatus(error instanceof Error ? `Ошибка: ${error.message}` : "Не удалось импортировать файл");
     }
-  }, [baseJobs]);
-  const toggleEngineerAvailability = useCallback(async (id: string) => {
-    if (optimizing) return;
-    const becomingUnavailable = !unavailableEngineerIds.includes(id);
-    const next = becomingUnavailable ? [...unavailableEngineerIds, id] : unavailableEngineerIds.filter(item => item !== id);
-    const time = parseTime(eventTimeText);
-    if (!Number.isFinite(time)) { setSolverError("Укажите корректное время события"); return; }
-    if (applied && planResult) {
-      const jobs = planResult.jobs;
-      if (!await runTemporalEvent({ type: "engineer_unavailable", time, id }, jobs, next)) return;
-      setAvailabilityChanges(current => [...current, { engineerId: id, time, unavailable: becomingUnavailable }]);
+  }, [baseJobs,baseEngineers,draft.speedKmh,started,simTime,invalidateFutureScenario,optimizing,replaceNotifications]);
+  const toggleEngineerAvailability = useCallback(async (id:string) => {
+    if (optimizing || scheduledLock.current) return;
+    const time=Math.floor(simTime), engineer=activeEngineers.find(item=>item.id===id);
+    if (!engineer) return;
+    const current=started ? invalidateFutureScenario() : null;
+    const ids=current?.unavailableIds ?? unavailableEngineerIds;
+    const becomingUnavailable=!ids.includes(id);
+    const next=becomingUnavailable ? [...ids,id] : ids.filter(item=>item!==id);
+    const previous=current?.previous;
+    const moment=previous ? engineerAbsenceMoment(previous,engineer,time) : null;
+    if (previous) {
+      if (!await runTemporalEvent({ type:"engineer_unavailable",time,id },previous.jobs,next,{ previous,previousEventTime:null })) return;
+      setAvailabilityChanges(changes=>[...changes,{ engineerId:id,time:becomingUnavailable ? moment!.effectiveAt : time,unavailable:becomingUnavailable }]);
     }
     if (becomingUnavailable) {
-      const engineer = activeEngineers.find(item => item.id === id);
-      const moment = engineer && planResult ? engineerAbsenceMoment(planResult, engineer, time) : null;
-      appendNotifications([{ kind: "left", time, title: `${engineer?.name ?? id}: исключён из смены`, message: moment?.phase === "service" ? `Завершит №${moment.currentJobId} к ${minutesLabel(moment.effectiveAt)}, затем выйдет. Будущие заявки проверены для переназначения.` : "Будущие заявки проверены для передачи другим инженерам.", engineerIds: [id] }]);
-    }
-    setUnavailableEngineerIds(next); setEditorUnavailableIds(next); setSelectedEngineerDetailsId(null);
-    setAbsenceReasons(current => { const updated = { ...current }; delete updated[id]; return updated; });
-    setAbsenceMoments(current => { const updated = { ...current }; delete updated[id]; return updated; });
-    setAbsenceNotices(current => current.filter(item => item.engineerId !== id));
-  }, [unavailableEngineerIds, applied, planResult, runTemporalEvent, eventTimeText, appendNotifications, activeEngineers, optimizing]);
+      appendNotifications([{ kind:"left",time,title:`${engineer.name}: исключён из смены`,message:moment?.phase==="service" ? `Завершит №${moment.currentJobId} к ${minutesLabel(moment.effectiveAt)}, затем выйдет. Будущие заявки проверены для переназначения.` : "Будущие заявки проверены для передачи другим инженерам.",engineerIds:[id] }]);
+      if (moment) setAbsenceMoments(moments=>({...moments,[id]:moment}));
+    } else setAbsenceMoments(moments=>{ const updated={...moments};delete updated[id];return updated; });
+    setUnavailableEngineerIds(next);setEditorUnavailableIds(next);setSelectedEngineerDetailsId(null);
+    setAbsenceReasons(reasons=>{const updated={...reasons};delete updated[id];return updated;});
+    setAbsenceNotices(notices=>notices.filter(item=>item.engineerId!==id));
+  }, [optimizing,simTime,activeEngineers,started,invalidateFutureScenario,unavailableEngineerIds,runTemporalEvent,appendNotifications]);
   const reportEngineerUnavailable = useCallback(async () => {
     const id = engineerPersonaId;
     const reason = pendingEngineerAction;
-    if (!id || !reason || optimizing || unavailableEngineerIds.includes(id)) return;
+    if (!id || !reason || optimizing || scheduledLock.current || playbackUnavailableIds.includes(id) || (absenceMoments[id]?.reportedAt ?? Infinity)<=simTime) return;
     const engineer = activeEngineers.find(item => item.id === id);
     if (!engineer) return;
     setPendingEngineerAction(null);
     setEngineerActionError("");
     const eventTime = Math.round(simTime);
-    if (lastEventTime != null && eventTime < lastEventTime) {
-      setEngineerActionError(`Для нового события установите время не раньше ${minutesLabel(lastEventTime)}. Просмотр прошлого не изменяет уже записанные события.`);
-      return;
-    }
-    const next = [...unavailableEngineerIds, id];
+    const current=started ? invalidateFutureScenario() : null;
+    const next=[...(current?.unavailableIds ?? unavailableEngineerIds),id];
     let impact: AbsenceImpact = { reassigned: [], unassigned: [], preserved: [] };
     let moment: AbsenceMoment = { reportedAt: eventTime, effectiveAt: eventTime, phase: "idle", currentJobId: null, completedBefore: 0 };
     if (applied && planResult) {
-      const jobs = planResult.jobs;
-      const previous = planResult;
-      moment = engineerAbsenceMoment(previous, engineer, eventTime);
-      const updated = await runTemporalEvent({ type: "engineer_unavailable", time: eventTime, id }, jobs, next);
+      const previous=current!.previous;
+      moment=engineerAbsenceMoment(previous,engineer,eventTime);
+      const updated=await runTemporalEvent({ type:"engineer_unavailable",time:eventTime,id },previous.jobs,next,{ previous,previousEventTime:null });
       if (!updated) { setEngineerActionError("Перепланирование не выполнено. Проверьте сообщение об ошибке у диспетчера и повторите действие."); return; }
       impact = absenceImpact(previous, updated, id, eventTime, activeEngineers);
     }
@@ -1565,15 +1636,14 @@ export default function Dashboard() {
     setAbsenceNotices(current => [...current, { engineerId: id, engineerName: engineer.name, reason, impact, moment }]);
     appendNotifications([{ kind: reason, time: moment.reportedAt, title: `${engineer.name}: ${reason === "emergency" ? "ЧС" : "выход из смены"}`, message: `${moment.phase === "service" ? `Завершит №${moment.currentJobId} к ${minutesLabel(moment.effectiveAt)}, затем выйдет из смены.` : `Вне смены с ${minutesLabel(moment.effectiveAt)}.`} Передано другим инженерам: ${impact.reassigned.length}. ${impact.unassigned.length ? `Нет доступной замены для №${impact.unassigned.join(", №")}.` : "Заявок без доступной замены нет."}`, engineerIds: [id] }]);
     setEngineerSelectedJobId(null);
-  }, [engineerPersonaId, pendingEngineerAction, optimizing, unavailableEngineerIds, activeEngineers, simTime, lastEventTime, applied, planResult, runTemporalEvent, appendNotifications]);
+  }, [engineerPersonaId, pendingEngineerAction, optimizing, unavailableEngineerIds, activeEngineers, simTime, playbackUnavailableIds, absenceMoments, started, invalidateFutureScenario, applied, planResult, runTemporalEvent, appendNotifications]);
   const toggleJobCancelled = useCallback(async (id: string) => {
-    if (optimizing) return;
-    const wasCancelled = Boolean((planResult?.jobs ?? activeJobs).find(job => job.id === id)?.cancelled);
-    const next = cancelledJobIds.includes(id) ? cancelledJobIds.filter(item => item !== id) : [...cancelledJobIds, id];
+    if (optimizing || scheduledLock.current) return;
+    const wasCancelled = Boolean((started ? playbackResult.jobs : activeJobs).find(job=>job.id===id)?.cancelled);
     const time = Math.floor(simTime);
     if (!Number.isFinite(time)) { setDispatchNotice("Укажите корректное время события."); setJobActionNotice("Укажите корректное время события."); return; }
-    const stop = planResult?.routes.flatMap(route => route.stops).find(item => item.jobId === id);
-    if (!wasCancelled && planResult?.jobs.find(item => item.id === id)?.executionStatus === "completed") {
+    const stop=started ? playbackResult.routes.flatMap(route=>route.stops).find(item=>item.jobId===id) : undefined;
+    if (!wasCancelled && playbackResult.jobs.find(item=>item.id===id)?.executionStatus === "completed") {
       const message = `Заявка №${id} уже отмечена выполненной. Отменить её нельзя.`;
       setDispatchNotice(message); setJobActionNotice(message); return;
     }
@@ -1582,9 +1652,12 @@ export default function Dashboard() {
       setDispatchNotice(message); setJobActionNotice(message);
       return;
     }
-    if (applied && planResult) {
-      const jobs = planResult.jobs.map(job => job.id === id ? { ...job, cancelled: !wasCancelled, executionStatus: "not_started" as const } : job);
-      if (!await runTemporalEvent({ type: wasCancelled ? "new_job" : "cancel_job", time, id }, jobs, unavailableEngineerIds)) return;
+    const current=started ? invalidateFutureScenario() : null;
+    const flags=current?.flags ?? cancelledJobIds;
+    const next=flags.includes(id) ? flags.filter(item=>item!==id) : [...flags,id];
+    if (applied && current) {
+      const jobs=current.previous.jobs.map(job=>job.id===id ? {...job,cancelled:!wasCancelled,executionStatus:"not_started" as const} : job);
+      if (!await runTemporalEvent({type:wasCancelled ? "new_job" : "cancel_job",time,id},jobs,current.unavailableIds,{previous:current.previous,previousEventTime:null})) return;
       if (wasCancelled) setDispatchNotice(`Заявка №${id} восстановлена в ${minutesLabel(time)} и проверена для включения в оставшийся план.`);
     }
     appendNotifications(wasCancelled ? [{ kind: "restored", time, title: `Заявка №${id} восстановлена`, message: "Заявка возвращена для включения в план." }] : !applied || !planResult ? [{ kind: "cancelled", time, title: `Заявка №${id} отменена`, message: "Заявка исключена до построения плана." }] : []);
@@ -1592,35 +1665,37 @@ export default function Dashboard() {
     setCancelledJobIds(next);
     setEditorJobs(current => current.map(job => job.id === id ? { ...job, cancelled: !wasCancelled } : job));
     setDetailsJobId(null);
-  }, [cancelledJobIds, applied, planResult, activeJobs, unavailableEngineerIds, runTemporalEvent, simTime, optimizing, appendNotifications]);
+  }, [cancelledJobIds, applied, planResult, activeJobs, playbackResult, started, invalidateFutureScenario, runTemporalEvent, simTime, optimizing, appendNotifications]);
   const titles = { plan: ["План работ", ""], generator: ["Генератор", ""], requests: ["Заявки", ""], team: ["Инженеры", ""], analytics: ["Аналитика", ""], editor: ["Редактор данных", ""], about: ["О решении", ""], engineer: ["Моя смена", ""] } as const; const distanceDataReady = baseJobs.every(job => job.geocodeVerified === true) && (applied?.jobs ?? 0) <= baseJobs.length && (applied?.engineers ?? 0) <= baseEngineers.length && extraJobs.every(job => job.geocodeVerified === true) && !matrixFallback; const distanceReady = started && result.comparison.commonAssigned > 0 && result.comparison.distanceDeltaPercent != null && distanceDataReady; const distanceWarning = !started ? "" : !distanceDataReady ? ((applied?.jobs ?? 0) > baseJobs.length || (applied?.engineers ?? 0) > baseEngineers.length ? "Синтетические точки не геокодированы." : baseJobs.some(job => job.geocodeVerified !== true) ? "Часть адресов не геокодирована." : extraJobs.some(job => job.geocodeVerified !== true) ? "Координаты новой заявки требуют подтверждения." : activeEngineers.some(engineer => engineer.transport === "Общественный транспорт") ? "Для общественного транспорта расписание рассчитывается оценочно." : "Использовано приближённое расстояние.") : "";
   const routingLabel = optimizing || routingState === "loading" ? "Строим маршруты" : matrixFallback ? "Матрица оценочная" : routingState === "ready" ? "Дорожный граф подключён" : routingState === "idle" ? "Ожидание запуска" : "Часть дорог недоступна";
   const unservedElevated = started && !optimizing ? result.jobs.filter(job => jobPriorityLevel(job) === 2 && !job.cancelled && job.executionStatus !== "completed" && !job.engineerId) : [];
-  const metricCards = <section className="metric-grid"><article><div className="metric-head"><span className="metric-icon purple"><Wrench /></span><small>Назначено заявок</small><Badge className="metric-badge">{started ? `${result.metrics.unassigned} без маршрута` : "ожидание"}</Badge></div><strong>{result.metrics.assigned}<em>/ {result.metrics.total}</em></strong><p>Покрытие {result.metrics.total ? (result.metrics.assigned / result.metrics.total * 100).toFixed(1).replace(".", ",") : "0"}% · базовый {result.baseline.assigned}</p></article><article><div className="metric-head"><span className="metric-icon teal"><Route /></span><small>Пробег</small><Badge className="metric-badge good">{distanceReady && result.comparison.distanceDeltaPercent != null ? `${result.comparison.distanceDeltaPercent < 0 ? "−" : "+"}${Math.abs(result.comparison.distanceDeltaPercent).toFixed(1).replace(".", ",")}%` : "расчёт"}</Badge></div><strong>{result.metrics.distanceKm.toFixed(1).replace(".", ",")}<em> км</em></strong><p>базовый: {formatDistance(result.baseline.distanceKm)}</p></article><article><div className="metric-head"><span className="metric-icon orange"><UsersRound /></span><small>Активные инженеры</small><Badge className="metric-badge">{started ? "активно" : "ожидание"}</Badge></div><strong>{result.baseline.activeEngineers}<em> → {result.metrics.activeEngineers}</em></strong><p>из {availableEngineers.length} доступных · {unavailableEngineerIds.length} вне смены</p></article><article><div className="metric-head"><span className="metric-icon blue"><Database /></span><small>Геокодирование</small><Badge className="metric-badge">{regions.length} зоны</Badge></div><strong>{baseJobs.filter(job => job.geocodeVerified).length}<em>/ {baseJobs.length}</em></strong><p>дом: {baseJobs.filter(job => job.geocodeQuality === "house").length} · улица: {baseJobs.filter(job => job.geocodeQuality === "street").length}</p></article></section>;
+  const metricCards = <section className="metric-grid"><article><div className="metric-head"><span className="metric-icon purple"><Wrench /></span><small>Назначено заявок</small><Badge className="metric-badge">{started ? `${result.metrics.unassigned} без маршрута` : "ожидание"}</Badge></div><strong>{result.metrics.assigned}<em>/ {result.metrics.total}</em></strong><p>Покрытие {result.metrics.total ? (result.metrics.assigned / result.metrics.total * 100).toFixed(1).replace(".", ",") : "0"}% · базовый {result.baseline.assigned}</p></article><article><div className="metric-head"><span className="metric-icon teal"><Route /></span><small>Пробег</small><Badge className="metric-badge good">{distanceReady && result.comparison.distanceDeltaPercent != null ? `${result.comparison.distanceDeltaPercent < 0 ? "−" : "+"}${Math.abs(result.comparison.distanceDeltaPercent).toFixed(1).replace(".", ",")}%` : "расчёт"}</Badge></div><strong>{result.metrics.distanceKm.toFixed(1).replace(".", ",")}<em> км</em></strong><p>базовый: {formatDistance(result.baseline.distanceKm)}</p></article><article><div className="metric-head"><span className="metric-icon orange"><UsersRound /></span><small>Активные инженеры</small><Badge className="metric-badge">{started ? "активно" : "ожидание"}</Badge></div><strong>{result.baseline.activeEngineers}<em> → {result.metrics.activeEngineers}</em></strong><p>из {activeEngineers.length-playbackUnavailableIds.length} доступных · {playbackUnavailableIds.length} вне смены</p></article><article><div className="metric-head"><span className="metric-icon blue"><Database /></span><small>Геокодирование</small><Badge className="metric-badge">{regions.length} зоны</Badge></div><strong>{baseJobs.filter(job => job.geocodeVerified).length}<em>/ {baseJobs.length}</em></strong><p>дом: {baseJobs.filter(job => job.geocodeQuality === "house").length} · улица: {baseJobs.filter(job => job.geocodeQuality === "street").length}</p></article></section>;
+  const visibleJournalEntries=journalEntries.filter(entry=>!started || entry.time<=simTime);
+  const visibleReplanChanges=lastEventTime!==null && simTime<lastEventTime ? [] : replanChanges;
+  const busy=optimizing || scheduledProcessing;
+  if (!workspaceReady) return <main className="workspace-restoring" role="status">Восстанавливаем сохранённый сценарий…</main>;
   return <main className="app-shell">{mobileNavOpen && <button className="mobile-nav-backdrop" aria-label="Закрыть меню" onClick={() => setMobileNavOpen(false)} />}
     <aside className={`sidebar${mobileNavOpen ? " mobile-open" : ""}`}>
       <div className="sidebar-brand-row"><Logo /><button className="mobile-nav-close" aria-label="Закрыть меню" onClick={() => setMobileNavOpen(false)}><X /></button></div>
       {view === "engineer" ? <nav aria-label="Навигация инженера"><button className="nav-item active" onClick={() => navigate("engineer")}><Route /><span>Моя смена</span></button></nav> : <nav aria-label="Основная навигация"><button className={`nav-item${view === "plan" ? " active" : ""}`} onClick={() => navigate("plan")}><Route /><span>Планирование</span></button><button className={`nav-item${view === "generator" ? " active" : ""}`} onClick={() => navigate("generator")}><Sparkles /><span>Генератор</span></button><button className={`nav-item${view === "requests" ? " active" : ""}`} onClick={() => navigate("requests")}><Wrench /><span>Заявки</span><b>{plannedJobs.length}</b></button><button className={`nav-item${view === "team" ? " active" : ""}`} onClick={() => navigate("team")}><UsersRound /><span>Инженеры</span></button><button className={`nav-item${view === "analytics" ? " active" : ""}`} onClick={() => navigate("analytics")}><BarChart3 /><span>Аналитика</span></button><button className={`nav-item${view === "editor" ? " active" : ""}`} onClick={() => navigate("editor")}><Table2 /><span>Редактор данных</span>{editorDirty && <b>●</b>}</button><button className={`nav-item${view === "about" ? " active" : ""}`} onClick={() => navigate("about")}><Compass /><span>О решении</span></button></nav>}
       <div className="sidebar-bottom"><button className="nav-item theme-nav" onClick={() => setThemeOpen(open => !open)}><SunMoon /><span>Тема</span></button><button type="button" className="profile profile-switch" aria-label={view === "engineer" ? "Перейти в окно диспетчера" : "Перейти в окно инженера"} onClick={() => { if (view === "engineer") navigate("plan"); else { setEngineerPersonaId(current => current && activeEngineers.some(item => item.id === current) ? current : null); setEngineerSelectedJobId(null); navigate("engineer"); } }}><span>{view === "engineer" ? engineerPersona?.initials ?? "ИН" : "ДК"}</span><div><strong>{view === "engineer" ? engineerPersona?.name ?? "Инженер" : "Диспетчер"}</strong><small>{view === "engineer" ? "Открыть диспетчера" : "Открыть инженера"}</small></div><MoreHorizontal size={17} /></button></div>
-    </aside><section className="workspace" id="plan"><header className="topbar"><button className="mobile-menu" aria-label="Открыть меню" aria-expanded={mobileNavOpen} onClick={() => setMobileNavOpen(true)}><Menu /></button><div><h1>{titles[view][0]}</h1>{titles[view][1] ? <p>{titles[view][1]}</p> : null}</div><div className="top-actions"><button type="button" className="journal-button" aria-label={`Журнал уведомлений: ${journalEntries.length} записей`} onClick={() => setJournalOpen(true)}><Bell size={18} /><span>Уведомления</span>{journalEntries.length > 0 && <b>{journalEntries.length}</b>}</button><button className="theme-button" onClick={() => setThemeOpen(open => !open)}><Contrast /><span>{themes.find(item => item.id === theme)?.name}</span><ChevronDown /></button></div></header>
+    </aside><section className="workspace" id="plan"><header className="topbar"><button className="mobile-menu" aria-label="Открыть меню" aria-expanded={mobileNavOpen} onClick={() => setMobileNavOpen(true)}><Menu /></button><div><h1>{titles[view][0]}</h1>{titles[view][1] ? <p>{titles[view][1]}</p> : null}</div><div className="top-actions"><button type="button" className="journal-button" aria-label={`Журнал уведомлений: ${visibleJournalEntries.length} записей`} onClick={() => setJournalOpen(true)}><Bell size={18} /><span>Уведомления</span>{visibleJournalEntries.length > 0 && <b>{visibleJournalEntries.length}</b>}</button><button className="theme-button" onClick={() => setThemeOpen(open => !open)}><Contrast /><span>{themes.find(item => item.id === theme)?.name}</span><ChevronDown /></button></div></header>
+    {workspaceStorageError && <p role="alert" className="workspace-storage-error">{workspaceStorageError}</p>}
     {themeOpen && <div className="theme-menu" role="menu">{themes.map(item => <button key={item.id} className={theme === item.id ? "active" : ""} onClick={() => { setTheme(item.id); setThemeOpen(false); }}><span className="theme-swatches">{item.colors.map(color => <i key={color} style={{ background: color }} />)}</span><b>{item.name}</b>{theme === item.id && <Check />}</button>)}</div>}
-    {optimizing && <div className="calculation-notice" role="status" aria-live="polite"><LoaderCircle className="loading-spinner" size={18} /><span>Рассчитываем план…</span></div>}
-    {view !== "engineer" && dispatchNotice && <div className="impact-banner engineer-absence-notice" role="alert"><span><AlertTriangle /></span><div><strong>Уведомление диспетчеру</strong><p>{dispatchNotice}</p></div><button type="button" onClick={() => setDispatchNotice("")}>Скрыть</button></div>}
-    {view !== "engineer" && absenceNotices.map(notice => <div key={notice.engineerId} className="impact-banner engineer-absence-notice" role="alert"><span><ShieldAlert /></span><div><strong>{notice.engineerName}: {notice.reason === "emergency" ? "сообщил о ЧС" : "вышел из смены"}</strong><p>Событие в {minutesLabel(notice.moment.reportedAt)} · {notice.moment.phase === "service" ? `завершит №${notice.moment.currentJobId} к ${minutesLabel(notice.moment.effectiveAt)} и выйдет` : `вне смены с ${minutesLabel(notice.moment.effectiveAt)}`} · выполнено до события: {notice.moment.completedBefore}.</p><p>Передано другим инженерам: {notice.impact.reassigned.length}{notice.impact.reassigned.length ? ` — ${notice.impact.reassigned.slice(0, 5).map(item => `№${item.jobId} → ${item.engineerName}`).join("; ")}` : ""}.</p>{notice.impact.reassigned.length > 5 && <details><summary>Показать остальные {notice.impact.reassigned.length - 5} назначений</summary><p>{notice.impact.reassigned.slice(5).map(item => `№${item.jobId} → ${item.engineerName}`).join("; ")}</p></details>}<p>{notice.impact.unassigned.length ? `Нет доступной замены для ${notice.impact.unassigned.map(id => `№${id}`).join(", ")}. Требуется решение диспетчера.` : "Все затронутые будущие задания получили назначение либо уже выполнялись."}</p></div><button type="button" onClick={() => setAbsenceNotices(current => current.filter(item => item.engineerId !== notice.engineerId))}>Скрыть</button></div>)}
-    {view === "engineer" && <EngineerWorkspace engineer={engineerPersona} jobs={playbackResult.jobs} route={engineerPersona ? routeByEngineer.get(engineerPersona.id) : undefined} allEngineers={activeEngineers} unavailableIds={playbackUnavailableIds} absenceReasons={absenceReasons} absenceMoments={absenceMoments} cancellationNotices={cancellationNotices} selectedJobId={engineerSelectedJobId} onSelectEngineer={setEngineerPersonaId} onSelectJob={setEngineerSelectedJobId} onReport={setPendingEngineerAction} reporting={optimizing} error={engineerActionError} simTime={simTime} simEnd={simRange.end} simPlaying={simPlaying} simSpeed={playbackMinutesPerSecond} onSimTime={changeSimulationTime} onSimPlaying={setSimPlaying} onSimSpeed={setPlaybackMinutesPerSecond} speedKmh={applied?.speedKmh ?? draft.speedKmh} onRoutingState={updateRoutingState} />}
-    {view === "plan" && <><div className="filter-row"><div className="region-select">{(["Все зоны", "Восток", "Юго-восток", "Югоцентр"] as const).map(item => <button key={item} className={region === item ? "selected" : ""} onClick={() => { setRegion(item); setSelectedEngineerId(null); setSelectedJobId(null); }}>{item}</button>)}</div><select aria-label="Инженер" className="engineer-quick-select" value={selectedEngineerId ?? ""} onChange={e => { const id = e.target.value; if (id) focusEngineer(id); else setSelectedEngineerId(null); }}><option value="">Все инженеры ({visibleEngineers.length})</option>{visibleEngineers.map(eng => <option key={eng.id} value={eng.id}>{eng.name} ({eng.id})</option>)}</select><div className="plan-state"><span className={routingState === "ready" ? "state-dot" : routingState === "loading" ? "state-dot changed" : routingState === "idle" ? "state-dot idle" : "state-dot risk-dot"} />{routingLabel}{started ? ` · ${solverLabels[solverEngine]}` : ""}</div><div className="plan-run-control"><button className="plan-run-button" disabled={optimizing || routingState === "loading" || !baseJobs.length || !baseEngineers.length} onClick={startPlanning}><span aria-hidden="true">{optimizing ? <LoaderCircle className="loading-spinner" /> : <Play />}</span>{optimizing ? "Рассчитываем план…" : routingState === "loading" ? "Строим дороги…" : started ? "Пересчитать маршруты" : "Построить маршруты"}</button><HelpHint label="Расчёт маршрутов">До начала смены распределяет оборудование и строит план. Во время смены пересчитывает оставшиеся задания на выбранное время события, сохраняя завершённые и начатые работы. Дождитесь окончания расчёта.</HelpHint></div><button disabled={optimizing} className="plain-button" style={{ border: "1px solid var(--border)", padding: "0 10px", borderRadius: "8px", height: "38px" }} onClick={() => setUrgentOpen(true)}><Zap size={14} /> Новая заявка</button>{started && <ExportButtons result={result} engineers={activeEngineers} solver={solverEngine} speedKmh={applied?.speedKmh ?? draft.speedKmh} />}</div>
-      <div className="event-time-row">
-        <label className="event-time-control">Время события <input type="time" disabled={optimizing} min={minutesLabel(FIRST_EVENT_MINUTE)} max={minutesLabel(simRange.end)} value={eventTimeText} onChange={event => changeEventTime(event.target.value)} onInput={event => changeEventTime(event.currentTarget.value)} onBlur={() => { const message = eventTimeError(parseTime(eventTimeText), null, simRange.end); if (message) { setDispatchNotice(message); setEventTimeText(minutesLabel(Math.floor(simTime))); } }} aria-label="Время события" /></label><HelpHint label="Время события">Установите момент новой заявки, отмены, выхода инженера или пересчёта. Поле связано с временем просмотра на карте. Само изменение времени не меняет назначения; событие применяется после действия. Начатые и выполненные работы сохраняются.</HelpHint>
-      </div>
+    {busy && <div className="calculation-notice" role="status" aria-live="polite"><LoaderCircle className="loading-spinner" size={18} /><span>Рассчитываем план…</span></div>}
+    {view !== "engineer" && dispatchNotice && (lastEventTime===null || simTime>=lastEventTime) && <div className="impact-banner engineer-absence-notice" role="alert"><span><AlertTriangle /></span><div><strong>Уведомление диспетчеру</strong><p>{dispatchNotice}</p></div><button type="button" onClick={() => setDispatchNotice("")}>Скрыть</button></div>}
+    {view !== "engineer" && absenceNotices.filter(notice=>notice.moment.reportedAt<=simTime).map(notice => <div key={notice.engineerId} className="impact-banner engineer-absence-notice" role="alert"><span><ShieldAlert /></span><div><strong>{notice.engineerName}: {notice.reason === "emergency" ? "сообщил о ЧС" : "вышел из смены"}</strong><p>Событие в {minutesLabel(notice.moment.reportedAt)} · {notice.moment.phase === "service" ? `завершит №${notice.moment.currentJobId} к ${minutesLabel(notice.moment.effectiveAt)} и выйдет` : `вне смены с ${minutesLabel(notice.moment.effectiveAt)}`} · выполнено до события: {notice.moment.completedBefore}.</p><p>Передано другим инженерам: {notice.impact.reassigned.length}{notice.impact.reassigned.length ? ` — ${notice.impact.reassigned.slice(0, 5).map(item => `№${item.jobId} → ${item.engineerName}`).join("; ")}` : ""}.</p>{notice.impact.reassigned.length > 5 && <details><summary>Показать остальные {notice.impact.reassigned.length - 5} назначений</summary><p>{notice.impact.reassigned.slice(5).map(item => `№${item.jobId} → ${item.engineerName}`).join("; ")}</p></details>}<p>{notice.impact.unassigned.length ? `Нет доступной замены для ${notice.impact.unassigned.map(id => `№${id}`).join(", ")}. Требуется решение диспетчера.` : "Все затронутые будущие задания получили назначение либо уже выполнялись."}</p></div><button type="button" onClick={() => setAbsenceNotices(current => current.filter(item => item.engineerId !== notice.engineerId))}>Скрыть</button></div>)}
+    {view === "engineer" && <EngineerWorkspace engineer={engineerPersona} jobs={playbackResult.jobs} route={engineerPersona ? routeByEngineer.get(engineerPersona.id) : undefined} allEngineers={activeEngineers} unavailableIds={playbackUnavailableIds} absenceReasons={absenceReasons} absenceMoments={absenceMoments} cancellationNotices={cancellationNotices} selectedJobId={engineerSelectedJobId} onSelectEngineer={setEngineerPersonaId} onSelectJob={setEngineerSelectedJobId} onReport={setPendingEngineerAction} reporting={busy} error={engineerActionError} simTime={simTime} simEnd={simRange.end} simPlaying={simPlaying} simSpeed={playbackMinutesPerSecond} onSimTime={changeSimulationTime} onSimPlaying={setSimPlaying} onSimSpeed={setPlaybackMinutesPerSecond} speedKmh={applied?.speedKmh ?? draft.speedKmh} onRoutingState={updateRoutingState} />}
+    {view === "plan" && <><div className="filter-row"><div className="region-select">{(["Все зоны", "Восток", "Юго-восток", "Югоцентр"] as const).map(item => <button key={item} className={region === item ? "selected" : ""} onClick={() => { setRegion(item); setSelectedEngineerId(null); setSelectedJobId(null); }}>{item}</button>)}</div><select aria-label="Инженер" className="engineer-quick-select" value={selectedEngineerId ?? ""} onChange={e => { const id = e.target.value; if (id) focusEngineer(id); else setSelectedEngineerId(null); }}><option value="">Все инженеры ({visibleEngineers.length})</option>{visibleEngineers.map(eng => <option key={eng.id} value={eng.id}>{eng.name} ({eng.id})</option>)}</select><div className="plan-state"><span className={routingState === "ready" ? "state-dot" : routingState === "loading" ? "state-dot changed" : routingState === "idle" ? "state-dot idle" : "state-dot risk-dot"} />{routingLabel}{started ? ` · ${solverLabels[solverEngine]}` : ""}</div><div className="plan-run-control"><button className="plan-run-button" disabled={busy || routingState === "loading" || !baseJobs.length || !baseEngineers.length} onClick={startPlanning}><span aria-hidden="true">{busy ? <LoaderCircle className="loading-spinner" /> : <Play />}</span>{busy ? "Рассчитываем план…" : routingState === "loading" ? "Строим дороги…" : started ? "Пересчитать маршруты" : "Построить маршруты"}</button><HelpHint label="Расчёт маршрутов">До начала смены распределяет оборудование и строит план. Во время смены пересчитывает оставшиеся задания на текущее время просмотра, сохраняя завершённые и начатые работы. Дождитесь окончания расчёта.</HelpHint></div><button disabled={busy} className="plain-button" style={{ border: "1px solid var(--border)", padding: "0 10px", borderRadius: "8px", height: "38px" }} onClick={() => setUrgentOpen(true)}><Zap size={14} /> Новая заявка</button>{started && <ExportButtons result={result} engineers={activeEngineers} solver={solverEngine} speedKmh={applied?.speedKmh ?? draft.speedKmh} />}</div>
       {!baseJobs.length && !baseEngineers.length && <div className="impact-banner"><span><Database /></span><div><strong>Набора данных нет</strong><p>Сгенерируйте заявки во вкладке «Генератор» или загрузите CSV / JSON. Новый набор полностью заменяет предыдущий.</p></div><button onClick={() => navigate("generator")}>Открыть генератор</button></div>}
 
       {solverError && <div className="impact-banner error-banner"><span><AlertTriangle /></span><div><strong>Не удалось выполнить действие</strong><p>{solverError}</p></div><button onClick={() => setSolverError("")}>Скрыть</button></div>}
       {unservedElevated.length > 0 && <div className="impact-banner error-banner" role="alert"><span><AlertTriangle /></span><div><strong>Повышенный приоритет: {unservedElevated.length} заявок без назначения</strong><p>№ {unservedElevated.slice(0, 8).map(job => job.id).join(", № ")}{unservedElevated.length > 8 ? "…" : ""}. Проверьте окна, инженеров и ресурсы в карточках; найденный план не выполнил все повышенные работы.</p></div></div>}
-      {replanned && started && !solverError && <div className="impact-banner"><span><Sparkles /></span><div><strong>{lastCalculationMethod === "cancel_local" ? "Заявка отменена у назначенного инженера" : lastCalculationMethod === "no_change" ? "Отмена без изменения маршрутов" : lastCalculationMethod === "insert" ? "Обычная заявка проверена для вставки в свободный интервал" : `OR-Tools VRPTW рассчитан за ${result.runtimeMs} мс`}</strong><p>{lastCalculationMethod === "cancel_local" ? "Инженер уведомлён; для него проверена подходящая замена. Расписание других инженеров сохранено." : lastCalculationMethod === "no_change" ? "Отменённая заявка не была назначена; повторная оптимизация не потребовалась." : lastCalculationMethod === "insert" ? "Прошедшие и согласованные работы не перестраивались; серверный solver для этой вставки не запускался." : `Назначено ${result.metrics.assigned} из ${result.metrics.total}; движок подтверждён ответом сервера.`}</p></div><button onClick={() => setReplanned(false)}>Скрыть уведомление</button></div>}
-      {showReplanSummary && replanChanges.length > 0 && <section className="panel replan-compact" aria-label="Кратко об изменениях после перепланирования"><div><strong>Что изменилось после перепланирования</strong><p>{replanChanges.length} {changeWord(replanChanges.length)} · вынужденных событием: {replanChanges.filter(change => change.necessity === "required").length}. Подробности во вкладке «Аналитика».</p></div><button type="button" className="plain-button" onClick={() => navigate("analytics")}>Открыть аналитику</button><button type="button" className="plain-button" onClick={() => setShowReplanSummary(false)}>Скрыть</button></section>}
+      {replanned && started && !solverError && (lastEventTime===null || simTime>=lastEventTime) && <div className="impact-banner"><span><Sparkles /></span><div><strong>{lastCalculationMethod === "cancel_local" ? "Заявка отменена у назначенного инженера" : lastCalculationMethod === "no_change" ? "Отмена без изменения маршрутов" : lastCalculationMethod === "insert" ? "Обычная заявка проверена для вставки в свободный интервал" : `OR-Tools VRPTW рассчитан за ${result.runtimeMs} мс`}</strong><p>{lastCalculationMethod === "cancel_local" ? "Инженер уведомлён; для него проверена подходящая замена. Расписание других инженеров сохранено." : lastCalculationMethod === "no_change" ? "Отменённая заявка не была назначена; повторная оптимизация не потребовалась." : lastCalculationMethod === "insert" ? "Прошедшие и согласованные работы не перестраивались; серверный solver для этой вставки не запускался." : `Назначено ${result.metrics.assigned} из ${result.metrics.total}; движок подтверждён ответом сервера.`}</p></div><button onClick={() => setReplanned(false)}>Скрыть уведомление</button></div>}
+      {showReplanSummary && visibleReplanChanges.length > 0 && <section className="panel replan-compact" aria-label="Кратко об изменениях после перепланирования"><div><strong>Что изменилось после перепланирования</strong><p>{replanChanges.length} {changeWord(replanChanges.length)} · вынужденных событием: {replanChanges.filter(change => change.necessity === "required").length}. Подробности во вкладке «Аналитика».</p></div><button type="button" className="plain-button" onClick={() => navigate("analytics")}>Открыть аналитику</button><button type="button" className="plain-button" onClick={() => setShowReplanSummary(false)}>Скрыть</button></section>}
       <section className="content-grid assignment-layout">
-        <article className="panel map-panel"><div className="panel-header"><div><h2>Карта маршрутов</h2><p>{visibleEngineers.length} инж. · {mapJobs.length} заявок · {region}{simulationOn ? ` · ${minutesLabel(simTime)}` : ""}</p></div></div><div className="map-stage"><MapCanvas visibleJobs={mapJobs} baselineJobs={mapJobs} engineers={activeEngineers} selectedEngineerId={selectedEngineerId} selectedJobId={selectedJobId} simTime={simulationOn ? simTime : null} simPlaying={simPlaying} simSpeed={playbackMinutesPerSecond} carSpeedKmh={applied?.speedKmh ?? draft.speedKmh} simEnd={simRange.end} onSimTime={changeSimulationTime} onSimPlaying={setSimPlaying} compare={compare} routingEnabled={started && Boolean(planResult)} routes={playbackResult.routes} baselineRoutes={visibleBaselineRoutes} onSelectEngineer={selectEngineer} onSelectJob={selectJob} onInspectJob={inspectJob} onRoutingState={updateRoutingState} />{simulationOn && <TimeDrum start={simRange.start} end={simRange.end} time={simTime} playing={simPlaying} speed={playbackMinutesPerSecond} onTime={changeSimulationTime} onPlaying={setSimPlaying} onSpeed={setPlaybackMinutesPerSecond} disabled={optimizing} />}</div></article>
-        <article className="panel routes-panel"><div className="panel-header"><div><h2>Заявки</h2></div></div><AssignmentBoard jobs={visibleJobs} engineers={activeEngineers} routes={playbackResult.routes} selectedJobId={selectedJobId} selectedEngineerId={selectedEngineerId} started={started} loading={optimizing} filtersActive={region !== "Все зоны" || selectedEngineerId !== null} resetVersion={filterResetVersion} onResetFilters={() => { setRegion("Все зоны"); setSelectedEngineerId(null); setSelectedJobId(null); setDetailsJobId(null); setFilterResetVersion(value => value + 1); }} onSelectJob={selectJob} onSelectEngineer={focusEngineer} onShowAll={() => { setSelectedEngineerId(null); setSelectedJobId(null); setDetailsJobId(null); }} /></article>
+        <article className="panel map-panel"><div className="panel-header"><div><h2>Карта маршрутов</h2><p>{visibleEngineers.length} инж. · {mapJobs.length} заявок · {region}{simulationOn ? ` · ${minutesLabel(simTime)}` : ""}</p></div></div><div className="map-stage"><MapCanvas visibleJobs={mapJobs} baselineJobs={mapJobs} engineers={activeEngineers} selectedEngineerId={selectedEngineerId} selectedJobId={selectedJobId} simTime={simulationOn ? simTime : null} simPlaying={simPlaying} simSpeed={playbackMinutesPerSecond} carSpeedKmh={applied?.speedKmh ?? draft.speedKmh} simEnd={simRange.end} onSimTime={changeSimulationTime} onSimPlaying={setSimPlaying} compare={compare} routingEnabled={started && Boolean(planResult)} routes={playbackResult.routes} baselineRoutes={visibleBaselineRoutes} onSelectEngineer={selectEngineer} onSelectJob={selectJob} onInspectJob={inspectJob} onRoutingState={updateRoutingState} />{simulationOn && <TimeDrum start={simRange.start} end={simRange.end} time={simTime} playing={simPlaying} speed={playbackMinutesPerSecond} onTime={changeSimulationTime} onPlaying={setSimPlaying} onSpeed={setPlaybackMinutesPerSecond} disabled={busy} />}</div></article>
+        <article className="panel routes-panel"><div className="panel-header"><div><h2>Заявки</h2></div></div><AssignmentBoard jobs={visibleJobs} engineers={activeEngineers} routes={playbackResult.routes} selectedJobId={selectedJobId} selectedEngineerId={selectedEngineerId} started={started} loading={busy} filtersActive={region !== "Все зоны" || selectedEngineerId !== null} resetVersion={filterResetVersion} onResetFilters={() => { setRegion("Все зоны"); setSelectedEngineerId(null); setSelectedJobId(null); setDetailsJobId(null); setFilterResetVersion(value => value + 1); }} onSelectJob={selectJob} onSelectEngineer={focusEngineer} onShowAll={() => { setSelectedEngineerId(null); setSelectedJobId(null); setDetailsJobId(null); }} /></article>
       </section>
       {focusedEngineer && (
         <EngineerTimeline
@@ -1635,7 +1710,7 @@ export default function Dashboard() {
       <section className="panel queue-panel"><div className="panel-header"><div><h2>Ближайшие заявки</h2></div></div><JobTable started={started} jobs={plannedJobs.filter(job => !job.cancelled && (region === "Все зоны" || job.region === region))} engineers={activeEngineers} onOpen={selectJob} limit={12} /></section></>}
     {view === "requests" && <RequestsView started={started} jobs={plannedJobs} engineers={activeEngineers} onOpen={selectJob} onAdd={() => setUrgentOpen(true)} onImport={file => void handleImport(file)} importStatus={importStatus} />}
     {view === "team" && <EngineersView engineers={activeEngineers} jobs={plannedJobs} result={playbackResult} unavailableIds={playbackUnavailableIds} absenceReasons={absenceReasons} absenceMoments={absenceMoments} simTime={simTime} onOpenDetails={setSelectedEngineerDetailsId} onOpenRoute={openEngineerOnMap} />}
-    {view === "analytics" && <AnalyticsView result={result} engineers={activeEngineers} distanceReady={distanceReady} distanceWarning={distanceWarning} solver={solverEngine} speedKmh={applied?.speedKmh ?? draft.speedKmh} metrics={metricCards} travel={travel} replanChanges={replanChanges} />}
+    {view === "analytics" && <AnalyticsView result={result} engineers={activeEngineers} distanceReady={distanceReady} distanceWarning={distanceWarning} estimated={!distanceDataReady} calculated={started} solver={solverEngine} speedKmh={applied?.speedKmh ?? draft.speedKmh} metrics={metricCards} travel={travel} replanChanges={visibleReplanChanges} />}
     {view === "generator" && (
       <GeneratorView
         draft={draft}
@@ -1644,8 +1719,8 @@ export default function Dashboard() {
         generatedFrom={generatedFrom}
         generatedTz={generatedTz}
         onGenerate={createGenerated}
-        onAddEvent={addGeneratedEvent}
-        onClear={clearDataset}
+        onAddEvent={addGeneratedEvent} onRemoveEvent={removeGeneratedEvent} eventOutcomes={eventOutcomes} simTime={simTime} started={started} busy={optimizing || scheduledProcessing} preferences={generatorPreferences} onPreferences={setGeneratorPreferences} eventDraft={eventDraft} onEventDraft={setEventDraft}
+        onClear={() => setClearOpen(true)}
         onDemo={() => { void handleImport(new File([JSON.stringify(demoScenario)], "demo-scenario.json", { type: "application/json" })); }}
         onPlan={() => {
           navigate("plan");
@@ -1657,8 +1732,9 @@ export default function Dashboard() {
         importedEngineers={importedEngineers}
       />
     )}
-    {view === "editor" && <DataEditor jobs={editorJobs} engineers={editorEngineers} carSpeedKmh={applied?.speedKmh ?? draft.speedKmh} simTime={simulationOn ? simTime : null} stopsByJob={stopByJob} unavailableIds={editorUnavailableIds} dirty={editorDirty} optimizing={optimizing} error={editorError || solverError} onJobs={jobs => { setEditorJobs(jobs); setEditorDirty(true); setEditorError(""); }} onEngineers={engineers => { setEditorEngineers(engineers); setEditorDirty(true); setEditorError(""); }} onUnavailable={ids => { setEditorUnavailableIds(ids); setEditorDirty(true); }} onApply={applyEditedData} onReset={() => { setEditorJobs(activeJobs); setEditorEngineers(activeEngineers); setEditorUnavailableIds(unavailableEngineerIds); setEditorDirty(false); setEditorError(""); }} />}
+    {view === "editor" && <DataEditor jobs={editorJobs} engineers={editorEngineers} carSpeedKmh={applied?.speedKmh ?? draft.speedKmh} simTime={simulationOn ? simTime : null} stopsByJob={stopByJob} unavailableIds={editorUnavailableIds} dirty={editorDirty} optimizing={busy} error={editorError || solverError} onJobs={jobs => { setEditorJobs(jobs); setEditorDirty(true); setEditorError(""); }} onEngineers={engineers => { setEditorEngineers(engineers); setEditorDirty(true); setEditorError(""); }} onUnavailable={ids => { setEditorUnavailableIds(ids); setEditorDirty(true); }} onApply={applyEditedData} onReset={() => { setEditorJobs(activeJobs); setEditorEngineers(activeEngineers); setEditorUnavailableIds(unavailableEngineerIds); setEditorDirty(false); setEditorError(""); }} />}
     {view === "about" && <AboutSolutionView onOpenPlan={() => navigate("plan")} onOpenGenerator={() => navigate("generator")} />}</section>
+  <Dialog open={clearOpen} onOpenChange={setClearOpen}><DialogContent><DialogHeader><DialogTitle>Удалить текущий сценарий?</DialogTitle><DialogDescription>Будут удалены текущие заявки, инженеры, события, рассчитанные маршруты, история перепланирования и несохранённые правки редактора. Это действие нельзя отменить. Затем можно создать или загрузить новый набор.</DialogDescription></DialogHeader><DialogFooter><Button variant="outline" onClick={()=>setClearOpen(false)}>Оставить сценарий</Button><Button variant="destructive" disabled={busy} onClick={()=>{ clearDataset(); setClearOpen(false); }}>Удалить сценарий</Button></DialogFooter></DialogContent></Dialog>
   <Dialog open={pendingEngineerAction !== null} onOpenChange={open => { if (!open) setPendingEngineerAction(null); }}><DialogContent><DialogHeader><DialogTitle>{pendingEngineerAction === "emergency" ? "Сообщить о ЧС?" : "Выйти с работы?"}</DialogTitle><DialogDescription>{engineerPersona?.name}: событие в {minutesLabel(Math.round(simTime))}. Если заявка выполняется, инженер завершит её и затем выйдет. При поездке или ожидании следующая заявка перейдёт в перепланирование. Уже выполненные заявки сохранятся. Если замена не найдётся, диспетчер увидит заявки без назначения.</DialogDescription></DialogHeader><DialogFooter><Button variant="outline" onClick={() => setPendingEngineerAction(null)}>Отмена</Button><Button onClick={() => void reportEngineerUnavailable()}>{pendingEngineerAction === "emergency" ? "Подтвердить ЧС" : "Подтвердить выход"}</Button></DialogFooter></DialogContent></Dialog>
   <Dialog open={urgentOpen} onOpenChange={setUrgentOpen}><DialogContent className="urgent-dialog"><DialogHeader><DialogTitle>Новая заявка</DialogTitle></DialogHeader><div className="urgent-form">
     <label className="wide"><span>Адрес</span><Input value={urgentForm.address} onChange={event => setUrgentForm(value => ({ ...value, address: event.target.value }))} placeholder="Москва, ул. Люблинская, 72" /></label>
@@ -1669,8 +1745,8 @@ export default function Dashboard() {
     <label><span>Начало окна</span><Input type="time" value={urgentForm.start} onChange={event => setUrgentForm(value => ({ ...value, start: event.target.value }))} /></label><label><span>Окончание окна</span><Input type="time" value={urgentForm.end} onChange={event => setUrgentForm(value => ({ ...value, end: event.target.value }))} /></label>
     <label><span>Требуемый транспорт</span><select value={urgentForm.transport} onChange={event => setUrgentForm(value => ({ ...value, transport: event.target.value }))}><option value="">Не ограничен</option><option>Автомобиль</option><option>Общественный транспорт</option><option>Велосипед</option><option>Пешком</option></select></label>
     <label><span>Приоритет</span><select value={urgentForm.urgency} onChange={event => setUrgentForm(value => ({ ...value, urgency: event.target.value as "normal" | "urgent" }))}><option value="urgent">Повышенный</option><option value="normal">Обычный</option></select></label>
-  </div>{formError && <p className="form-error">{formError}</p>}<DialogFooter><Button variant="outline" onClick={() => setUrgentOpen(false)}>Отмена</Button><Button disabled={optimizing} onClick={() => void addUrgent()}><Zap />{started ? "Добавить и пересчитать" : "Добавить заявку"}</Button></DialogFooter></DialogContent></Dialog>
+  </div>{formError && <p className="form-error">{formError}</p>}<DialogFooter><Button variant="outline" onClick={() => setUrgentOpen(false)}>Отмена</Button><Button disabled={busy} onClick={() => void addUrgent()}><Zap />{started ? "Добавить и пересчитать" : "Добавить заявку"}</Button></DialogFooter></DialogContent></Dialog>
 <EngineerDetailsDialog engineer={detailsEngineer} route={detailsEngineer ? routeByEngineer.get(detailsEngineer.id) : undefined} unavailable={Boolean(detailsEngineer && playbackUnavailableIds.includes(detailsEngineer.id) && (!absenceMoments[detailsEngineer.id] || simTime >= absenceMoments[detailsEngineer.id].effectiveAt))} onClose={() => setSelectedEngineerDetailsId(null)} onOpenRoute={openEngineerOnMap} onToggleAvailability={toggleEngineerAvailability} />
-    <NotificationJournal entries={journalEntries} open={journalOpen} onOpenChange={setJournalOpen} storageError={journalStorageError} />
-    <JobDetailsDialog job={detailsJobRaw} executionStatus={detailsJob?.executionStatus} engineer={selectedEngineer} plan={detailsJob?.engineerId ? routeByEngineer.get(detailsJob.engineerId) : undefined} started={started} loading={optimizing} actionNotice={jobActionNotice} onClose={() => { setDetailsJobId(null); setJobActionNotice(""); }} onShowOnMap={id => { const job = result.jobs.find(item => item.id === id); if (job) setRegion(job.region); setSelectedJobId(id); setSelectedEngineerId(job?.engineerId ?? null); setDetailsJobId(null); setView("plan"); }} onToggleCancelled={toggleJobCancelled} /></main>;
+    <NotificationJournal entries={visibleJournalEntries} open={journalOpen} onOpenChange={setJournalOpen} storageError={journalStorageError} />
+    <JobDetailsDialog job={detailsJobRaw} executionStatus={detailsJob?.executionStatus} engineer={selectedEngineer} plan={detailsJob?.engineerId ? routeByEngineer.get(detailsJob.engineerId) : undefined} started={started} loading={busy} actionNotice={jobActionNotice} onClose={() => { setDetailsJobId(null); setJobActionNotice(""); }} onShowOnMap={id => { const job = result.jobs.find(item => item.id === id); if (job) setRegion(job.region); setSelectedJobId(id); setSelectedEngineerId(job?.engineerId ?? null); setDetailsJobId(null); setView("plan"); }} onToggleCancelled={toggleJobCancelled} /></main>;
 }

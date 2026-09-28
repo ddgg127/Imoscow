@@ -29,7 +29,8 @@ export function useNotificationJournal() {
     const added = drafts.map(draft => ({ ...draft, id: crypto.randomUUID(), recordedAt }));
     setEntries(current => [...current, ...added]);
   }, []);
-  return { entries, append, storageError };
+  const replace = useCallback((value:JournalEntry[]) => setEntries(value), []);
+  return { entries, append, replace, storageError };
 }
 
 export function NotificationJournal({ entries, open, onOpenChange, storageError }: { entries: JournalEntry[]; open: boolean; onOpenChange: (open: boolean) => void; storageError: boolean }) {

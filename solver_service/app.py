@@ -49,7 +49,7 @@ class Matrix(BaseModel):
     @model_validator(mode="after")
     def square(self) -> "Matrix":
         size = len(self.points)
-        if size < 2 or any(len(row) != size for row in self.distancesKm) or any(len(row) != size for row in self.durationsMin):
+        if size < 1 or len(self.distancesKm) != size or len(self.durationsMin) != size or any(len(row) != size for row in self.distancesKm) or any(len(row) != size for row in self.durationsMin):
             raise ValueError("matrix must be square and match points")
         values = (value for table in (self.distancesKm, self.durationsMin) for row in table for value in row)
         if any(not math.isfinite(value) or value < 0 for value in values):

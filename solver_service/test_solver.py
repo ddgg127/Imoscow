@@ -41,6 +41,19 @@ def payload(engineers=None, jobs=None, distances=None, durations=None):
     }
 
 
+def test_colocated_jobs_and_engineers_use_single_point_matrix():
+    data = payload()
+    for engineer in data["engineers"]:
+        engineer["start"] = [0, 0]
+    for job in data["jobs"]:
+        job["coordinates"] = [0, 0]
+    data["matrix"] = {"points": [[0, 0]], "distancesKm": [[0]], "durationsMin": [[0]]}
+    response = TestClient(app).post("/solve", json=data)
+    assert response.status_code == 200, response.text
+    assigned = [job for route in response.json()["routes"] for job in route["jobIds"]]
+    assert sorted(assigned) == ["a", "b"]
+
+
 def test_health_and_solve_endpoint():
     client = TestClient(app)
     assert client.get("/health").json() == {"status": "ok", "solver": "ortools"}

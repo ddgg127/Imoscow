@@ -1,8 +1,9 @@
 import type { Coordinate } from "./map-providers";
 import type { Engineer, Job, Region } from "./vrptw";
+import type { TzReplanEvent } from "./generator-files.ts";
 import { TZ_SKILLS, canonicalSkill as mapCanonicalSkill, equipmentFor as defaultEquipment, plannerSkills as mapPlannerSkills } from "./domain.ts";
 
-export type ImportedPlan = { jobs: Job[]; engineers?: Engineer[]; speedKmh?: number; warnings: string[] };
+export type ImportedPlan = { jobs: Job[]; engineers?: Engineer[]; events?: TzReplanEvent[]; speedKmh?: number; warnings: string[] };
 
 const regions: Region[] = ["Восток", "Юго-восток", "Югоцентр"];
 const transports = ["Автомобиль", "Общественный транспорт", "Велосипед", "Пешком", "Служебный вертолёт"];
@@ -138,7 +139,7 @@ function rowsToJobs(rows: Record<string, unknown>[], centers: Record<Region, Coo
     const address = value(row, ["address", "адрес"]);
     if (!address) throw new Error(`Строка ${index + 2}: отсутствует адрес`);
     const rawWork = value(row, ["worktype", "work_type", "тип работы", "тип заявки hd", "тип заявки bk", "kind", "навык", "навыки", "название задачи", "title"]) || "Локальные работы";
-    const kind = canonicalSkill(rawWork);
+    const kind = canonicalSkill(value(row,["kind","требуемый навык"]) || rawWork);
     const start = timeMinutes(value(row, ["windowstart", "window_start", "начало", "окно с", "начало окна"]), 540);
     const end = timeMinutes(value(row, ["windowend", "window_end", "окончание", "окно до", "конец окна"]), Math.max(660, start + 120));
     if (end <= start) throw new Error(`Строка ${index + 2}: окончание окна должно быть позже начала`);
@@ -146,7 +147,7 @@ function rowsToJobs(rows: Record<string, unknown>[], centers: Record<Region, Coo
     const embedded = Array.isArray(row.coordinates) ? row.coordinates.map(Number) : [];
     const lon = Number.isFinite(embedded[0]) ? embedded[0] : numberValue(row, ["lon", "lng", "longitude", "долгота"]);
     const lat = Number.isFinite(embedded[1]) ? embedded[1] : numberValue(row, ["lat", "latitude", "широта"]);
-    const verified = lon != null && lat != null && lon >= 30 && lon <= 50 && lat >= 50 && lat <= 60;
+    const verified = row.geocodeVerified !== false && value(row,["geocodeQuality"]) !== "fallback" && lon != null && lat != null && lon >= 30 && lon <= 50 && lat >= 50 && lat <= 60;
     if (!verified) warnings.push(`№ ${id}: координаты будут геокодированы по адресу`);
     const point: Coordinate = verified ? [lon!, lat!] : centers[region];
     const resolvedRegion = value(row, ["region", "регион", "зона"]) ? region : verified ? regionFromPoint(point, centers) : region;
@@ -208,16 +209,39 @@ function rowsToEngineers(rows: Record<string, unknown>[], centers: Record<Region
   return engineers;
 }
 
+function rowsToEvents(rows:Record<string,unknown>[],centers:Record<Region,Coordinate>):TzReplanEvent[] {
+  const jobId=(raw:string)=>/^\d+$/.test(raw) ? raw.padStart(4,"0") : raw;
+  const events=rows.map((row,index):TzReplanEvent=>{
+    const type=value(row,["type","тип события"]) as TzReplanEvent["type"];
+    const time=value(row,["time","время события","время"]);
+    if (!["отмена заявки","недоступность инженера","срочная заявка"].includes(type) || !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(time) || timeMinutes(time,0)<450 || timeMinutes(time,0)>1320) throw new Error(`Событие ${index+1}: проверьте тип и время с 07:30 до 22:00`);
+    const rawId=value(row,["entityId","jobId","engineerId","id сущности","идентификатор"]);
+    if (type==="срочная заявка") {
+      const embedded=row.job && typeof row.job==="object" ? row.job as Record<string,unknown> : { ...row,id:rawId,kind:value(row,["требуемый навык"]),equipment:value(row,["требуемое оборудование"]),serviceMinutes:value(row,["длительность"]),requiredTransport:value(row,["требуемый транспорт"]) };
+      const job=rowsToJobs([embedded],centers,"Событие генератора").jobs[0];
+      if (Math.max(timeMinutes(time,0),job.windowStart)+job.serviceMinutes>job.windowEnd) throw new Error(`Событие ${index+1}: работы не помещаются в окно после появления заявки`);
+      return { type,time,entityId:job.id,job:{...job,priority:2,urgency:"urgent"} };
+    }
+    if (!rawId) throw new Error(`Событие ${index+1}: отсутствует номер заявки или инженера`);
+    return { type,time,entityId:type==="отмена заявки" ? jobId(rawId) : rawId };
+  });
+  return events.sort((a,b)=>a.time.localeCompare(b.time));
+}
+
 export function importPlanText(text: string, name: string, centers: Record<Region, Coordinate>): ImportedPlan {
   if (name.toLocaleLowerCase().endsWith(".json")) {
     const payload = JSON.parse(text) as unknown;
-    const object: { jobs?: unknown[]; engineers?: unknown[]; speedKmh?: number } = Array.isArray(payload) ? { jobs: payload } : payload as { jobs?: unknown[]; engineers?: unknown[]; speedKmh?: number };
+    const object = (Array.isArray(payload) ? { jobs: payload } : payload) as { jobs?: unknown[]; engineers?: unknown[]; events?:Record<string,unknown>[]; speedKmh?: number };
     if (!Array.isArray(object.jobs)) throw new Error("JSON должен содержать массив jobs или быть массивом заявок");
     const imported = rowsToJobs(object.jobs as Record<string, unknown>[], centers, "Генератор");
-    return { ...imported, engineers: Array.isArray(object.engineers) && object.engineers.length ? rowsToEngineers(object.engineers as Record<string, unknown>[], centers) : undefined, speedKmh: Number.isFinite(object.speedKmh) ? object.speedKmh : undefined };
+    const events=Array.isArray(object.events) ? rowsToEvents(object.events,centers) : undefined;
+    const urgentIds=events?.flatMap(event=>event.job ? [event.job.id] : []) ?? [];
+    if (new Set([...imported.jobs.map(job=>job.id),...urgentIds]).size!==imported.jobs.length+urgentIds.length) throw new Error("Номера срочных и исходных заявок должны быть уникальны");
+    return { ...imported, events, engineers: Array.isArray(object.engineers) && object.engineers.length ? rowsToEngineers(object.engineers as Record<string, unknown>[], centers) : undefined, speedKmh: Number.isFinite(object.speedKmh) ? object.speedKmh : undefined };
   }
   if (!/\.csv$/i.test(name)) throw new Error("Поддерживаются только CSV и JSON");
   const { headers, rows } = parseCsv(text);
+  if (headers.some(header=>keyMatches(header,"тип события"))) return {jobs:[],events:rowsToEvents(rows,centers),warnings:[]};
   if (looksLikeEngineerRows(headers, rows) && !headers.some(header => keyMatches(header, "recordType"))) {
     return { jobs: [], engineers: rowsToEngineers(rows, centers), warnings: ["Загружен список инженеров без заявок. Добавьте CSV или JSON заявок."] };
   }

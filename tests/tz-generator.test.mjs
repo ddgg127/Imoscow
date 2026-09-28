@@ -52,6 +52,7 @@ test("TZ generator creates configurable replan events and extra skills", () => {
     seed: 7,
   });
   assert.equal(data.events.filter(event => event.type === "отмена заявки").length, 2);
+  assert.equal(new Set(data.events.filter(event => event.type === "отмена заявки").map(event => event.entityId)).size, 2);
   assert.equal(data.events.filter(event => event.type === "недоступность инженера").length, 1);
   assert.equal(data.events.filter(event => event.type === "срочная заявка").length, 3);
   assert.equal(new Set(data.events.map(event => event.time)).size, data.events.length);

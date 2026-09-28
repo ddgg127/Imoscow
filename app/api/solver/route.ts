@@ -13,7 +13,7 @@ function validPayload(value: unknown): value is SolverPayload {
     && Number.isFinite(body.speedKmh) && Number(body.speedKmh) >= 5 && Number(body.speedKmh) <= 200
     && (body.forcedAssignments == null || (typeof body.forcedAssignments === "object"
       && Object.entries(body.forcedAssignments).every(([jobId, engineerId]) => Boolean(jobId) && typeof engineerId === "string" && Boolean(engineerId))))
-    && n >= 2 && n <= 1500
+    && n >= 1 && n <= 1500
     && body.matrix!.distancesKm.length === n && body.matrix!.durationsMin.length === n
     && body.matrix!.distancesKm.every(row => Array.isArray(row) && row.length === n)
     && body.matrix!.durationsMin.every(row => Array.isArray(row) && row.length === n);

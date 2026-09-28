@@ -388,6 +388,17 @@ function clampEventCount(value: number | undefined, fallback: number, max: numbe
   return Math.max(0, Math.min(max, Math.round(value)));
 }
 
+function placeUrgentWindow(job:Job,time:string) {
+  const [hour,minute]=time.split(":").map(Number);
+  const appearance=hour*60+minute;
+  const span=job.windowEnd-job.windowStart;
+  job.windowStart=Math.max(appearance,job.windowStart);
+  job.windowEnd=Math.min(1320,job.windowStart+span);
+  if (job.windowStart+job.serviceMinutes>job.windowEnd) throw new Error("Срочная работа не помещается до 22:00.");
+  job.time=`${minutesToHm(job.windowStart)}–${minutesToHm(job.windowEnd)}`;
+  return job;
+}
+
 export function createTzReplanEvent(options: {
   type: TzReplanEvent["type"];
   time: string;
@@ -396,13 +407,27 @@ export function createTzReplanEvent(options: {
   events?: TzReplanEvent[];
   buildings?: BuildingRef[];
   seed?: number;
+  entityId?: string;
+  job?: Job;
 }): TzReplanEvent {
+  if (!/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(options.time)) throw new Error("Некорректное время события.");
+  const [hour,minute]=options.time.split(":").map(Number);
+  const appearance=hour*60+minute;
+  if (appearance<450 || appearance>1320) throw new Error("События доступны с 07:30 до 22:00.");
   const rng = createRng(options.seed ?? 17);
   const jobs = options.jobs;
   const engineers = options.engineers;
   const events = options.events ?? [];
   const buildings = options.buildings ?? catalog.buildings;
   if (options.type === "отмена заявки") {
+    if (options.entityId) {
+      const target=[...jobs, ...events.flatMap(event => event.job ? [event.job] : [])].find(job => job.id === options.entityId);
+      if (!target) throw new Error("Выбранная заявка не найдена.");
+      if (events.some(event => event.type === "отмена заявки" && event.entityId === options.entityId)) throw new Error("Для этой заявки уже создано событие отмены.");
+      const appearanceEvent=events.find(event => event.type === "срочная заявка" && event.entityId === options.entityId);
+      if (appearanceEvent && appearanceEvent.time > options.time) throw new Error("Заявку нельзя отменить до её появления.");
+      return { type: options.type, time: options.time, entityId: options.entityId };
+    }
     const used = new Set(events.filter(event => event.type === "отмена заявки").map(event => event.entityId));
     const ordinary = jobs.filter(job => jobPriorityLevel(job) === 1 && !used.has(job.id));
     const pool = ordinary.length ? ordinary : jobs.filter(job => !used.has(job.id));
@@ -410,13 +435,24 @@ export function createTzReplanEvent(options: {
     return { type: "отмена заявки", time: options.time, entityId: job?.id ?? "0001" };
   }
   if (options.type === "недоступность инженера") {
+    if (options.entityId) {
+      if (!engineers.some(engineer => engineer.id === options.entityId)) throw new Error("Выбранный инженер не найден.");
+      return { type: options.type, time: options.time, entityId: options.entityId };
+    }
     const used = new Set(events.filter(event => event.type === "недоступность инженера").map(event => event.entityId));
     const pool = engineers.filter(engineer => !used.has(engineer.id));
     const engineer = pool[Math.floor(pool.length / 2)] ?? engineers[0];
     return { type: "недоступность инженера", time: options.time, entityId: engineer?.id ?? "E001" };
   }
   const existingUrgent = events.filter(event => event.type === "срочная заявка" && event.job).map(event => event.job!);
-  const job = makeUrgentEventJob(rng, [...jobs, ...existingUrgent], engineers, buildings, existingUrgent.length);
+  if (options.job) {
+    if ([...jobs, ...existingUrgent].some(job => job.id === options.job!.id)) throw new Error("Номер срочной заявки уже существует.");
+    const job=options.job;
+    if (!job.address.trim() || !job.kind || !job.equipment || !job.geocodeVerified || !job.coordinates.every(Number.isFinite)) throw new Error("Проверьте адрес, координаты, навык и оборудование срочной заявки.");
+    if (job.windowStart<450 || job.windowEnd>1320 || job.serviceMinutes<5 || !Number.isInteger(job.serviceMinutes) || !Number.isFinite(job.windowStart) || !Number.isFinite(job.windowEnd) || Math.max(appearance,job.windowStart)+job.serviceMinutes>job.windowEnd) throw new Error("Работы не помещаются в окно после появления заявки.");
+    return { type: options.type, time: options.time, entityId: options.job.id, job: { ...options.job, priority: 2, urgency: "urgent", engineerId: null, baselineEngineerId: null, cancelled: false, executionStatus: "not_started" } };
+  }
+  const job = placeUrgentWindow(makeUrgentEventJob(rng, [...jobs, ...existingUrgent], engineers, buildings, existingUrgent.length),options.time);
   matchGeneratedJobsToIssuedKits([job], engineers);
   return { type: "срочная заявка", time: options.time, entityId: job.id, job };
 }
@@ -437,12 +473,17 @@ function buildReplanEvents(
 
   const usedJobs = new Set<string>();
   const cancelPool = shuffleList(rng, jobs.filter(job => jobPriorityLevel(job) === 1));
-  const fallbackJobs = cancelPool.length ? cancelPool : shuffleList(rng, jobs);
+  const fallbackJobs = [...cancelPool, ...shuffleList(rng, jobs.filter(job => jobPriorityLevel(job) !== 1))];
   for (let i = 0; i < cancelN; i++) {
-    const job = fallbackJobs.find(item => !usedJobs.has(item.id)) ?? fallbackJobs[i % fallbackJobs.length];
+    const time=times[timeIndex++] ?? "10:00";
+    const eventMinute=Number(time.slice(0,2))*60+Number(time.slice(3));
+    const remaining=fallbackJobs.filter(item => !usedJobs.has(item.id));
+    const job = remaining.find(item => item.windowStart >= eventMinute)
+      ?? remaining.find(item => item.windowEnd > eventMinute)
+      ?? remaining[0];
     if (!job) break;
     usedJobs.add(job.id);
-    events.push({ type: "отмена заявки", time: times[timeIndex++] ?? "10:00", entityId: job.id });
+    events.push({ type: "отмена заявки", time, entityId: job.id });
   }
 
   const usedEngineers = new Set<string>();
@@ -456,9 +497,10 @@ function buildReplanEvents(
 
   const urgentJobs: Job[] = [];
   for (let i = 0; i < urgentN; i++) {
-    const job = makeUrgentEventJob(rng, [...jobs, ...urgentJobs], engineers, buildings, i);
+    const time=times[timeIndex++] ?? "12:00";
+    const job = placeUrgentWindow(makeUrgentEventJob(rng, [...jobs, ...urgentJobs], engineers, buildings, i),time);
     urgentJobs.push(job);
-    events.push({ type: "срочная заявка", time: times[timeIndex++] ?? "12:00", entityId: job.id, job });
+    events.push({ type: "срочная заявка", time, entityId: job.id, job });
   }
 
   events.sort((a, b) => a.time.localeCompare(b.time));
