@@ -142,27 +142,27 @@ function save(filename: string, body: string, type: string) {
 
 export function downloadAnalysis(analysis: PlanAnalysis, kind: "assignments" | "legs" | "matrix" | "json") {
   if (kind === "assignments") {
-    save("vrptw-assignments.csv", csv([
+    save("naznacheniya-zayavok.csv", csv([
       ["Заявка", "Адрес", "Зона", "Окно", "Исходный инженер", "VRPTW", "Переназначена"],
       ...analysis.assignments.map(row => [row.jobId, row.address, row.region, row.window, row.baselineEngineer, row.vrptwEngineer, row.changed ? "да" : "нет"]),
     ]), "text/csv;charset=utf-8");
     return;
   }
   if (kind === "legs") {
-    save("vrptw-legs.csv", csv([
+    save("uchastki-marshrutov.csv", csv([
       ["Источник", "Инженер", "№", "Откуда", "Куда", "км", "мин"],
       ...analysis.legs.map(row => [row.source, row.engineer, row.sequence, row.fromLabel, row.toLabel, row.km.toFixed(3), row.minutes.toFixed(1)]),
     ]), "text/csv;charset=utf-8");
     return;
   }
   if (kind === "matrix") {
-    save("vrptw-matrix.csv", csv([
+    save("rasstoyaniya-mezhdu-tochkami.csv", csv([
       ["", ...analysis.matrix.labels],
       ...analysis.matrix.labels.map((label, i) => [label, ...analysis.matrix.km[i].map(value => value.toFixed(3))]),
     ]), "text/csv;charset=utf-8");
     return;
   }
-  save("vrptw-analysis.json", JSON.stringify(analysis, null, 2), "application/json");
+  save("analitika-planov.json", JSON.stringify(analysis, null, 2), "application/json");
 }
 
 export function formatKm(value: number) {

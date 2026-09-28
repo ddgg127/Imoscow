@@ -1,13 +1,16 @@
 export const transportSpeedsKmh: Record<string, number> = {
   "Автомобиль": 24,
-  "Пешком": 5,
-  "Пешеход": 5,
+  "Пешком": 6,
+  "Пешеход": 6,
   "Велосипед": 15,
   "Общественный транспорт": 18,
   "Служебный вертолёт": 120,
 };
 
 export function engineerSpeedKmh(transport: string, override: number | undefined, carSpeedKmh: number) {
+  // Older generated scenarios stored the car speed on every engineer.
+  // A pedestrian can never inherit that value, even when it is saved as an override.
+  if (transport === "Пешком" || transport === "Пешеход") return Math.min(6, override != null && Number.isFinite(override) && override >= 2 ? override : transportSpeedsKmh[transport]);
   if (override != null && Number.isFinite(override) && override >= 2 && override <= 200) return override;
   return transport === "Автомобиль" ? carSpeedKmh : transportSpeedsKmh[transport] ?? carSpeedKmh;
 }

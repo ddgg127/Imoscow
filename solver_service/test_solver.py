@@ -325,7 +325,10 @@ def test_transport_modes_and_individual_speed_change_travel_time():
     request.engineers[0].transport = "Велосипед"
     assert vehicle_travel_minutes(request, 0, 0, 2) == 42
     request.engineers[0].transport = "Пешком"
-    assert vehicle_travel_minutes(request, 0, 0, 2) == 122
+    assert vehicle_travel_minutes(request, 0, 0, 2) == 102
+    request.engineers[0].speedKmh = 24
+    assert vehicle_travel_minutes(request, 0, 0, 2) == 102
+    request.engineers[0].speedKmh = None
     request.engineers[0].transport = "Общественный транспорт"
     assert vehicle_travel_minutes(request, 0, 0, 2) == 40
     request.engineers[0].transport = "Автомобиль"

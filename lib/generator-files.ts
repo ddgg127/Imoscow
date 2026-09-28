@@ -10,7 +10,7 @@ export type { TzSkill, Vehicle };
 export const BUILDING_COUNT = catalog.buildings.length;
 
 export type TzReplanEvent = {
-  type: "отмена заявки" | "недоступность инженера" | "срочная заявка";
+  type: "отмена заявки" | "недоступность инженера" | "срочная заявка" | "новая заявка";
   time: string;
   entityId: string;
   job?: Job;
@@ -423,8 +423,9 @@ export function createTzReplanEvent(options: {
     if (options.entityId) {
       const target=[...jobs, ...events.flatMap(event => event.job ? [event.job] : [])].find(job => job.id === options.entityId);
       if (!target) throw new Error("Выбранная заявка не найдена.");
+      if (appearance >= target.windowEnd) throw new Error("Заявка к этому времени уже вышла из окна выполнения.");
       if (events.some(event => event.type === "отмена заявки" && event.entityId === options.entityId)) throw new Error("Для этой заявки уже создано событие отмены.");
-      const appearanceEvent=events.find(event => event.type === "срочная заявка" && event.entityId === options.entityId);
+      const appearanceEvent=events.find(event => event.job && event.entityId === options.entityId);
       if (appearanceEvent && appearanceEvent.time > options.time) throw new Error("Заявку нельзя отменить до её появления.");
       return { type: options.type, time: options.time, entityId: options.entityId };
     }
@@ -444,14 +445,26 @@ export function createTzReplanEvent(options: {
     const engineer = pool[Math.floor(pool.length / 2)] ?? engineers[0];
     return { type: "недоступность инженера", time: options.time, entityId: engineer?.id ?? "E001" };
   }
-  const existingUrgent = events.filter(event => event.type === "срочная заявка" && event.job).map(event => event.job!);
-  if (options.job) {
-    if ([...jobs, ...existingUrgent].some(job => job.id === options.job!.id)) throw new Error("Номер срочной заявки уже существует.");
-    const job=options.job;
-    if (!job.address.trim() || !job.kind || !job.equipment || !job.geocodeVerified || !job.coordinates.every(Number.isFinite)) throw new Error("Проверьте адрес, координаты, навык и оборудование срочной заявки.");
-    if (job.windowStart<450 || job.windowEnd>1320 || job.serviceMinutes<5 || !Number.isInteger(job.serviceMinutes) || !Number.isFinite(job.windowStart) || !Number.isFinite(job.windowEnd) || Math.max(appearance,job.windowStart)+job.serviceMinutes>job.windowEnd) throw new Error("Работы не помещаются в окно после появления заявки.");
-    return { type: options.type, time: options.time, entityId: options.job.id, job: { ...options.job, priority: 2, urgency: "urgent", engineerId: null, baselineEngineerId: null, cancelled: false, executionStatus: "not_started" } };
+  if (options.type === "срочная заявка" && options.entityId && !options.job) {
+    const target=[...jobs,...events.flatMap(event=>event.job ? [event.job] : [])].find(job=>job.id===options.entityId);
+    if (!target) throw new Error("Заявка для повышения приоритета не найдена.");
+    if (target.cancelled || jobPriorityLevel(target)===2) throw new Error("Эта заявка уже срочная или отменена.");
+    const appearanceEvent=events.find(event=>event.job?.id===target.id);
+    if (appearanceEvent && appearanceEvent.time>options.time) throw new Error("Нельзя повысить приоритет заявки до её появления.");
+    if (appearance>=target.windowEnd) throw new Error("Нельзя повысить приоритет заявки после конца её окна.");
+    if (events.some(event=>event.type==="срочная заявка" && !event.job && event.entityId===target.id)) throw new Error("Эта заявка уже повышена до срочной другим событием.");
+    return { type:options.type,time:options.time,entityId:target.id };
   }
+  const existingUrgent = events.filter(event => event.job).map(event => event.job!);
+  if (options.job) {
+    if ([...jobs, ...existingUrgent].some(job => job.id === options.job!.id)) throw new Error("Номер новой заявки уже существует.");
+    const job=options.job;
+    if (!job.address.trim() || !job.kind || !job.equipment || !job.geocodeVerified || !job.coordinates.every(Number.isFinite)) throw new Error("Проверьте адрес, координаты, навык и оборудование новой заявки.");
+    if (job.windowStart<450 || job.windowEnd>1320 || job.serviceMinutes<5 || !Number.isInteger(job.serviceMinutes) || !Number.isFinite(job.windowStart) || !Number.isFinite(job.windowEnd) || Math.max(appearance,job.windowStart)+job.serviceMinutes>job.windowEnd) throw new Error("Работы не помещаются в окно после появления заявки.");
+    const urgent=options.type==="срочная заявка";
+    return { type: options.type, time: options.time, entityId: options.job.id, job: { ...options.job, priority: urgent ? 2 : 1, urgency: urgent ? "urgent" : "normal", engineerId: null, baselineEngineerId: null, cancelled: false, executionStatus: "not_started" } };
+  }
+  if (options.type === "новая заявка") throw new Error("Заполните параметры новой заявки.");
   const job = placeUrgentWindow(makeUrgentEventJob(rng, [...jobs, ...existingUrgent], engineers, buildings, existingUrgent.length),options.time);
   matchGeneratedJobsToIssuedKits([job], engineers);
   return { type: "срочная заявка", time: options.time, entityId: job.id, job };
@@ -637,7 +650,6 @@ export function generateTzDataset(rawOptions: Partial<GenerateTzOptions> = {}): 
       transport: vehicle,
       shiftStart: shift[0],
       shiftEnd: shift[1],
-      speedKmh,
       address: b.address,
       level,
     };
@@ -935,7 +947,8 @@ export function downloadTzJson(dataset: GeneratedTzDataset) {
       time: ev.time,
       ...(ev.type === "отмена заявки" ? { jobId: ev.entityId } : {}),
       ...(ev.type === "недоступность инженера" ? { engineerId: ev.entityId } : {}),
-      ...(ev.type === "срочная заявка" && ev.job ? { job: ev.job } : {}),
+      ...((ev.type === "срочная заявка" || ev.type === "новая заявка") && ev.job ? { job: ev.job } : {}),
+      ...(ev.type === "срочная заявка" && !ev.job ? { jobId: ev.entityId } : {}),
     })),
     engineers: dataset.engineers,
     jobs: dataset.jobs,

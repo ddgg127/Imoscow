@@ -10,28 +10,28 @@ export function PlanAnalysisView({ result, engineers, travel }: { result: Optimi
   const analysis = useMemo(() => buildPlanAnalysis(result, engineers, travel), [result, engineers, travel]);
   const legs = analysis.legs.filter(row => tab === "legs" ? true : row.source === "VRPTW");
   if (!result.metrics.assigned) {
-    return <section className="page-view"><p className="list-cap">Сначала постройте маршруты — здесь появятся связи, ноги и матрица расстояний.</p></section>;
+    return <section className="page-view"><p className="list-cap">Сначала постройте маршруты — здесь появятся назначения, участки маршрутов и расстояния между точками.</p></section>;
   }
   return <section className="page-view">
-    <div className="view-summary">
+    <details className="panel distance-details"><summary><strong>Изменение пробега</strong><span className="details-action">Показать расчёт</span></summary><div className="view-summary">
       <article><span>Инженеры</span><strong>{analysis.vehiclesVrptw}<em> / {analysis.vehiclesBaseline}</em></strong><small>Оптимизация / базовый план</small></article>
       <article><span>Пробег</span><strong>{formatKm(analysis.distanceVrptw)}</strong><small>базовый {formatKm(analysis.distanceBaseline)}</small></article>
       <article><span>Разница</span><strong>{analysis.extraKm >= 0 ? "+" : ""}{formatKm(analysis.extraKm)}</strong><small>{analysis.assigned} назначений</small></article>
     </div>
-    <article className="panel analytics-panel wide analysis-note">
+    <article className="analytics-panel wide analysis-note">
       <div className="panel-header"><div><h2>Анализ пробега</h2><p>Оптимизация учитывает приоритет выполнения заявок перед минимизацией километража</p></div></div>
       <p>{analysis.packNote}</p>
-    </article>
+    </article></details>
     <div className="export-bar">
-      <button className="plain-button" onClick={() => downloadAnalysis(analysis, "assignments")}><Download />Связи CSV</button>
-      <button className="plain-button" onClick={() => downloadAnalysis(analysis, "legs")}><Download />Ноги CSV</button>
-      <button className="plain-button" onClick={() => downloadAnalysis(analysis, "matrix")}><Download />Матрица CSV</button>
-      <button className="plain-button" onClick={() => downloadAnalysis(analysis, "json")}><Download />JSON</button>
+      <button className="plain-button" title="Скачать таблицу заявок и назначенных инженеров" onClick={() => downloadAnalysis(analysis, "assignments")}><Download />Скачать назначения CSV</button>
+      <button className="plain-button" title="Скачать расстояние и время каждого участка маршрута" onClick={() => downloadAnalysis(analysis, "legs")}><Download />Скачать участки маршрутов CSV</button>
+      <button className="plain-button" title="Скачать расстояния между парами точек" onClick={() => downloadAnalysis(analysis, "matrix")}><Download />Скачать расстояния CSV</button>
+      <button className="plain-button" title="Скачать все данные анализа в одном файле" onClick={() => downloadAnalysis(analysis, "json")}><Download />Скачать весь анализ JSON</button>
     </div>
     <div className="analysis-tabs">
-      <button className={tab === "assignments" ? "selected" : ""} onClick={() => setTab("assignments")}>Связи заявок</button>
-      <button className={tab === "legs" ? "selected" : ""} onClick={() => setTab("legs")}>Ноги маршрутов</button>
-      <button className={tab === "matrix" ? "selected" : ""} onClick={() => setTab("matrix")}>Матрица км</button>
+      <button className={tab === "assignments" ? "selected" : ""} onClick={() => setTab("assignments")}>Назначения заявок</button>
+      <button className={tab === "legs" ? "selected" : ""} onClick={() => setTab("legs")}>Участки маршрутов</button>
+      <button className={tab === "matrix" ? "selected" : ""} onClick={() => setTab("matrix")}>Расстояния между точками</button>
     </div>
     {tab === "assignments" && <div className="job-table analysis-table"><div className="job-row table-head analysis-assign-head"><span>Заявка</span><span>Адрес</span><span>Исходный</span><span>VRPTW</span><span>Сдвиг</span></div>
       {analysis.assignments.map(row => <div className="job-row analysis-assign-row" key={row.jobId}><span><b>№ {row.jobId}</b><small>{row.window}</small></span><span>{row.address}</span><span>{row.baselineEngineer}</span><span>{row.vrptwEngineer}</span><span>{row.changed ? "да" : "нет"}</span></div>)}

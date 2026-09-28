@@ -113,8 +113,8 @@ def compatible(engineer: Engineer, job: Job) -> bool:
 
 
 TRANSPORT_SPEEDS = {
-    "Пешком": 5.0,
-    "Пешеход": 5.0,
+    "Пешком": 6.0,
+    "Пешеход": 6.0,
     "Велосипед": 15.0,
     "Общественный транспорт": 18.0,
 }
@@ -127,6 +127,8 @@ def vehicle_travel_minutes(data: SolveRequest, vehicle: int, from_point: int, to
     if road_km < 0.001:
         return 0
     speed = engineer.speedKmh or (data.speedKmh if engineer.transport == "Автомобиль" else TRANSPORT_SPEEDS.get(engineer.transport, data.speedKmh))
+    if engineer.transport in ("Пешком", "Пешеход"):
+        speed = min(speed, 6.0)
     if engineer.transport == "Автомобиль":
         minutes = matrix.durationsMin[from_point][to_point] * data.speedKmh / speed
     else:

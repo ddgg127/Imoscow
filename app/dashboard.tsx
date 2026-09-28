@@ -81,8 +81,9 @@ const solverLabels: Record<SolverEngine, string> = { ortools: "OR-Tools", "heuri
 
 function ExportButtons({ result, engineers, solver, speedKmh }: { result: OptimizationResult; engineers: Engineer[]; solver: SolverEngine; speedKmh: number }) {
   return <div className="export-actions" aria-label="Экспорт результата">
-    <button type="button" onClick={() => downloadPlan(result, engineers, "csv", { solver, speedKmh })}><Download />CSV</button>
-    <button type="button" onClick={() => downloadPlan(result, engineers, "json", { solver, speedKmh })}><FileJson />JSON</button>
+    <button type="button" title="Скачать таблицу рассчитанного плана для Excel" onClick={() => downloadPlan(result, engineers, "csv", { solver, speedKmh })}><Download />Скачать CSV</button>
+    <button type="button" title="Скачать все данные рассчитанного плана для повторной обработки" onClick={() => downloadPlan(result, engineers, "json", { solver, speedKmh })}><FileJson />Скачать JSON</button>
+    <HelpHint label="Скачивание плана">CSV — таблица заявок и маршрутов для Excel. JSON — полный результат с данными, которые можно обработать программно. Обе кнопки скачивают файлы; загрузка данных находится в «Генераторе».</HelpHint>
   </div>;
 }
 
@@ -480,7 +481,7 @@ function GeneratorView({
   generatedFrom,
   generatedTz,
   onGenerate,
-  onAddEvent, onRemoveEvent, eventOutcomes, simTime, started, busy, preferences, onPreferences, eventDraft, onEventDraft,
+  onAddEvent, onRemoveEvent, onRewindEvent, eventOutcomes, simTime, started, busy, preferences, onPreferences, eventDraft, onEventDraft, plannedStarts,
   onDemo,
   onPlan,
   onClear,
@@ -495,7 +496,7 @@ function GeneratorView({
   generatedFrom: PlanConfig | null;
   generatedTz: GeneratedTzDataset | null;
   onGenerate: (opts?: Partial<GenerateTzOptions>) => void;
-  onAddEvent: (event: TzReplanEvent, oldKey?: string) => void; onRemoveEvent: (key: string) => void; eventOutcomes: EventOutcomes; simTime: number; started: boolean; busy: boolean; preferences: GeneratorPreferences | null; onPreferences: (value:GeneratorPreferences) => void; eventDraft:EventEditorDraft | null; onEventDraft:(value:EventEditorDraft)=>void;
+  onAddEvent: (event: TzReplanEvent, oldKey?: string) => void; onRemoveEvent: (key: string) => void; onRewindEvent:(time:number)=>void; eventOutcomes: EventOutcomes; simTime: number; started: boolean; busy: boolean; preferences: GeneratorPreferences | null; onPreferences: (value:GeneratorPreferences) => void; eventDraft:EventEditorDraft | null; onEventDraft:(value:EventEditorDraft)=>void; plannedStarts:Record<string,number>;
   onDemo: () => void;
   onPlan: () => void;
   onClear: () => void;
@@ -825,17 +826,17 @@ function GeneratorView({
                 </button>
               </div>
               <div className="generator-export">
-                <button type="button" onClick={() => downloadBlob("jobs.csv", jobsToTzCsv(currentJobs))}>CSV заявок</button>
-                <button type="button" onClick={() => downloadBlob("engineers.csv", engineersToTzCsv(currentEngineers))}>CSV инженеров</button>
+                <button type="button" title="Скачать исходные заявки для Excel" onClick={() => downloadBlob("jobs.csv", jobsToTzCsv(currentJobs))}>Скачать заявки CSV</button>
+                <button type="button" title="Скачать список инженеров для Excel" onClick={() => downloadBlob("engineers.csv", engineersToTzCsv(currentEngineers))}>Скачать инженеров CSV</button>
                 {currentEvents.length > 0 && (
-                  <button type="button" onClick={() => downloadBlob("replan_events.csv", eventsToTzCsv(currentEvents))}>CSV событий</button>
+                  <button type="button" title="Скачать расписание событий для Excel" onClick={() => downloadBlob("replan_events.csv", eventsToTzCsv(currentEvents))}>Скачать события CSV</button>
                 )}
-                {currentDataset && <button type="button" onClick={() => downloadAllTzCsvs(currentDataset)}>Все CSV</button>}
-                {currentDataset && <button type="button" onClick={() => downloadTzJson(currentDataset)}>JSON</button>}
+                {currentDataset && <button type="button" title="Скачать три отдельных CSV: заявки, инженеры и события" onClick={() => downloadAllTzCsvs(currentDataset)}>Скачать все CSV</button>}
+                {currentDataset && <button type="button" title="Скачать весь набор одним файлом, включая события" onClick={() => downloadTzJson(currentDataset)}>Скачать набор JSON</button>}
               </div>
             </div>
 
-            {previewTab === "events" && <ScheduledEventsEditor jobs={currentJobs} engineers={currentEngineers} events={currentEvents} outcomes={eventOutcomes} time={simTime} started={started} busy={busy} draft={eventDraft} onDraft={onEventDraft} onSave={onAddEvent} onRemove={onRemoveEvent} />}
+            {previewTab === "events" && <ScheduledEventsEditor jobs={currentJobs} engineers={currentEngineers} events={currentEvents} outcomes={eventOutcomes} time={simTime} started={started} busy={busy} draft={eventDraft} plannedStarts={plannedStarts} onDraft={onEventDraft} onSave={onAddEvent} onRemove={onRemoveEvent} onRewind={onRewindEvent} />}
 
             <div className="generator-table-wrap" hidden={previewTab === "events"}>
               {previewTab === "jobs" && (
@@ -958,6 +959,7 @@ function ReplanImpactPanel({ changes }: { changes: ReplanChange[] }) {
 export default function Dashboard() {
   const { entries: journalEntries, append: appendNotifications, replace: replaceNotifications, storageError: journalStorageError } = useNotificationJournal();
   const [journalOpen, setJournalOpen] = useState(false);
+  const [journalReadIds,setJournalReadIds] = useState<string[]>([]);
   const [filterResetVersion, setFilterResetVersion] = useState(0);
   const [view, setView] = useState<ViewId>("generator"); const [region, setRegion] = useState<"Все зоны" | Region>("Все зоны"); const [compare, setCompare] = useState(false); const [replanned, setReplanned] = useState(false); const [urgentOpen, setUrgentOpen] = useState(false); const [mobileNavOpen, setMobileNavOpen] = useState(false); const [selectedJobId, setSelectedJobId] = useState<string | null>(null); const [detailsJobId, setDetailsJobId] = useState<string | null>(null); const [selectedEngineerId, setSelectedEngineerId] = useState<string | null>(null); const [selectedEngineerDetailsId, setSelectedEngineerDetailsId] = useState<string | null>(null); const [simTime, setSimTime] = useState(480); const [simPlaying, setSimPlaying] = useState(false); const [playbackMinutesPerSecond, setPlaybackMinutesPerSecond] = useState(1); const [theme, setTheme] = useState<ThemeId>("light"); const [themeOpen, setThemeOpen] = useState(false); const [routingState, setRoutingState] = useState<RoutingState>("idle"); const [extraJobs, setExtraJobs] = useState<Job[]>([]); const [importedJobs, setImportedJobs] = useState<Job[]>([]); const [importedEngineers, setImportedEngineers] = useState<Engineer[]>([]); const [unavailableEngineerIds, setUnavailableEngineerIds] = useState<string[]>([]); const [cancelledJobIds, setCancelledJobIds] = useState<string[]>([]); const [importStatus, setImportStatus] = useState(""); const [optimizing, setOptimizing] = useState(false); const [formError, setFormError] = useState(""); const [solverError, setSolverError] = useState(""); const [planResult, setPlanResult] = useState<OptimizationResult | null>(null); const [travel, setTravel] = useState<TravelMatrix | undefined>(undefined); const [matrixFallback, setMatrixFallback] = useState(false);
   const [draft, setDraft] = useState<PlanConfig>(defaultConfig); const [applied, setApplied] = useState<PlanConfig | null>(null); const [generated, setGenerated] = useState<GeneratedDataset | null>(null); const [generatedFrom, setGeneratedFrom] = useState<PlanConfig | null>(null);
@@ -1039,7 +1041,7 @@ export default function Dashboard() {
   const travelPointsKey = JSON.stringify(uniquePoints(activeEngineers, [...baseJobs,...extraJobs]));
   const transportKey = JSON.stringify([...new Set(activeEngineers.map(engineer=>engineer.transport))]);
   const travelSaved = useMemo(() => saveTravel(travel, JSON.parse(travelPointsKey), JSON.parse(transportKey)), [travel,travelPointsKey,transportKey]);
-  const workspaceSnapshot = useMemo(() => ({ view, region, compare, replanned, selectedJobId, detailsJobId, selectedEngineerId, selectedEngineerDetailsId, simTime, playbackMinutesPerSecond, theme, extraJobs, importedJobs, importedEngineers, unavailableEngineerIds, cancelledJobIds, importStatus, solverError, planResult, matrixFallback, draft, applied, generated, generatedFrom, generatedTz, editorJobs, editorEngineers, editorUnavailableIds, editorDirty, editorError, urgentForm, urgentOpen, engineerPersonaId, engineerSelectedJobId, absenceReasons, absenceMoments, availabilityChanges, absenceNotices, planHistory, issuedEngineers, dispatchNotice, jobActionNotice, cancellationNotices, engineerActionError, lastEventTime, lastCalculationMethod, solverEngine, replanChanges, showReplanSummary, eventOutcomes, generatorPreferences, eventDraft, dayStarted, journalEntries, travelSaved }), [view, region, compare, replanned, selectedJobId, detailsJobId, selectedEngineerId, selectedEngineerDetailsId, simTime, playbackMinutesPerSecond, theme, extraJobs, importedJobs, importedEngineers, unavailableEngineerIds, cancelledJobIds, importStatus, solverError, planResult, matrixFallback, draft, applied, generated, generatedFrom, generatedTz, editorJobs, editorEngineers, editorUnavailableIds, editorDirty, editorError, urgentForm, urgentOpen, engineerPersonaId, engineerSelectedJobId, absenceReasons, absenceMoments, availabilityChanges, absenceNotices, planHistory, issuedEngineers, dispatchNotice, jobActionNotice, cancellationNotices, engineerActionError, lastEventTime, lastCalculationMethod, solverEngine, replanChanges, showReplanSummary, eventOutcomes, generatorPreferences, eventDraft, dayStarted, journalEntries, travelSaved]);
+  const workspaceSnapshot = useMemo(() => ({ view, region, compare, replanned, selectedJobId, detailsJobId, selectedEngineerId, selectedEngineerDetailsId, simTime, playbackMinutesPerSecond, theme, extraJobs, importedJobs, importedEngineers, unavailableEngineerIds, cancelledJobIds, importStatus, solverError, planResult, matrixFallback, draft, applied, generated, generatedFrom, generatedTz, editorJobs, editorEngineers, editorUnavailableIds, editorDirty, editorError, urgentForm, urgentOpen, engineerPersonaId, engineerSelectedJobId, absenceReasons, absenceMoments, availabilityChanges, absenceNotices, planHistory, issuedEngineers, dispatchNotice, jobActionNotice, cancellationNotices, engineerActionError, lastEventTime, lastCalculationMethod, solverEngine, replanChanges, showReplanSummary, eventOutcomes, generatorPreferences, eventDraft, dayStarted, journalEntries, journalReadIds, travelSaved }), [view, region, compare, replanned, selectedJobId, detailsJobId, selectedEngineerId, selectedEngineerDetailsId, simTime, playbackMinutesPerSecond, theme, extraJobs, importedJobs, importedEngineers, unavailableEngineerIds, cancelledJobIds, importStatus, solverError, planResult, matrixFallback, draft, applied, generated, generatedFrom, generatedTz, editorJobs, editorEngineers, editorUnavailableIds, editorDirty, editorError, urgentForm, urgentOpen, engineerPersonaId, engineerSelectedJobId, absenceReasons, absenceMoments, availabilityChanges, absenceNotices, planHistory, issuedEngineers, dispatchNotice, jobActionNotice, cancellationNotices, engineerActionError, lastEventTime, lastCalculationMethod, solverEngine, replanChanges, showReplanSummary, eventOutcomes, generatorPreferences, eventDraft, dayStarted, journalEntries, journalReadIds, travelSaved]);
   const restoreWorkspace = useCallback((value:typeof workspaceSnapshot) => {
     if (!value || !Array.isArray(value.importedJobs) || !Array.isArray(value.importedEngineers) || !Array.isArray(value.planHistory) || !value.draft || !["plan","generator","requests","team","analytics","editor","about","engineer"].includes(value.view)) throw new Error("Некорректное сохранение сценария");
     const restoredTravel=restoreTravel(value.travelSaved,value.applied?.speedKmh ?? value.draft.speedKmh);
@@ -1094,7 +1096,7 @@ export default function Dashboard() {
     setShowReplanSummary(value.showReplanSummary);
     setEventOutcomes(value.eventOutcomes);
     setGeneratorPreferences(value.generatorPreferences); setEventDraft(value.eventDraft ?? null);
-    setDayStarted(value.dayStarted); replaceNotifications(value.journalEntries ?? []);
+    setDayStarted(value.dayStarted); replaceNotifications(value.journalEntries ?? []); setJournalReadIds(value.journalReadIds ?? []);
     setTravel(restoredTravel); setSimPlaying(false); workdayStarted.current=value.dayStarted;
     setRoutingState(value.planResult ? "ready" : "idle");
   }, [replaceNotifications]);
@@ -1316,9 +1318,11 @@ export default function Dashboard() {
         const updated=await runTemporalEvent(change.dispatch,change.jobs,change.unavailableIds,{ previous, previousEventTime:lastEventTime });
         if (!updated) throw new Error("Перепланирование не выполнено. Проверьте сообщение расчёта и вернитесь до времени события и выполните ручной пересчёт, чтобы повторить его.");
         setEditorJobs(updated.jobs);
-        if (event.type === "срочная заявка" && event.job) {
+        if ((event.type === "срочная заявка" || event.type === "новая заявка") && event.job) {
           setExtraJobs(current=>[...current.filter(job=>job.id!==event.entityId),event.job!]);
-          appendNotifications([{ kind:"reassigned", time:minute, title:`Появилась срочная заявка №${event.entityId}`, message:`${event.job.address}. ${updated.jobs.find(job=>job.id===event.entityId)?.engineerId ? "Назначен инженер; оставшийся день пересчитан." : "Доступного назначения нет; заявка требует решения диспетчера."}` }]);
+          appendNotifications([{ kind:"reassigned", time:minute, title:`Появилась ${event.type === "срочная заявка" ? "срочная" : "обычная"} заявка №${event.entityId}`, message:`${event.job.address}. ${updated.jobs.find(job=>job.id===event.entityId)?.engineerId ? "Назначен инженер; оставшийся день пересчитан." : "Доступного назначения нет; заявка требует решения диспетчера."}` }]);
+        } else if (event.type === "срочная заявка") {
+          appendNotifications([{ kind:"reassigned",time:minute,title:`Заявка №${event.entityId} стала срочной`,message:"Приоритет повышен; оставшийся день пересчитан." }]);
         } else if (event.type === "отмена заявки") {
           setCancelledJobIds(current=>current.includes(event.entityId) ? current : [...current,event.entityId]);
         } else if (event.type === "недоступность инженера") {
@@ -1490,7 +1494,7 @@ export default function Dashboard() {
       absenceReasons:{},absenceMoments:{},availabilityChanges:[],absenceNotices:[],planHistory:[],engineerPersonaId:null,engineerSelectedJobId:null,
       applied:null,planResult:null,eventOutcomes:{},travelSaved:null,matrixFallback:false,replanChanges:[],selectedJobId:null,selectedEngineerId:null,
       detailsJobId:null,selectedEngineerDetailsId:null,solverError:"",lastEventTime:null,simTime:480,dayStarted:false,eventDraft:null,dispatchNotice:"",jobActionNotice:"",
-      cancellationNotices:[],engineerActionError:"",urgentOpen:false,journalEntries:[],importStatus:"Сценарий удалён. Сгенерируйте или загрузите данные заново." };
+      cancellationNotices:[],engineerActionError:"",urgentOpen:false,journalEntries:[],journalReadIds:[],importStatus:"Сценарий удалён. Сгенерируйте или загрузите данные заново." };
     requestedTime.current=null; setPendingEngineerAction(null);
     restoreWorkspace(cleared);
     void saveWorkspaceNow(cleared);
@@ -1671,6 +1675,7 @@ export default function Dashboard() {
   const unservedElevated = started && !optimizing ? result.jobs.filter(job => jobPriorityLevel(job) === 2 && !job.cancelled && job.executionStatus !== "completed" && !job.engineerId) : [];
   const metricCards = <section className="metric-grid"><article><div className="metric-head"><span className="metric-icon purple"><Wrench /></span><small>Назначено заявок</small><Badge className="metric-badge">{started ? `${result.metrics.unassigned} без маршрута` : "ожидание"}</Badge></div><strong>{result.metrics.assigned}<em>/ {result.metrics.total}</em></strong><p>Покрытие {result.metrics.total ? (result.metrics.assigned / result.metrics.total * 100).toFixed(1).replace(".", ",") : "0"}% · базовый {result.baseline.assigned}</p></article><article><div className="metric-head"><span className="metric-icon teal"><Route /></span><small>Пробег</small><Badge className="metric-badge good">{distanceReady && result.comparison.distanceDeltaPercent != null ? `${result.comparison.distanceDeltaPercent < 0 ? "−" : "+"}${Math.abs(result.comparison.distanceDeltaPercent).toFixed(1).replace(".", ",")}%` : "расчёт"}</Badge></div><strong>{result.metrics.distanceKm.toFixed(1).replace(".", ",")}<em> км</em></strong><p>базовый: {formatDistance(result.baseline.distanceKm)}</p></article><article><div className="metric-head"><span className="metric-icon orange"><UsersRound /></span><small>Активные инженеры</small><Badge className="metric-badge">{started ? "активно" : "ожидание"}</Badge></div><strong>{result.baseline.activeEngineers}<em> → {result.metrics.activeEngineers}</em></strong><p>из {activeEngineers.length-playbackUnavailableIds.length} доступных · {playbackUnavailableIds.length} вне смены</p></article><article><div className="metric-head"><span className="metric-icon blue"><Database /></span><small>Геокодирование</small><Badge className="metric-badge">{regions.length} зоны</Badge></div><strong>{baseJobs.filter(job => job.geocodeVerified).length}<em>/ {baseJobs.length}</em></strong><p>дом: {baseJobs.filter(job => job.geocodeQuality === "house").length} · улица: {baseJobs.filter(job => job.geocodeQuality === "street").length}</p></article></section>;
   const visibleJournalEntries=journalEntries.filter(entry=>!started || entry.time<=simTime);
+  const unreadNotifications=visibleJournalEntries.filter(entry=>!journalReadIds.includes(entry.id)).length;
   const visibleReplanChanges=lastEventTime!==null && simTime<lastEventTime ? [] : replanChanges;
   const busy=optimizing || scheduledProcessing;
   if (!workspaceReady) return <main className="workspace-restoring" role="status">Восстанавливаем сохранённый сценарий…</main>;
@@ -1679,7 +1684,7 @@ export default function Dashboard() {
       <div className="sidebar-brand-row"><Logo /><button className="mobile-nav-close" aria-label="Закрыть меню" onClick={() => setMobileNavOpen(false)}><X /></button></div>
       {view === "engineer" ? <nav aria-label="Навигация инженера"><button className="nav-item active" onClick={() => navigate("engineer")}><Route /><span>Моя смена</span></button></nav> : <nav aria-label="Основная навигация"><button className={`nav-item${view === "plan" ? " active" : ""}`} onClick={() => navigate("plan")}><Route /><span>Планирование</span></button><button className={`nav-item${view === "generator" ? " active" : ""}`} onClick={() => navigate("generator")}><Sparkles /><span>Генератор</span></button><button className={`nav-item${view === "requests" ? " active" : ""}`} onClick={() => navigate("requests")}><Wrench /><span>Заявки</span><b>{plannedJobs.length}</b></button><button className={`nav-item${view === "team" ? " active" : ""}`} onClick={() => navigate("team")}><UsersRound /><span>Инженеры</span></button><button className={`nav-item${view === "analytics" ? " active" : ""}`} onClick={() => navigate("analytics")}><BarChart3 /><span>Аналитика</span></button><button className={`nav-item${view === "editor" ? " active" : ""}`} onClick={() => navigate("editor")}><Table2 /><span>Редактор данных</span>{editorDirty && <b>●</b>}</button><button className={`nav-item${view === "about" ? " active" : ""}`} onClick={() => navigate("about")}><Compass /><span>О решении</span></button></nav>}
       <div className="sidebar-bottom"><button className="nav-item theme-nav" onClick={() => setThemeOpen(open => !open)}><SunMoon /><span>Тема</span></button><button type="button" className="profile profile-switch" aria-label={view === "engineer" ? "Перейти в окно диспетчера" : "Перейти в окно инженера"} onClick={() => { if (view === "engineer") navigate("plan"); else { setEngineerPersonaId(current => current && activeEngineers.some(item => item.id === current) ? current : null); setEngineerSelectedJobId(null); navigate("engineer"); } }}><span>{view === "engineer" ? engineerPersona?.initials ?? "ИН" : "ДК"}</span><div><strong>{view === "engineer" ? engineerPersona?.name ?? "Инженер" : "Диспетчер"}</strong><small>{view === "engineer" ? "Открыть диспетчера" : "Открыть инженера"}</small></div><MoreHorizontal size={17} /></button></div>
-    </aside><section className="workspace" id="plan"><header className="topbar"><button className="mobile-menu" aria-label="Открыть меню" aria-expanded={mobileNavOpen} onClick={() => setMobileNavOpen(true)}><Menu /></button><div><h1>{titles[view][0]}</h1>{titles[view][1] ? <p>{titles[view][1]}</p> : null}</div><div className="top-actions"><button type="button" className="journal-button" aria-label={`Журнал уведомлений: ${visibleJournalEntries.length} записей`} onClick={() => setJournalOpen(true)}><Bell size={18} /><span>Уведомления</span>{visibleJournalEntries.length > 0 && <b>{visibleJournalEntries.length}</b>}</button><button className="theme-button" onClick={() => setThemeOpen(open => !open)}><Contrast /><span>{themes.find(item => item.id === theme)?.name}</span><ChevronDown /></button></div></header>
+    </aside><section className="workspace" id="plan"><header className="topbar"><button className="mobile-menu" aria-label="Открыть меню" aria-expanded={mobileNavOpen} onClick={() => setMobileNavOpen(true)}><Menu /></button><div><h1>{titles[view][0]}</h1>{titles[view][1] ? <p>{titles[view][1]}</p> : null}</div><div className="top-actions"><button type="button" className={`journal-button${unreadNotifications ? " unread" : ""}`} aria-label={`Журнал уведомлений: ${visibleJournalEntries.length} записей, ${unreadNotifications} новых`} onClick={() => {setJournalReadIds(current=>[...new Set([...current,...visibleJournalEntries.map(entry=>entry.id)])]);setJournalOpen(true);}}><Bell size={18} /><span>Уведомления</span>{visibleJournalEntries.length > 0 && <b>{visibleJournalEntries.length}</b>}</button><button className="theme-button" onClick={() => setThemeOpen(open => !open)}><Contrast /><span>{themes.find(item => item.id === theme)?.name}</span><ChevronDown /></button></div></header>
     {workspaceStorageError && <p role="alert" className="workspace-storage-error">{workspaceStorageError}</p>}
     {themeOpen && <div className="theme-menu" role="menu">{themes.map(item => <button key={item.id} className={theme === item.id ? "active" : ""} onClick={() => { setTheme(item.id); setThemeOpen(false); }}><span className="theme-swatches">{item.colors.map(color => <i key={color} style={{ background: color }} />)}</span><b>{item.name}</b>{theme === item.id && <Check />}</button>)}</div>}
     {busy && <div className="calculation-notice" role="status" aria-live="polite"><LoaderCircle className="loading-spinner" size={18} /><span>Рассчитываем план…</span></div>}
@@ -1719,7 +1724,7 @@ export default function Dashboard() {
         generatedFrom={generatedFrom}
         generatedTz={generatedTz}
         onGenerate={createGenerated}
-        onAddEvent={addGeneratedEvent} onRemoveEvent={removeGeneratedEvent} eventOutcomes={eventOutcomes} simTime={simTime} started={started} busy={optimizing || scheduledProcessing} preferences={generatorPreferences} onPreferences={setGeneratorPreferences} eventDraft={eventDraft} onEventDraft={setEventDraft}
+        onAddEvent={addGeneratedEvent} onRemoveEvent={removeGeneratedEvent} onRewindEvent={changeSimulationTime} plannedStarts={Object.fromEntries(playbackResult.routes.flatMap(route=>route.stops.map(stop=>[stop.jobId,stop.start])))} eventOutcomes={eventOutcomes} simTime={simTime} started={started} busy={optimizing || scheduledProcessing} preferences={generatorPreferences} onPreferences={setGeneratorPreferences} eventDraft={eventDraft} onEventDraft={setEventDraft}
         onClear={() => setClearOpen(true)}
         onDemo={() => { void handleImport(new File([JSON.stringify(demoScenario)], "demo-scenario.json", { type: "application/json" })); }}
         onPlan={() => {

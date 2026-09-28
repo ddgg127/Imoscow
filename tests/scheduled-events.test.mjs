@@ -6,6 +6,7 @@ import { importPlanText } from "../lib/import-data.ts";
 import { saveTravel, restoreTravel, createWorkspaceWriter } from "../lib/workspace-storage.ts";
 import { fallbackTravel, resultFromRouteOrder } from "../lib/vrptw.ts";
 import { cancelJobLocally } from "../lib/temporal-replan.ts";
+import { engineerSpeedKmh } from "../lib/transport-speed.ts";
 
 const centers={"Восток":[37.78,55.71],"Юго-восток":[37.67,55.59],"Югоцентр":[37.61,55.65]};
 const engineer={id:"E1",name:"Инженер 1",initials:"И1",color:"#6547e7",region:"Восток",start:[37.78,55.71],transport:"Автомобиль",skills:["Локальные работы"],equipment:["Диагностический комплект"],shiftStart:480,shiftEnd:1320};
@@ -71,6 +72,43 @@ test("factory targets selected request/engineer and retains custom urgent parame
   assert.throws(()=>createTzReplanEvent({...cancel,entityId:"9999",jobs,engineers:[engineer]}),/не найдена/);
   assert.throws(()=>createTzReplanEvent({...cancel,jobs,engineers:[engineer],events:[cancel]}),/уже создано/);
   assert.throws(()=>createTzReplanEvent({...cancel,entityId:"0003",time:"15:59",jobs,engineers:[engineer],events:[event]}),/до её появления/);
+});
+test("an existing request becomes urgent only before work starts; an ordinary event creates a normal request",()=>{
+  const elevate=createTzReplanEvent({type:"срочная заявка",time:"16:00",entityId:"0001",jobs,engineers:[engineer]});
+  assert.equal(elevate.job,undefined);
+  const change=scheduledEventChange(elevate,initial,[engineer],[]);
+  assert.equal(change.dispatch.type,"recalculate");
+  assert.equal(change.jobs.find(item=>item.id==="0001").priority,2);
+  assert.throws(()=>scheduledEventChange({...elevate,time:"16:30"},initial,[engineer],[]),/началась/);
+  assert.throws(()=>createTzReplanEvent({...elevate,time:"20:00",jobs,engineers:[engineer]}),/после конца/);
+  const ordinary=createTzReplanEvent({type:"новая заявка",time:"16:00",job:job("0003",960),jobs,engineers:[engineer]});
+  assert.equal(ordinary.job.priority,1);
+  assert.equal(scheduledEventChange(ordinary,initial,[engineer],[]).jobs.find(item=>item.id==="0003").urgency,"normal");
+});
+test("new ordinary and existing urgent events survive JSON and CSV import",()=>{
+  const ordinary=createTzReplanEvent({type:"новая заявка",time:"16:00",job:job("0003",960),jobs,engineers:[engineer]});
+  const elevated=createTzReplanEvent({type:"срочная заявка",time:"15:00",entityId:"0002",jobs,engineers:[engineer]});
+  const events=[ordinary,elevated];
+  for(const imported of [importPlanText(JSON.stringify({jobs,engineers:[engineer],events:events.map(event=>({...event,jobId:event.job ? undefined : event.entityId}))}),"data.json",centers),importPlanText(eventsToTzCsv(events),"events.csv",centers)]) {
+    assert.equal(imported.events.length,2);
+    assert.equal(imported.events.find(event=>event.type==="новая заявка").job.priority,1);
+    assert.equal(imported.events.find(event=>event.type==="срочная заявка").entityId,"0002");
+    assert.equal(imported.events.find(event=>event.type==="срочная заявка").job,undefined);
+  }
+});
+test("a normal request created by an event can be raised later, but not before it appears",()=>{
+  const ordinary=createTzReplanEvent({type:"новая заявка",time:"16:00",job:job("0003",960),jobs,engineers:[engineer]});
+  const elevated=createTzReplanEvent({type:"срочная заявка",time:"16:15",entityId:"0003",jobs,engineers:[engineer],events:[ordinary]});
+  assert.equal(elevated.job,undefined);
+  assert.throws(()=>createTzReplanEvent({...elevated,time:"15:45",jobs,engineers:[engineer],events:[ordinary]}),/до её появления/);
+  assert.throws(()=>createTzReplanEvent({...cancel,entityId:"0003",time:"15:45",jobs,engineers:[engineer],events:[ordinary]}),/до её появления/);
+});
+test("walking speed is realistic even for an old generated 24 km/h override",()=>{
+  assert.equal(engineerSpeedKmh("Пешком",24,24),6);
+  assert.equal(engineerSpeedKmh("Пешком",undefined,24),6);
+  assert.equal(engineerSpeedKmh("Автомобиль",24,24),24);
+  const generated=generateTzDataset({jobs:20,engineers:8,seed:19});
+  assert.ok(generated.engineers.filter(item=>item.transport==="Пешком").every(item=>item.speedKmh===undefined));
 });
 test("JSON and event CSV retain explicit targets and urgent parameters",()=>{
   const urgent=createTzReplanEvent({type:"срочная заявка",time:"16:00",job:job("0003",960),jobs,engineers:[engineer]});

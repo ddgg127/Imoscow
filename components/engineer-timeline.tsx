@@ -10,17 +10,7 @@ import {
   X,
   Zap,
 } from "lucide-react";
-import { jobPriorityLevel, type Engineer, type Job, type RoutePlan } from "@/lib/vrptw";
-
-function minutesLabel(minutes: number) {
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
-}
-
-function formatDistance(km: number) {
-  return `${km.toFixed(1).replace(".", ",")} км`;
-}
+import { jobPriorityLevel, minutesLabel, type Engineer, type Job, type RoutePlan } from "@/lib/vrptw";
 
 export function EngineerTimeline({
   engineer,
@@ -150,7 +140,7 @@ export function EngineerTimeline({
                         <div
                           className="travel-clip"
                           style={{ left: `${travelLeft}%`, width: `${travelWidth}%` }}
-                          title={`Дорога: ${travelMin} мин (${stop.distanceKm.toFixed(1)} км)`}
+                          title={`Дорога: ${Math.round(travelMin)} мин (${stop.distanceKm.toFixed(1)} км)`}
                         >
                           <span className="clip-car">🚗</span>
                         </div>
@@ -161,7 +151,7 @@ export function EngineerTimeline({
                         <div
                           className="wait-clip"
                           style={{ left: `${waitLeft}%`, width: `${waitWidth}%` }}
-                          title={`Ожидание открытия окна: ${stop.start - stop.arrival} мин`}
+                          title={`Ожидание открытия окна: ${Math.round(stop.start - stop.arrival)} мин`}
                         />
                       )}
 

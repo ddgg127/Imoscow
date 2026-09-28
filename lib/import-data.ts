@@ -214,13 +214,18 @@ function rowsToEvents(rows:Record<string,unknown>[],centers:Record<Region,Coordi
   const events=rows.map((row,index):TzReplanEvent=>{
     const type=value(row,["type","тип события"]) as TzReplanEvent["type"];
     const time=value(row,["time","время события","время"]);
-    if (!["отмена заявки","недоступность инженера","срочная заявка"].includes(type) || !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(time) || timeMinutes(time,0)<450 || timeMinutes(time,0)>1320) throw new Error(`Событие ${index+1}: проверьте тип и время с 07:30 до 22:00`);
+    if (!["отмена заявки","недоступность инженера","срочная заявка","новая заявка"].includes(type) || !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(time) || timeMinutes(time,0)<450 || timeMinutes(time,0)>1320) throw new Error(`Событие ${index+1}: проверьте тип и время с 07:30 до 22:00`);
     const rawId=value(row,["entityId","jobId","engineerId","id сущности","идентификатор"]);
-    if (type==="срочная заявка") {
+    if (type==="срочная заявка" && !row.job && !value(row,["адрес","address"])) {
+      if (!rawId) throw new Error(`Событие ${index+1}: укажите заявку для повышения приоритета`);
+      return { type,time,entityId:jobId(rawId) };
+    }
+    if (type==="срочная заявка" || type==="новая заявка") {
       const embedded=row.job && typeof row.job==="object" ? row.job as Record<string,unknown> : { ...row,id:rawId,kind:value(row,["требуемый навык"]),equipment:value(row,["требуемое оборудование"]),serviceMinutes:value(row,["длительность"]),requiredTransport:value(row,["требуемый транспорт"]) };
       const job=rowsToJobs([embedded],centers,"Событие генератора").jobs[0];
       if (Math.max(timeMinutes(time,0),job.windowStart)+job.serviceMinutes>job.windowEnd) throw new Error(`Событие ${index+1}: работы не помещаются в окно после появления заявки`);
-      return { type,time,entityId:job.id,job:{...job,priority:2,urgency:"urgent"} };
+      const urgent=type==="срочная заявка";
+      return { type,time,entityId:job.id,job:{...job,priority:urgent?2:1,urgency:urgent?"urgent":"normal"} };
     }
     if (!rawId) throw new Error(`Событие ${index+1}: отсутствует номер заявки или инженера`);
     return { type,time,entityId:type==="отмена заявки" ? jobId(rawId) : rawId };

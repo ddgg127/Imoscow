@@ -304,6 +304,7 @@ export function MapCanvas(props: CanvasProps) {
   const jobMarkersRef = useRef<Marker[]>([]);
   const engineerMarkersRef = useRef<Marker[]>([]);
   const legMarkersRef = useRef<Marker[]>([]);
+  const startMarkerRef = useRef<Marker | null>(null);
   const vehiclesRef = useRef<Map<string, Marker>>(new Map());
   const clockRef = useRef<HTMLSpanElement>(null);
   const actionBoxRef = useRef<HTMLDivElement>(null);
@@ -534,6 +535,23 @@ export function MapCanvas(props: CanvasProps) {
     });
     return () => { cancelled = true; markers.forEach(marker => marker.remove()); markers.length = 0; };
   }, [selectedLeg, mapReady]);
+  useEffect(() => {
+    startMarkerRef.current?.remove();
+    startMarkerRef.current=null;
+    if (!mapRef.current || !loadedRef.current || !selectedRouteEngineer || !selectedRoutePlan?.stops.length || selectedJobId || selectedLeg) return;
+    let cancelled=false;
+    void import("maplibre-gl").then(({Marker})=>{
+      if (cancelled || !mapRef.current) return;
+      const element=document.createElement("div");
+      element.className="route-start-marker";
+      element.textContent="Старт";
+      element.title=`Начало маршрута: ${selectedRouteEngineer.startAddress || selectedRouteEngineer.name}`;
+      element.setAttribute("aria-label",element.title);
+      element.style.setProperty("--start-color",selectedRouteEngineer.color);
+      startMarkerRef.current=new Marker({element,anchor:"bottom"}).setLngLat(selectedRouteEngineer.start).addTo(mapRef.current);
+    });
+    return ()=>{cancelled=true;startMarkerRef.current?.remove();startMarkerRef.current=null;};
+  },[selectedRouteEngineer,selectedRoutePlan,selectedJobId,selectedLeg,mapReady]);
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !loadedRef.current) return;

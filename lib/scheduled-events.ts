@@ -39,6 +39,7 @@ export function scheduledEventChange(event: TzReplanEvent, previous: Optimizatio
     if (!job) throw new Error("Отменяемая заявка ещё не появилась или отсутствует в наборе.");
     const stop = previous.routes.flatMap(route => route.stops).find(item => item.jobId === job.id);
     if (job.cancelled) throw new Error("Заявка уже отменена.");
+    if (time >= job.windowEnd) throw new Error("Окно выполнения заявки уже закончилось: отмена невозможна.");
     if (job.executionStatus === "completed" || (stop && time >= stop.end)) throw new Error("Заявка уже выполнена: отмена невозможна.");
     if (stop && time >= stop.start) throw new Error("Заявка выполняется: отмена невозможна.");
     jobs = jobs.map(item => item.id === job.id ? { ...item, cancelled: true } : item);
@@ -47,13 +48,21 @@ export function scheduledEventChange(event: TzReplanEvent, previous: Optimizatio
     if (!engineers.some(engineer => engineer.id === event.entityId)) throw new Error("Инженер отсутствует в наборе.");
     if (unavailableIds.includes(event.entityId)) throw new Error("Инженер уже вне смены.");
     unavailable = [...unavailableIds, event.entityId];
+  } else if (event.type === "срочная заявка" && !event.job) {
+    type = "recalculate";
+    const target=jobs.find(item=>item.id===event.entityId);
+    if (!target || target.cancelled) throw new Error("Заявка для повышения приоритета отсутствует или отменена.");
+    const stop=previous.routes.flatMap(route=>route.stops).find(item=>item.jobId===target.id);
+    if (time>=target.windowEnd || (stop && time>=stop.start) || target.executionStatus==="completed") throw new Error("Заявка уже началась или завершилась: повысить приоритет поздно.");
+    jobs=jobs.map(item=>item.id===target.id ? {...item,priority:2,urgency:"urgent" as const} : item);
   } else {
     type = "new_job";
     const job = event.job;
-    if (!job || job.id !== event.entityId || jobs.some(item => item.id === job.id)) throw new Error("Проверьте номер и параметры срочной заявки.");
-    if (job.geocodeVerified !== true) throw new Error("Координаты срочной заявки не подтверждены.");
+    if (!job || job.id !== event.entityId || jobs.some(item => item.id === job.id)) throw new Error("Проверьте номер и параметры новой заявки.");
+    if (job.geocodeVerified !== true) throw new Error("Координаты новой заявки не подтверждены.");
     if (Math.max(time,job.windowStart) + job.serviceMinutes > job.windowEnd) throw new Error("Работы не помещаются в окно после появления заявки.");
-    jobs = [...jobs, { ...job, priority: 2, urgency: "urgent" as const, cancelled: false, engineerId: null, baselineEngineerId: null, executionStatus: "not_started" as const }];
+    const urgent=event.type==="срочная заявка";
+    jobs = [...jobs, { ...job, priority: urgent ? 2 : 1, urgency: urgent ? "urgent" as const : "normal" as const, cancelled: false, engineerId: null, baselineEngineerId: null, executionStatus: "not_started" as const }];
   }
   return { dispatch: { type, time, id: event.entityId } as DispatchEvent, jobs, unavailableIds: unavailable };
 }
