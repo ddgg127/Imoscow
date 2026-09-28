@@ -1,5 +1,5 @@
 import { ALL_SKILLS, EXTRA_SKILLS, SKILL_EQUIPMENT, SKILL_EQUIPMENT_POOLS, TZ_SKILLS, VEHICLES, type TzSkill, type Vehicle } from "./domain.ts";
-import { applyAverageWindows, jobPriorityLevel, scaleEngineers, scaleJobs, type Engineer, type Job, type Region } from "./vrptw.ts";
+import { applyAverageWindows, fallbackTravel, jobPriorityLevel, scaleEngineers, scaleJobs, type Engineer, type Job, type Region } from "./vrptw.ts";
 import { issueDailyEquipment } from "./equipment-issue.ts";
 import type { Coordinate } from "./map-providers.ts";
 import catalog from "../generator/src/data/moscow-buildings.json" with { type: "json" };
@@ -690,7 +690,9 @@ export function generateTzDataset(rawOptions: Partial<GenerateTzOptions> = {}): 
   applyExtraSkillJobs(draftedJobs, engineers, rng, extraSkillShare);
   const jobs: Job[] = applyAverageWindows(draftedJobs, targetWindow);
 
-  const issuedEngineers = issueDailyEquipment(engineers, jobs);
+  // Keep synthetic job requirements stable: generation anchors its initial
+  // kit coverage locally; the planner may then reissue kits across zones.
+  const issuedEngineers = issueDailyEquipment(engineers, jobs, fallbackTravel(speedKmh), speedKmh, true);
   matchGeneratedJobsToIssuedKits(jobs, issuedEngineers);
 
   const events = buildReplanEvents(rng, jobs, issuedEngineers, mixedJobPool, {
@@ -721,7 +723,7 @@ export function generateTzDataset(rawOptions: Partial<GenerateTzOptions> = {}): 
 
   return {
     jobs,
-    engineers: issuedEngineers.map(engineer => ({ ...engineer, equipmentOptions: engineer.equipment })),
+    engineers: issuedEngineers,
     events,
     speedKmh,
     stats: {
@@ -770,6 +772,7 @@ export function engineersToTzCsv(engineers: Engineer[]): string {
     "Число навыков",
     "Навыки",
     "Оборудование",
+    "Доступное оборудование",
     "Транспорт",
     "Уровень",
   ];
@@ -784,6 +787,7 @@ export function engineersToTzCsv(engineers: Engineer[]): string {
     e.skills.length,
     e.skills.join(", "),
     e.equipment.join(", "),
+    (e.equipmentOptions ?? e.equipment).join("|"),
     e.transport,
     (e as Engineer & { level?: string }).level ?? (e.skills.length === 1 ? "новичок" : e.skills.length === 2 ? "специалист" : "профи"),
   ]);
@@ -912,7 +916,7 @@ export function generateDataset(sourceJobs: Job[], sourceEngineers: Engineer[], 
   return { jobs, engineers: issueDailyEquipment(scaleEngineers(sourceEngineers, options.engineers, jobs), jobs), speedKmh: options.speedKmh };
 }
 
-const columns = ["recordType", "id", "region", "area", "address", "kind", "workType", "lon", "lat", "geocodeQuality", "windowStart", "windowEnd", "serviceMinutes", "normativeMinutes", "travelReserveMinutes", "estimatedTravelMinutes", "normSource", "equipment", "requiredTransport", "allowedTransports", "priority", "urgency", "workClass", "status", "executionStatus", "cancelled", "name", "initials", "skills", "transport", "shiftStart", "shiftEnd", "startAddress", "startMode", "officeAddress", "equipmentIssue", "color", "speedKmh"] as const;
+const columns = ["recordType", "id", "region", "area", "address", "kind", "workType", "lon", "lat", "geocodeQuality", "windowStart", "windowEnd", "serviceMinutes", "normativeMinutes", "travelReserveMinutes", "estimatedTravelMinutes", "normSource", "equipment", "equipmentOptions", "requiredTransport", "allowedTransports", "priority", "urgency", "workClass", "status", "executionStatus", "cancelled", "name", "initials", "skills", "transport", "shiftStart", "shiftEnd", "startAddress", "startMode", "officeAddress", "equipmentIssue", "color", "speedKmh"] as const;
 
 function legacyCsvCell(value: unknown) {
   const text = value == null ? "" : String(value);
@@ -922,7 +926,7 @@ function legacyCsvCell(value: unknown) {
 
 export function generatedCsv(dataset: GeneratedDataset) {
   const jobs = dataset.jobs.map(job => ({ recordType: "job", id: job.id, region: job.region, area: job.area, address: job.address, kind: job.kind, workType: job.workType ?? job.kind, lon: job.coordinates[0], lat: job.coordinates[1], geocodeQuality: job.geocodeQuality, windowStart: job.windowStart, windowEnd: job.windowEnd, serviceMinutes: job.serviceMinutes, normativeMinutes: job.normativeMinutes, travelReserveMinutes: job.travelReserveMinutes, estimatedTravelMinutes: job.estimatedTravelMinutes, normSource: job.normSource, equipment: job.equipment, requiredTransport: job.requiredTransport, allowedTransports: job.allowedTransports?.join("|"), priority: job.priority, urgency: job.urgency, workClass: job.workClass, status: job.status, executionStatus: job.executionStatus ?? "not_started", cancelled: Boolean(job.cancelled), speedKmh: dataset.speedKmh }));
-  const engineers = dataset.engineers.map(engineer => ({ recordType: "engineer", id: engineer.id, region: engineer.region, lon: engineer.start[0], lat: engineer.start[1], equipment: engineer.equipment.join("|"), name: engineer.name, initials: engineer.initials, skills: engineer.skills.join("|"), transport: engineer.transport, shiftStart: engineer.shiftStart, shiftEnd: engineer.shiftEnd, startAddress: engineer.startAddress, startMode: engineer.startMode, officeAddress: engineer.officeAddress, equipmentIssue: engineer.equipmentIssue, color: engineer.color, speedKmh: engineer.speedKmh ?? "" }));
+  const engineers = dataset.engineers.map(engineer => ({ recordType: "engineer", id: engineer.id, region: engineer.region, lon: engineer.start[0], lat: engineer.start[1], equipment: engineer.equipment.join("|"), equipmentOptions: (engineer.equipmentOptions ?? engineer.equipment).join("|"), name: engineer.name, initials: engineer.initials, skills: engineer.skills.join("|"), transport: engineer.transport, shiftStart: engineer.shiftStart, shiftEnd: engineer.shiftEnd, startAddress: engineer.startAddress, startMode: engineer.startMode, officeAddress: engineer.officeAddress, equipmentIssue: engineer.equipmentIssue, color: engineer.color, speedKmh: engineer.speedKmh ?? "" }));
   return "\uFEFF" + columns.join(",") + "\r\n" + [...jobs, ...engineers].map(row => columns.map(column => legacyCsvCell((row as Record<string, unknown>)[column])).join(",")).join("\r\n") + "\r\n";
 }
 

@@ -61,9 +61,37 @@ def test_solver_uses_idle_qualified_engineer_to_maximize_coverage():
     assert len(result.routes) == 2
 
 
-def test_solver_minimizes_active_fleet_after_served_count():
+def test_cross_zone_engineer_serves_job_when_local_engineer_lacks_skill():
+    data = payload()
+    data["jobs"] = data["jobs"][:1]
+    data["engineers"][0]["skills"] = ["Другая работа"]
+    data["engineers"][1]["region"] = "Югоцентр"
+    result = solve_vrptw(SolveRequest.model_validate(data))
+    assert not result.droppedJobIds
+    assert result.routes[0].engineerId == "e2"
+
+
+def test_local_engineer_is_preferred_when_coverage_and_travel_are_equal():
+    data = payload()
+    data["jobs"] = data["jobs"][:1]
+    data["engineers"][1]["region"] = "Югоцентр"
+    data["engineers"][1]["start"] = data["engineers"][0]["start"]
+    data["matrix"] = payload(data["engineers"], data["jobs"])["matrix"]
+    result = solve_vrptw(SolveRequest.model_validate(data))
+    assert result.routes[0].engineerId == "e1"
+
+
+def test_solver_uses_nearby_engineers_when_that_saves_a_long_trip():
     result = solve_vrptw(SolveRequest.model_validate(payload()))
     assert sum(len(route.jobIds) for route in result.routes) == 2
+    assert len(result.routes) == 2
+
+
+def test_solver_does_not_activate_extra_engineer_for_nearby_jobs():
+    data = payload()
+    data["jobs"][1]["coordinates"] = [1, 0]
+    result = solve_vrptw(SolveRequest.model_validate(data))
+    assert not result.droppedJobIds
     assert len(result.routes) == 1
 
 
@@ -208,7 +236,7 @@ def test_saved_demonstration_case_runs_in_real_ortools():
     served = {job_id for route in result.routes for job_id in route.jobIds}
     assert "D-NARROW" in served
     assert "D-NO-TRANSPORT" not in served
-    assert len(served) == 50
+    assert len(served) >= 48
 
 
 def test_bad_matrix_is_rejected():

@@ -33,6 +33,7 @@ function verifyRoundTrip(fileName, text) {
     assert.deepEqual(actual.start, expected.start);
     assert.deepEqual(actual.skills, expected.skills);
     assert.deepEqual(actual.equipment, expected.equipment);
+    assert.deepEqual(actual.equipmentOptions, expected.equipmentOptions ?? expected.equipment);
     assert.equal(actual.transport, expected.transport);
     assert.equal(actual.shiftStart, expected.shiftStart);
     assert.equal(actual.shiftEnd, expected.shiftEnd);

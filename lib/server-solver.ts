@@ -31,7 +31,7 @@ export function createSolverPayload(engineers: Engineer[], jobs: Job[], speedKmh
   const previousAppointments = previous ? Object.fromEntries(previous.routes.flatMap(route => route.stops
     .filter(stop => remaining.has(stop.jobId))
     .map(stop => [stop.jobId, { engineerId: route.engineerId, start: stop.start }]))) : undefined;
-  return { engineers, jobs, speedKmh, urgentId, eventTime: event?.time, eventType: event?.type, forcedAssignments, previousAppointments, timeLimitSeconds: forcedAssignments ? 8 : 12, matrix: dense(travel), modeMatrices };
+  return { engineers, jobs, speedKmh, urgentId, eventTime: event?.time, eventType: event?.type, forcedAssignments, previousAppointments, timeLimitSeconds: forcedAssignments ? 8 : jobs.length <= 75 ? 30 : jobs.length <= 250 ? 25 : 35, matrix: dense(travel), modeMatrices };
 }
 
 export function travelFromSolverPayload(payload: SolverPayload): TravelMatrix {

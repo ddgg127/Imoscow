@@ -71,7 +71,7 @@ class SolveRequest(BaseModel):
     previousAppointments: dict[str, PreviousAppointment] = Field(default_factory=dict)
     matrix: Matrix
     modeMatrices: dict[str, Matrix] = Field(default_factory=dict)
-    timeLimitSeconds: int = Field(default=12, ge=1, le=60)
+    timeLimitSeconds: int = Field(default=12, ge=1, le=90)
 
 
 class RouteOrder(BaseModel):
@@ -99,7 +99,6 @@ def compatible(engineer: Engineer, job: Job) -> bool:
     return (
         not job.cancelled
         and job.executionStatus != "completed"
-        and engineer.region == job.region
         and (
             engineer.transport == job.requiredTransport if job.requiredTransport
             else engineer.transport in job.allowedTransports if job.allowedTransports
@@ -194,7 +193,10 @@ def solve_vrptw(data: SolveRequest) -> SolveResponse:
             # int64 overflow for the complete 205-job source dataset.
             cost = max(0, int(round(value * 10)))
             if to_node >= engineer_count:
-                old = data.previousAppointments.get(data.jobs[to_node - engineer_count].id)
+                job = data.jobs[to_node - engineer_count]
+                if job.region != data.engineers[vehicle].region:
+                    cost += 150  # Prefer the local zone when coverage is equal.
+                old = data.previousAppointments.get(job.id)
                 if old and old.engineerId != data.engineers[vehicle].id:
                     cost += assignment_change_cost
             return cost
@@ -215,11 +217,13 @@ def solve_vrptw(data: SolveRequest) -> SolveResponse:
     for vehicle, distance_index in enumerate(distance_indices):
         routing.SetArcCostEvaluatorOfVehicle(distance_index, vehicle)
 
-    # Lexicographic: elevated jobs -> total served -> stability, active fleet,
-    # and distance. Work class specifies the skill, not an extra priority tier.
+    # Lexicographic: elevated jobs -> total served -> stability, then a
+    # balanced travel/fleet cost. A small activation cost avoids needless
+    # vehicles, but cannot force a long cross-city trip to save one engineer.
+    # Work class specifies the skill, not an extra priority tier.
     max_total_distance = max(1, max_arc_cost * len(data.jobs))
-    vehicle_weight = max_total_distance + 1
-    max_fleet_and_distance = len(data.engineers) * vehicle_weight + max_total_distance
+    vehicle_weight = 50  # 5 km per active engineer in 100 m cost units.
+    max_fleet_and_distance = len(data.engineers) * vehicle_weight + max_total_distance + 150 * len(data.jobs)
     max_stability_cost = len(data.previousAppointments) * (assignment_change_cost + (max(engineer.shiftEnd for engineer in data.engineers) + 1440) * time_shift_cost)
     secondary_cost = max_fleet_and_distance + max_stability_cost
     dropped_job_weight = secondary_cost + 1

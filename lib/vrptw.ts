@@ -30,6 +30,17 @@ export type Engineer = {
 };
 export type RouteStop = { jobId: string; arrival: number; start: number; end: number; distanceKm: number; travelMinutes?: number; onTime: boolean };
 export type RoutePlan = { engineerId: string; stops: RouteStop[]; distanceKm: number; durationMinutes: number; load: number };
+
+/** Account for service and travel as occupied time; an empty window is idle. */
+export function routeTimeBreakdown(stops: RouteStop[], shiftMinutes: number) {
+  const service = stops.reduce((sum, stop) => sum + Math.max(0, stop.end - stop.start), 0);
+  const travel = stops.reduce((sum, stop) => sum + Math.max(0, stop.travelMinutes ?? 0), 0);
+  const first = stops[0];
+  const last = stops[stops.length - 1];
+  const elapsed = first && last ? last.end - (first.arrival - (first.travelMinutes ?? 0)) : 0;
+  const waiting = Math.max(0, elapsed - service - travel);
+  return { service, travel, waiting, load: Math.round((service + travel) / Math.max(1, shiftMinutes) * 100) };
+}
 export type PlanMetrics = { assigned: number; total: number; unassigned: number; activeEngineers: number; distanceKm: number; slaPercent: number; late: number; utilization: number };
 export type ZoneMetric = { name: Region; jobs: number; assigned: number; baselineAssigned: number; sla: number; distance: number; baselineDistance: number; engineers: number; baselineEngineers: number };
 export type PlanComparison = {
@@ -330,14 +341,12 @@ export function transportAllowed(job: Pick<Job, "requiredTransport" | "allowedTr
 function engineerTransport(value: string) { return value === "Пешеход" ? "Пешком" : value; }
 
 export function compatible(engineer: Engineer, job: Job) {
-  return !job.cancelled && job.executionStatus !== "completed" && engineer.region === job.region && transportAllowed(job, engineer.transport) && engineer.equipment.includes(job.equipment) && engineer.skills.includes(job.kind);
+  return !job.cancelled && job.executionStatus !== "completed" && transportAllowed(job, engineer.transport) && engineer.equipment.includes(job.equipment) && engineer.skills.includes(job.kind);
 }
 
 export function resourceBlocker(engineers: Engineer[], job: Job) {
-  const local = engineers.filter(engineer => engineer.region === job.region);
-  if (!local.length) return `В регионе ${job.region} нет доступных инженеров.`;
-  const skilled = local.filter(engineer => engineer.skills.includes(job.kind));
-  if (!skilled.length) return `Нет инженера с навыком «${job.kind}» в регионе ${job.region}.`;
+  const skilled = engineers.filter(engineer => engineer.skills.includes(job.kind));
+  if (!skilled.length) return `Нет инженера с навыком «${job.kind}».`;
   const equipped = skilled.filter(engineer => engineer.equipment.includes(job.equipment));
   if (!equipped.length) return `У инженеров с нужным навыком нет оборудования «${job.equipment}».`;
   if (!equipped.some(engineer => transportAllowed(job, engineer.transport))) return `Нет инженера с требуемым транспортом «${job.requiredTransport || job.allowedTransports?.join(", ") || "любой"}».`;
@@ -360,7 +369,7 @@ export function simulate(engineer: Engineer, route: Job[], hardWindows = true, s
     point = job.coordinates;
     time = end;
   }
-  return { engineerId: engineer.id, stops, distanceKm: totalDistance, durationMinutes: Math.max(0, time - engineer.shiftStart), load: Math.round(Math.max(0, time - engineer.shiftStart) / (engineer.shiftEnd - engineer.shiftStart) * 100) };
+  return { engineerId: engineer.id, stops, distanceKm: totalDistance, durationMinutes: Math.max(0, time - engineer.shiftStart), load: routeTimeBreakdown(stops, engineer.shiftEnd - engineer.shiftStart).load };
 }
 
 function planScore(plan: RoutePlan, engineer: Engineer) {
@@ -513,6 +522,16 @@ export function compareReplannedPlans(before: OptimizationResult, after: Optimiz
   const jobIds = new Set([...before.jobs.map(job => job.id), ...after.jobs.map(job => job.id)]);
   const oldStops = new Map(before.routes.flatMap(route => route.stops.map(stop => [stop.jobId, stop] as const)));
   const newStops = new Map(after.routes.flatMap(route => route.stops.map(stop => [stop.jobId, stop] as const)));
+  // Removing or transferring a stop changes the displayed ordinal of later
+  // visits, but does not change their order relative to one another.
+  const retainedOrder = new Map<string, { before: number; after: number }>();
+  for (const oldRoute of before.routes) {
+    const newRoute = after.routes.find(route => route.engineerId === oldRoute.engineerId);
+    if (!newRoute) continue;
+    const oldIds = oldRoute.stops.map(stop => stop.jobId).filter(id => next.get(id)?.engineerId === oldRoute.engineerId);
+    const newIds = newRoute.stops.map(stop => stop.jobId).filter(id => previous.get(id)?.engineerId === oldRoute.engineerId);
+    for (const [index, id] of oldIds.entries()) retainedOrder.set(id, { before: index, after: newIds.indexOf(id) });
+  }
   for (const jobId of jobIds) {
     if (eventTime != null && (oldStops.get(jobId)?.start ?? Infinity) < eventTime) continue;
     const oldPlace = previous.get(jobId);
@@ -527,7 +546,7 @@ export function compareReplannedPlans(before: OptimizationResult, after: Optimiz
         || (event.type === "new_job" && event.id === jobId)
         || (event.type === "engineer_unavailable" && oldPlace?.engineerId === event.id)) ? "required" as const : undefined;
       changes.push({ kind: "assignment", key: `assignment-${jobId}`, message, necessity });
-    } else if (oldPlace && newPlace && oldPlace.position !== newPlace.position) {
+    } else if (oldPlace && newPlace && retainedOrder.get(jobId)?.before !== retainedOrder.get(jobId)?.after) {
       changes.push({ kind: "order", key: `order-${jobId}`, message: `№${jobId} перемещена с ${oldPlace.position}-го на ${newPlace.position}-е место в маршруте ${names.get(newPlace.engineerId) ?? newPlace.engineerId}.` });
     }
     const oldTime = oldStops.get(jobId)?.start;
@@ -575,14 +594,13 @@ export function explainAssignment(job: Job, engineer: Engineer, plan: RoutePlan,
   const checks = [
     `Навык «${job.kind}» подтверждён у инженера.`,
     `Оборудование «${job.equipment}» и транспорт «${engineer.transport}» доступны.`,
-    `Регион ${job.region}; прибытие ${minutesLabel(stop?.arrival ?? start)}, начало ${minutesLabel(start)}, окончание ${minutesLabel(stop?.end ?? start + job.serviceMinutes)} — внутри SLA ${job.time} и смены ${minutesLabel(engineer.shiftStart)}–${minutesLabel(engineer.shiftEnd)}.`,
+    `Зона заявки ${job.region}${engineer.region === job.region ? "" : `; межзонный выезд из ${engineer.region}`}; прибытие ${minutesLabel(stop?.arrival ?? start)}, начало ${minutesLabel(start)}, окончание ${minutesLabel(stop?.end ?? start + job.serviceMinutes)} — внутри SLA ${job.time} и смены ${minutesLabel(engineer.shiftStart)}–${minutesLabel(engineer.shiftEnd)}.`,
     plan.stops.length > 1 ? `Заявка встроена в уже используемый маршрут; дополнительный инженер не потребовался.` : `Для выполнения заявки задействован этот инженер.`,
     `Вклад заявки в маршрут — около ${distanceImpactKm.toFixed(1)} км.`,
   ];
 
   const alternatives = engineers.filter(item => item.id !== engineer.id).map(candidate => {
     const prefix = { engineerId: candidate.id, engineerName: candidate.name || candidate.id, proximityKm: travelDistance(candidate.start, job.coordinates, speedKmh, travel, candidate) };
-    if (candidate.region !== job.region) return { ...prefix, feasible: false, reason: `другой регион: ${candidate.region}` };
     if (!candidate.skills.includes(job.kind)) return { ...prefix, feasible: false, reason: `нет навыка «${job.kind}»` };
     if (!candidate.equipment.includes(job.equipment)) return { ...prefix, feasible: false, reason: `нет оборудования «${job.equipment}»` };
     if (!transportAllowed(job, candidate.transport)) return { ...prefix, feasible: false, reason: `транспорт «${candidate.transport}» не подходит` };
@@ -1065,12 +1083,12 @@ function finish(engineers: Engineer[], inputJobs: Job[], jobs: Job[], assignment
   const metrics = metricsFrom(engineers, resultJobs, routes);
   const zones = regions.map(name => {
     const zoneJobs = resultJobs.filter(job => job.region === name && !job.cancelled && job.executionStatus !== "completed");
-    const ids = new Set(engineers.filter(engineer => engineer.region === name).map(engineer => engineer.id));
-    const zoneRoutes = routes.filter(route => ids.has(route.engineerId));
-    const baseRoutes = baseline.routes.filter(route => ids.has(route.engineerId));
-    const assigned = zoneRoutes.reduce((sum, route) => sum + route.stops.length, 0);
-    const onTime = zoneRoutes.reduce((sum, route) => sum + route.stops.filter(stop => stop.onTime).length, 0);
-    return { name, jobs: zoneJobs.length, assigned, baselineAssigned: baseRoutes.reduce((sum, route) => sum + route.stops.length, 0), sla: zoneJobs.length ? Math.round(onTime / zoneJobs.length * 100) : 0, distance: zoneRoutes.reduce((sum, route) => sum + route.distanceKm, 0), baselineDistance: baseRoutes.reduce((sum, route) => sum + route.distanceKm, 0), engineers: zoneRoutes.length, baselineEngineers: baseRoutes.length };
+    const zoneIds = new Set(zoneJobs.map(job => job.id));
+    const selected = (plans: RoutePlan[]) => plans.flatMap(route => route.stops.filter(stop => zoneIds.has(stop.jobId)).map(stop => ({ engineerId: route.engineerId, stop })));
+    const zoneStops = selected(routes);
+    const baseStops = selected(baseline.routes);
+    const onTime = zoneStops.filter(item => item.stop.onTime).length;
+    return { name, jobs: zoneJobs.length, assigned: zoneStops.length, baselineAssigned: baseStops.length, sla: zoneJobs.length ? Math.round(onTime / zoneJobs.length * 100) : 0, distance: zoneStops.reduce((sum, item) => sum + item.stop.distanceKm, 0), baselineDistance: baseStops.reduce((sum, item) => sum + item.stop.distanceKm, 0), engineers: new Set(zoneStops.map(item => item.engineerId)).size, baselineEngineers: new Set(baseStops.map(item => item.engineerId)).size };
   });
   return { jobs: resultJobs, routes, baselineRoutes: baseline.routes, metrics, baseline: baseline.metrics, comparison: comparePlansStrict(engineers, inputJobs, baseline.routes, routes, speedKmh, travel), zones, runtimeMs: Math.round((performance.now() - started) * 10) / 10 };
 }

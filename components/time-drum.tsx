@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { startTransition, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Pause, Play } from "lucide-react";
-import { dragTime } from "@/lib/time-drum-motion";
+import { createTimeDrumMotion, dragTime } from "@/lib/time-drum-motion";
 import { minutesLabel } from "@/lib/vrptw";
 
 const STEP = 30;
@@ -35,8 +35,10 @@ type DrumProps = {
 export function TimeDrum({ start, end, time, playing, speed, onTime, onPlaying, onSpeed, disabled }: DrumProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const lensRef = useRef<HTMLDivElement>(null);
+  const stripRef = useRef<HTMLDivElement>(null);
+  const labelRef = useRef<HTMLElement>(null);
   const speedRef = useRef<HTMLDivElement>(null);
-  const timeRef = useRef(time);
+  const [initialTime] = useState(time);
   const startRef = useRef(start);
   const endRef = useRef(end);
   const onTimeRef = useRef(onTime);
@@ -44,11 +46,10 @@ export function TimeDrum({ start, end, time, playing, speed, onTime, onPlaying, 
   const onSpeedRef = useRef(onSpeed);
   const disabledRef = useRef(disabled);
   const speedValueRef = useRef(speed);
-  const dragRef = useRef<{ y: number; time: number } | null>(null);
-  const frameRef = useRef<number | null>(null);
+  const dragRef = useRef<{ y: number; time: number; fine: boolean } | null>(null);
+  const motionRef = useRef<ReturnType<typeof createTimeDrumMotion> | null>(null);
   const [speedOpen, setSpeedOpen] = useState(false);
-  useEffect(() => {
-    timeRef.current = time;
+  useLayoutEffect(() => {
     startRef.current = start;
     endRef.current = end;
     onTimeRef.current = onTime;
@@ -65,18 +66,30 @@ export function TimeDrum({ start, end, time, playing, speed, onTime, onPlaying, 
     return list;
   }, [start, end]);
 
-  const clamp = useCallback((value: number) => Math.min(endRef.current, Math.max(startRef.current, value)), []);
-  const setTimeSmoothly = useCallback((value: number) => {
-    timeRef.current = clamp(value);
-    if (frameRef.current === null) {
-      frameRef.current = requestAnimationFrame(() => {
-        frameRef.current = null;
-        onTimeRef.current(timeRef.current);
-      });
-    }
-  }, [clamp]);
-
-  useEffect(() => () => { if (frameRef.current !== null) cancelAnimationFrame(frameRef.current); }, []);
+  useLayoutEffect(() => {
+    const motion = createTimeDrumMotion({ time: initialTime, start: startRef.current, end: endRef.current,
+      requestFrame: callback => requestAnimationFrame(callback), cancelFrame: id => cancelAnimationFrame(id),
+      paint: value => {
+        const label = minutesLabel(value);
+        if (stripRef.current) stripRef.current.style.transform = `translate3d(0, ${-(value - Math.floor(startRef.current / STEP) * STEP) / STEP * ITEM}px, 0)`;
+        if (labelRef.current) labelRef.current.textContent = label;
+        if (lensRef.current) {
+          lensRef.current.setAttribute("aria-valuenow", String(Math.round(value)));
+          lensRef.current.setAttribute("aria-valuetext", label);
+        }
+      },
+      publish: (value, final) => {
+        if (final) onTimeRef.current(value);
+        else startTransition(() => onTimeRef.current(value));
+      },
+    });
+    motionRef.current = motion;
+    return () => { motion.dispose(); motionRef.current = null; };
+  }, [initialTime]);
+  useLayoutEffect(() => {
+    motionRef.current?.sync(time, start, end);
+    if (disabled && motionRef.current?.isMoving()) { dragRef.current = null; motionRef.current.finish(); }
+  }, [time, start, end, disabled]);
 
   useEffect(() => {
     const el = lensRef.current;
@@ -86,11 +99,13 @@ export function TimeDrum({ start, end, time, playing, speed, onTime, onPlaying, 
       if (disabledRef.current) return;
       onPlayingRef.current(false);
       const gain = event.shiftKey ? FINE : 1;
-      setTimeSmoothly(timeRef.current + event.deltaY * WHEEL * gain);
+      const delta = event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? el.clientHeight : 1);
+      const motion = motionRef.current;
+      if (motion) motion.set(motion.getTarget() + delta * WHEEL * gain, true);
     };
     el.addEventListener("wheel", onWheel, { passive: false });
     return () => el.removeEventListener("wheel", onWheel);
-  }, [setTimeSmoothly]);
+  }, []);
 
   useEffect(() => {
     if (!speedOpen) return;
@@ -122,7 +137,7 @@ export function TimeDrum({ start, end, time, playing, speed, onTime, onPlaying, 
     return () => el.removeEventListener("wheel", onWheel);
   }, []);
 
-  const offset = ((time - start) / STEP) * ITEM;
+  const offset = ((initialTime - Math.floor(start / STEP) * STEP) / STEP) * ITEM;
 
   return (
     <div className="time-drum" ref={hostRef} aria-label="Барабан времени смены">
@@ -132,7 +147,9 @@ export function TimeDrum({ start, end, time, playing, speed, onTime, onPlaying, 
         disabled={disabled}
         aria-label={playing ? "Пауза симуляции" : "Продолжить симуляцию"}
         onClick={() => {
-          if (!playing && time >= end - 1e-6) onTime(start);
+          const motion = motionRef.current;
+          if (motion?.isMoving()) motion.finish();
+          if (!playing && (motion?.getTime() ?? time) >= end - 1e-6) onTime(start);
           onPlaying(!playing);
         }}
       >
@@ -176,46 +193,55 @@ export function TimeDrum({ start, end, time, playing, speed, onTime, onPlaying, 
         tabIndex={disabled ? -1 : 0}
         aria-valuemin={start}
         aria-valuemax={end}
-        aria-valuenow={Math.round(time)}
-        aria-valuetext={minutesLabel(time)}
+        aria-valuenow={Math.round(initialTime)}
+        aria-valuetext={minutesLabel(initialTime)}
         aria-label="Время смены"
         onPointerDown={event => {
           if (disabled) return;
           event.preventDefault();
           try { event.currentTarget.setPointerCapture(event.pointerId); } catch { /* synthetic pointer */ }
-          dragRef.current = { y: event.clientY, time: timeRef.current };
+          motionRef.current?.begin();
+          dragRef.current = { y: event.clientY, time: motionRef.current?.getTime() ?? time, fine: event.shiftKey };
           onPlaying(false);
         }}
         onPointerMove={event => {
           if (!dragRef.current || disabledRef.current) return;
+          if (event.shiftKey !== dragRef.current.fine) dragRef.current = { y: event.clientY, time: motionRef.current?.getTime() ?? time, fine: event.shiftKey };
           const dy = event.clientY - dragRef.current.y;
-          setTimeSmoothly(dragTime(dragRef.current.time, dy, ITEM, STEP, event.shiftKey, startRef.current, endRef.current));
+          motionRef.current?.set(dragTime(dragRef.current.time, dy, ITEM, STEP, event.shiftKey, startRef.current, endRef.current));
         }}
-        onPointerUp={() => { dragRef.current = null; }}
-        onPointerCancel={() => { dragRef.current = null; }}
+        onPointerUp={() => { if (dragRef.current) motionRef.current?.finish(); dragRef.current = null; }}
+        onPointerCancel={() => { if (dragRef.current) motionRef.current?.finish(); dragRef.current = null; }}
+        onLostPointerCapture={() => { if (dragRef.current) motionRef.current?.finish(); dragRef.current = null; }}
         onKeyDown={event => {
           if (disabled) return;
           if (event.key === "ArrowDown" || event.key === "PageDown") {
             event.preventDefault();
-            onTime(clamp(time + (event.key === "PageDown" ? 60 : event.shiftKey ? 1 : 15)));
+            onPlaying(false);
+            const motion = motionRef.current;
+            if (motion) motion.set(motion.getTarget() + (event.key === "PageDown" ? 60 : event.shiftKey ? 1 : 15), true);
           }
           if (event.key === "ArrowUp" || event.key === "PageUp") {
             event.preventDefault();
-            onTime(clamp(time - (event.key === "PageUp" ? 60 : event.shiftKey ? 1 : 15)));
+            onPlaying(false);
+            const motion = motionRef.current;
+            if (motion) motion.set(motion.getTarget() - (event.key === "PageUp" ? 60 : event.shiftKey ? 1 : 15), true);
           }
-          if (event.key === "Home") { event.preventDefault(); onTime(start); }
-          if (event.key === "End") { event.preventDefault(); onTime(end); }
+          if (event.key === "Home") { event.preventDefault(); onPlaying(false); motionRef.current?.set(start); }
+          if (event.key === "End") { event.preventDefault(); onPlaying(false); motionRef.current?.set(end); }
           if (event.key === " ") {
             event.preventDefault();
-            if (!playing && time >= end - 1e-6) onTime(start);
+            const motion = motionRef.current;
+            if (motion?.isMoving()) motion.finish();
+            if (!playing && (motion?.getTime() ?? time) >= end - 1e-6) onTime(start);
             onPlaying(!playing);
           }
         }}
       >
         <div className="time-drum-window" aria-hidden>
-          <b>{minutesLabel(time)}</b>
+          <b ref={labelRef}>{minutesLabel(initialTime)}</b>
         </div>
-        <div className="time-drum-strip" style={{ transform: `translateY(${-offset}px)` }}>
+        <div ref={stripRef} className="time-drum-strip" style={{ transform: `translate3d(0, ${-offset}px, 0)`, willChange: "transform" }}>
           {ticks.map(tick => (
             <div key={tick} className={`time-drum-tick${tick % 60 === 0 ? " hour" : ""}`}>{minutesLabel(tick)}</div>
           ))}

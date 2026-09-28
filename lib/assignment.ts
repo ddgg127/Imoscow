@@ -1,4 +1,5 @@
 import type { Coordinate } from "./map-providers";
+import { transportAllowed } from "./vrptw.ts";
 import type {
   AssignmentAlternative,
   AssignmentExplanation,
@@ -16,7 +17,7 @@ import type {
  * Здесь только исполнимый код. Порядок остановок (2-opt, отжиг) живёт в `vrptw.ts`.
  *
  * Порядок решения:
- * 1. Жёсткий фильтр ресурсов: регион, навык, оборудование, транспорт, отмена.
+ * 1. Жёсткий фильтр ресурсов: навык, оборудование, транспорт, отмена.
  * 2. Очередь заявок: сначала срочные и с более ранним концом окна.
  * 3. Выбор инженера: дельта целевой функции вставки, штраф за нового человека.
  * 4. Baseline ТЗ: входной порядок заявок, первый допустимый инженер, только в конец.
@@ -46,7 +47,7 @@ export type AssignmentEval = {
   objective?: SearchObjective;
 };
 
-const BASELINE_NO_RESOURCE = "Нет инженера с нужными навыком, оборудованием и транспортом в регионе.";
+const BASELINE_NO_RESOURCE = "Нет инженера с нужными навыком, оборудованием и транспортом.";
 const BASELINE_NO_TAIL = "Последовательный baseline не нашёл инженера, которому заявку можно добавить в конец маршрута без нарушения окна или смены.";
 
 export function compatible(engineer: Engineer, job: Job) {
@@ -56,11 +57,9 @@ export function compatible(engineer: Engineer, job: Job) {
 /** Почему инженер не проходит жёсткий фильтр ТЗ; `null` — ресурсы сходятся. */
 export function compatibilityFailure(engineer: Engineer, job: Job): string | null {
   if (job.cancelled) return "заявка отменена";
-  if (engineer.region !== job.region) return `другой регион: ${engineer.region}`;
   if (!engineer.skills.includes(job.kind)) return `нет навыка «${job.kind}»`;
   if (!engineer.equipment.includes(job.equipment)) return `нет оборудования «${job.equipment}»`;
-  const transports = job.allowedTransports ?? [job.requiredTransport];
-  if (!transports.includes(engineer.transport)) return `транспорт «${engineer.transport}» не подходит`;
+  if (!transportAllowed(job, engineer.transport)) return `транспорт «${engineer.transport}» не подходит`;
   return null;
 }
 

@@ -25,11 +25,13 @@ test("a selected stop shows only its incoming road segment and origin", () => {
   assert.equal(second.originLabel, "Заявка № a");
 });
 
-test("execution state follows arrival and completion, with manual completion preserved", () => {
+test("execution starts with service, not arrival while waiting for the window", () => {
   const job = { ...csvJobs[0], executionStatus: "not_started" };
-  const stop = { arrival: 500, end: 560 };
+  const stop = { arrival: 500, start: 530, end: 560 };
   assert.equal(executionAtTime(job, stop, 499), "not_started");
-  assert.equal(executionAtTime(job, stop, 500), "in_progress");
+  assert.equal(executionAtTime(job, stop, 500), "not_started");
+  assert.equal(executionAtTime(job, stop, 529), "not_started");
+  assert.equal(executionAtTime(job, stop, 530), "in_progress");
   assert.equal(executionAtTime(job, stop, 559), "in_progress");
   assert.equal(executionAtTime(job, stop, 560), "completed");
   assert.equal(executionAtTime({ ...job, executionStatus: "completed" }, stop, 480), "completed");

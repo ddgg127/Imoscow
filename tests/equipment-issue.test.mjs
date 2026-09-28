@@ -14,6 +14,55 @@ test("pre-shift issue gives each engineer one type and reserves unique urgent eq
   assert.deepEqual(issued[1].equipmentOptions, ["ONT", "Рефлектометр"]);
 });
 
+test("equipment choice counts work that fits the schedule, not just raw demand", () => {
+  const tight = ["A1", "A2", "A3"].map(id => ({ ...job(id, "A"), windowEnd: 480, serviceMinutes: 60 }));
+  const spaced = [{ ...job("B1", "B"), windowEnd: 550, serviceMinutes: 60 }, { ...job("B2", "B"), windowStart: 650, windowEnd: 700, serviceMinutes: 60 }];
+  const [issued] = issueDailyEquipment([engineer("flex", ["A", "B"])], [...tight, ...spaced]);
+  assert.deepEqual(issued.equipment, ["B"]);
+});
+
+test("one low-demand kit yields to a kit serving five compatible visits", () => {
+  const oldKit = { ...job("A1", "A"), windowStart: 480, windowEnd: 540, serviceMinutes: 30 };
+  const visits = Array.from({ length: 5 }, (_, index) => ({ ...job(`B${index + 1}`, "B"), windowStart: 480 + index * 70, windowEnd: 540 + index * 70, serviceMinutes: 30 }));
+  assert.deepEqual(issueDailyEquipment([engineer("flex", ["A", "B"])], [oldKit, ...visits])[0].equipment, ["B"]);
+});
+
+test("pre-shift kit choice uses the loaded travel matrix", () => {
+  const crew = [{ ...engineer("flex", ["A", "B"]), start: [0, 0] }];
+  const jobs = [{ ...job("A1", "A"), coordinates: [0.1, 0], windowEnd: 500 }, { ...job("B1", "B"), coordinates: [0.2, 0], windowEnd: 500 }];
+  const travel = { distanceKm: (_from, to) => to[0] === 0.1 ? 50 : 1, durationMin: (_from, to) => to[0] === 0.1 ? 80 : 5 };
+  assert.deepEqual(issueDailyEquipment(crew, jobs, travel)[0].equipment, ["B"]);
+});
+
+test("kit exchange improves travel without dropping either equipment type", () => {
+  const crew = [
+    { ...engineer("west", ["A", "B"]), start: [0, 0] },
+    { ...engineer("east", ["A", "B"]), start: [10, 0] },
+  ];
+  const jobs = [
+    { ...job("B", "B"), coordinates: [10, 0], windowEnd: 720 },
+    { ...job("A", "A"), coordinates: [0, 0], windowEnd: 900 },
+  ];
+  const travel = { distanceKm: (from, to) => Math.abs(from[0] - to[0]) * 10, durationMin: (from, to) => Math.abs(from[0] - to[0]) * 10 };
+  const issued = issueDailyEquipment(crew, jobs, travel);
+  assert.deepEqual(issued.map(item => item.equipment), [["A"], ["B"]]);
+});
+
+test("repeated pre-shift planning reselects kits from the full inventory when windows change", () => {
+  const source = ["A1", "A2", "A3"].map(id => ({ ...job(id, "A"), windowEnd: 480, serviceMinutes: 60 }));
+  source.push({ ...job("B1", "B"), windowEnd: 550, serviceMinutes: 60 }, { ...job("B2", "B"), windowStart: 650, windowEnd: 700, serviceMinutes: 60 });
+  const first = issueDailyEquipment([engineer("flex", ["A", "B"])], source);
+  const changedWindows = source.map(item => item.equipment === "A" ? { ...item, windowEnd: 960 } : item);
+  const changed = issueDailyEquipment(first, changedWindows);
+  const repeated = issueDailyEquipment(changed, changedWindows);
+  const restored = issueDailyEquipment(repeated, source);
+  assert.deepEqual(first[0].equipment, ["B"]);
+  assert.deepEqual(changed[0].equipment, ["A"]);
+  assert.deepEqual(repeated[0].equipment, ["A"]);
+  assert.deepEqual(restored[0].equipment, ["B"]);
+  assert.deepEqual(restored[0].equipmentOptions, ["A", "B"]);
+});
+
 test("outage cannot reissue a rare kit mid-shift, so future work stays unassigned", () => {
   const jobs = [job("rare", "Рефлектометр", 2)];
   const crew = issueDailyEquipment([engineer("rare-carrier", ["Рефлектометр"]), engineer("other", ["ONT", "Рефлектометр"])], jobs);

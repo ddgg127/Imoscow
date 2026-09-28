@@ -29,16 +29,17 @@ const plan = (distanceKm, durationMinutes = 60, wait = 0) => ({
   stops: [{ jobId: "a", arrival: 480, start: 480 + wait, end: 510 + wait, distanceKm, onTime: true }],
 });
 
-test("resource filter keeps only same region, skill, equipment and allowed transport", () => {
+test("resource filter allows cross-zone work but enforces skill, equipment and transport", () => {
   const base = engineer("e1");
   const task = job("a");
   assert.equal(compatible(base, task), true);
   assert.equal(compatible(base, job("a", { cancelled: true })), false);
-  assert.equal(compatibilityFailure(engineer("e1", { region: "Югоцентр" }), task), "другой регион: Югоцентр");
+  assert.equal(compatibilityFailure(engineer("e1", { region: "Югоцентр" }), task), null);
   assert.equal(compatibilityFailure(engineer("e1", { skills: ["Диагностика"] }), task), "нет навыка «Монтаж»");
   assert.equal(compatibilityFailure(engineer("e1", { equipment: ["Рефлектометр"] }), task), "нет оборудования «ONT»");
   assert.equal(compatibilityFailure(engineer("e1", { transport: "Пешеход" }), task), "транспорт «Пешеход» не подходит");
-  assert.equal(compatible(engineer("e1", { transport: "Велосипед" }), job("a", { allowedTransports: ["Велосипед", "Автомобиль"] })), true);
+  assert.equal(compatible(engineer("e1", { transport: "Велосипед" }), job("a", { requiredTransport: "", allowedTransports: ["Велосипед", "Автомобиль"] })), true);
+  assert.equal(compatible(engineer("e1", { transport: "Велосипед" }), job("a", { requiredTransport: "" })), true);
 });
 
 test("construction queue prefers urgent jobs and earlier windows", () => {

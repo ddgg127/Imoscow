@@ -26,12 +26,12 @@ export function matchesEditorQuery(item: Job | Engineer, query: string, unavaila
   return terms.every(term => text.includes(term));
 }
 
-export function executionAtTime(job: Job, stop: { arrival: number; end: number } | undefined, time: number | null) {
+export function executionAtTime(job: Job, stop: { arrival: number; start?: number; end: number } | undefined, time: number | null) {
   if (job.executionStatus === "completed") return "completed" as const;
   if (time == null || !stop) return job.executionStatus ?? "not_started";
   if (time >= stop.end) return "completed" as const;
-  if (time >= stop.arrival) return "in_progress" as const;
-  return job.executionStatus ?? "not_started";
+  if (time >= (stop.start ?? stop.arrival)) return "in_progress" as const;
+  return "not_started" as const;
 }
 
 export function parseTime(value: string) {

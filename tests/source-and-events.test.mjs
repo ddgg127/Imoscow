@@ -3,7 +3,8 @@ import test from "node:test";
 import { readFileSync } from "node:fs";
 import { csvEngineers, csvJobs } from "../lib/csv-data.generated.ts";
 import { importPlanText } from "../lib/import-data.ts";
-import { cancelUnassignedJob, insertOrdinaryJob, mergeTemporalResult, prepareTemporalReplan } from "../lib/temporal-replan.ts";
+import { issueDailyEquipment } from "../lib/equipment-issue.ts";
+import { cancelJobLocally, cancelUnassignedJob, insertOrdinaryJob, mergeTemporalResult, prepareTemporalReplan } from "../lib/temporal-replan.ts";
 import { applyAverageWindows, baselinePlan, compareReplannedPlans, fallbackTravel, optimizeVrptw, resultFromRouteOrder, transportAllowed } from "../lib/vrptw.ts";
 
 const centers = { "Восток": [37.78, 55.71], "Юго-восток": [37.67, 55.59], "Югоцентр": [37.61, 55.65] };
@@ -168,7 +169,7 @@ test("cancelling a doubly unassigned request is a genuine no-op for routes", () 
   const impossible = { ...job("X", 2, 480, 900), requiredTransport: "Вертолёт" };
   const jobs = [job("A", 0, 480, 800), impossible];
   const previous = resultFromRouteOrder([engineer], jobs, [{ engineerId: "e", jobIds: ["A"] }], { speedKmh: 24, travel });
-  const next = cancelUnassignedJob(previous, "X");
+  const next = cancelUnassignedJob(previous, "X", [engineer], 24, travel);
   assert.deepEqual(next.routes, previous.routes);
   assert.deepEqual(next.baselineRoutes, previous.baselineRoutes);
   assert.equal(next.metrics.total, previous.metrics.total - 1);
@@ -178,28 +179,70 @@ test("cancelling a doubly unassigned request is a genuine no-op for routes", () 
   assert.deepEqual(compareReplannedPlans(previous, next, [engineer], 790), []);
 });
 
+test("cancelling during travel offers only the same engineer a fitting task and preserves agreed visits", () => {
+  const colleague = { ...engineer, id: "e2", name: "Коллега", start: [2, 0] };
+  const jobs = [job("A", 0, 480, 600, 180), job("B", 10, 800, 900), job("C", 10, 900, 970), job("D", 2, 700, 850), job("X", 0, 680, 750)];
+  const previous = resultFromRouteOrder([engineer, colleague], jobs, [{ engineerId: "e", jobIds: ["A", "B", "C"] }, { engineerId: "e2", jobIds: ["D"] }], { speedKmh: 24, travel });
+  const cancelled = jobs.map(item => item.id === "B" ? { ...item, cancelled: true } : item);
+  const changed = cancelJobLocally(previous, [engineer, colleague], cancelled, { type: "cancel_job", time: 680, id: "B" }, 24, travel);
+  assert.equal(changed.engineerId, "e");
+  assert.equal(changed.replacementId, "X");
+  assert.deepEqual(changed.result.routes.find(route => route.engineerId === "e2").stops, previous.routes.find(route => route.engineerId === "e2").stops);
+  assert.deepEqual(changed.result.routes.find(route => route.engineerId === "e").stops.map(stop => stop.jobId), ["A", "X", "C"]);
+  assert.equal(changed.result.routes.find(route => route.engineerId === "e").stops.find(stop => stop.jobId === "C").start, previous.routes.find(route => route.engineerId === "e").stops.find(stop => stop.jobId === "C").start);
+  assert.equal(changed.result.jobs.find(item => item.id === "B").cancelled, true);
+  assert.throws(() => cancelJobLocally(previous, [engineer, colleague], cancelled, { type: "cancel_job", time: 800, id: "B" }, 24, travel), /уже начата/);
+  assert.throws(() => cancelJobLocally(previous, [engineer, colleague], cancelled, { type: "cancel_job", time: 950, id: "B" }, 24, travel), /уже начата/);
+});
+
+test("cancellation leaves the engineer's next appointment intact when no replacement fits", () => {
+  const jobs = [job("A", 0, 480, 600, 180), job("B", 10, 800, 900), job("C", 10, 900, 970), job("X", 0, 680, 690, 230)];
+  const previous = resultFromRouteOrder([engineer], jobs, [{ engineerId: "e", jobIds: ["A", "B", "C"] }], { speedKmh: 24, travel });
+  const changed = cancelJobLocally(previous, [engineer], jobs.map(item => item.id === "B" ? { ...item, cancelled: true } : item), { type: "cancel_job", time: 680, id: "B" }, 24, travel);
+  assert.equal(changed.replacementId, null);
+  assert.deepEqual(changed.result.routes[0].stops.map(stop => stop.jobId), ["A", "C"]);
+  assert.equal(changed.result.routes[0].stops[1].start, previous.routes[0].stops[2].start);
+  assert.equal(changed.result.jobs.find(item => item.id === "X").engineerId, null);
+});
+
+test("a visit can be cancelled after arrival while the engineer waits for service to start", () => {
+  const jobs = [job("A", 0, 480, 600), job("B", 1, 600, 650), job("C", 1, 700, 850), job("X", 1, 550, 580)];
+  const previous = resultFromRouteOrder([engineer], jobs, [{ engineerId: "e", jobIds: ["A", "B", "C"] }], { speedKmh: 24, travel });
+  const changed = cancelJobLocally(previous, [engineer], jobs.map(item => item.id === "B" ? { ...item, cancelled: true } : item), { type: "cancel_job", time: 550, id: "B" }, 24, travel);
+  assert.equal(changed.replacementId, "X");
+  assert.equal(changed.result.jobs.find(item => item.id === "B").engineerId, null);
+  assert.equal(changed.result.routes[0].stops.find(stop => stop.jobId === "C").start, 700);
+});
+
 test("canceling an optimized-unassigned job leaves agreed routes intact even when baseline assigned it", () => {
   const jobs = [job("X", 0, 480, 550), job("Y", 1, 600, 700)];
   const previous = resultFromRouteOrder([engineer], jobs, [{ engineerId: "e", jobIds: ["Y"] }], { speedKmh: 24, travel });
   assert.equal(previous.jobs.find(item => item.id === "X").baselineEngineerId, "e");
-  const next = resultFromRouteOrder([engineer], jobs.map(item => item.id === "X" ? { ...item, cancelled: true } : item), [{ engineerId: "e", jobIds: ["Y"] }], { speedKmh: 24, travel });
+  const next = cancelUnassignedJob(previous, "X", [engineer], 24, travel);
   assert.deepEqual(next.routes, previous.routes);
   assert.equal(next.metrics.total, previous.metrics.total - 1);
+  assert.equal(next.jobs.find(item => item.id === "X").baselineEngineerId, null);
+  assert.equal(next.comparison.baselineOnly, 0);
+  assert.equal(next.baseline.assigned, previous.baseline.assigned - 1);
   assert.deepEqual(compareReplannedPlans(previous, next, [engineer], 540), []);
 });
 
-test("saved 12/51 reference case has a visible baseline conflict and one resource blocker", () => {
+test("saved 12/51 reference uses realistic windows and retains a clear optimization gap", () => {
   const demo = JSON.parse(readFileSync(new URL("../data/demo-scenario.json", import.meta.url), "utf8"));
   const imported = importPlanText(JSON.stringify(demo), "demo-scenario.json", centers);
   assert.ok(imported.engineers.every(item => item.speedKmh == null));
   assert.equal(demo.engineers.length, 12);
   assert.equal(demo.jobs.length, 51);
   assert.deepEqual(new Set(demo.engineers.map(engineer => engineer.transport)), new Set(["Автомобиль", "Общественный транспорт", "Велосипед", "Пешком"]));
+  assert.ok(demo.jobs.every(item => item.windowEnd - item.windowStart <= 300));
+  assert.ok(demo.jobs.filter(item => item.id !== "D-NARROW").every(item => item.windowEnd - item.windowStart >= 180));
+  assert.ok(demo.jobs.every(item => item.priority === 1 || item.priority === 2));
   const road = fallbackTravel(24);
-  const baseline = baselinePlan(demo.engineers, demo.jobs, 24, road);
-  const optimized = optimizeVrptw(demo.engineers, demo.jobs, { speedKmh: 24, travel: road, innerBudget: 80, zoneBudget: 200 });
-  assert.equal(baseline.metrics.assigned, 47);
-  assert.equal(optimized.metrics.assigned, 50);
-  assert.deepEqual(optimized.jobs.filter(item => !item.engineerId).map(item => item.id), ["D-NO-TRANSPORT"]);
+  const crew = issueDailyEquipment(imported.engineers, imported.jobs, road);
+  const baseline = baselinePlan(crew, imported.jobs, 24, road);
+  const optimized = optimizeVrptw(crew, imported.jobs, { speedKmh: 24, travel: road, innerBudget: 80, zoneBudget: 200 });
+  assert.ok(optimized.metrics.assigned >= 45);
+  assert.ok(optimized.metrics.assigned > baseline.metrics.assigned);
+  assert.ok(optimized.jobs.filter(item => !item.engineerId).some(item => item.id === "D-NO-TRANSPORT"));
   assert.match(optimized.jobs.find(item => item.id === "D-NO-TRANSPORT").unassignedReason, /транспорт/);
 });

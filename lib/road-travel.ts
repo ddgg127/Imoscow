@@ -18,6 +18,24 @@ export async function loadRoadTravel(
   const names = options?.region ? [options.region] : regions;
   const requests: Array<() => Promise<void>> = [];
   for (const mode of modes) {
+    const modeCrew = mode === "driving" ? engineers : engineers.filter(engineer => mode === "walking" ? ["Пешком", "Пешеход"].includes(engineer.transport) : engineer.transport === "Велосипед");
+    const allPoints = uniquePoints(modeCrew, jobs.filter(job => modeCrew.some(engineer => transportAllowed(job, engineer.transport))));
+    if (!options?.region && allPoints.length > 90 && new Set(modeCrew.map(engineer => engineer.region)).size > 1) provider = "fallback";
+    // A single table includes the inter-zone legs that the optimizer may now
+    // use. Keep larger datasets partitioned to respect public table limits.
+    if (!options?.region && allPoints.length >= 2 && allPoints.length <= 90) {
+      requests.push(async () => {
+        try {
+          const table = await routing.buildMatrix(allPoints, mode);
+          if (table.distances.some((row, i) => allPoints.some((_, j) => i !== j && (row?.[j] == null || table.durations[i]?.[j] == null)))) provider = "fallback";
+          parts.get(mode)!.push(travelFromTable(allPoints, table.distances, table.durations, speedKmh));
+        } catch {
+          parts.get(mode)!.push(fallbackTravel(speedKmh));
+          provider = "fallback";
+        }
+      });
+      continue;
+    }
     for (const name of names) {
       const modeEngineers = mode === "driving" ? engineers.filter(item => item.region === name) : engineers.filter(item => item.region === name && (mode === "walking" ? ["Пешком", "Пешеход"].includes(item.transport) : item.transport === "Велосипед"));
       const modeJobs = jobs.filter(job => job.region === name && modeEngineers.some(engineer => transportAllowed(job, engineer.transport)));
