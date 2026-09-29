@@ -594,7 +594,8 @@ export function explainAssignment(job: Job, engineer: Engineer, plan: RoutePlan,
   const checks = [
     `Навык «${job.kind}» подтверждён у инженера.`,
     `Оборудование «${job.equipment}» и транспорт «${engineer.transport}» доступны.`,
-    `Зона заявки ${job.region}${engineer.region === job.region ? "" : `; межзонный выезд из ${engineer.region}`}; прибытие ${minutesLabel(stop?.arrival ?? start)}, начало ${minutesLabel(start)}, окончание ${minutesLabel(stop?.end ?? start + job.serviceMinutes)} — внутри SLA ${job.time} и смены ${minutesLabel(engineer.shiftStart)}–${minutesLabel(engineer.shiftEnd)}.`,
+    `Прибытие по плану — ${minutesLabel(stop?.arrival ?? start)}. Начало ${minutesLabel(start)} попадает в окно SLA ${minutesLabel(job.windowStart)}–${minutesLabel(job.windowEnd)}; работа заканчивается в ${minutesLabel(stop?.end ?? start + job.serviceMinutes)}, до конца смены ${minutesLabel(engineer.shiftEnd)}.`,
+    engineer.region === job.region ? `Заявка находится в зоне инженера «${job.region}».` : `Допускается межзонный выезд из «${engineer.region}» в «${job.region}»; он учитывается в стоимости плана.`,
     plan.stops.length > 1 ? `Заявка встроена в уже используемый маршрут; дополнительный инженер не потребовался.` : `Для выполнения заявки задействован этот инженер.`,
     `Вклад заявки в маршрут — около ${distanceImpactKm.toFixed(1)} км.`,
   ];
@@ -612,12 +613,12 @@ export function explainAssignment(job: Job, engineer: Engineer, plan: RoutePlan,
     const activation = existingJobs.length ? "маршрут уже активен" : "потребовалось бы задействовать дополнительного инженера";
     const reason = added + 0.05 >= distanceImpactKm
       ? `${activation}; локальный прирост ${added.toFixed(1)} км против ${distanceImpactKm.toFixed(1)} км у выбранного`
-      : `${activation}; локально +${added.toFixed(1)} км, но глобально ухудшается порядок, окна или целевая функция плана`;
+      : `${activation}; локально +${added.toFixed(1)} км — меньше, чем у выбранного. Это допустимая локальная альтернатива; её преимущество для всего плана не проверено.`;
     return { ...prefix, feasible: true, reason };
   }).sort((a, b) => a.proximityKm - b.proximityKm || Number(b.feasible) - Number(a.feasible)).slice(0, 3).map(item => ({ engineerId: item.engineerId, engineerName: item.engineerName, reason: item.reason, feasible: item.feasible }));
 
   return {
-    summary: `${engineer.name || engineer.id} выбран: обязательные ресурсы подтверждены, работа начинается в ${minutesLabel(start)}, а назначение ${plan.stops.length > 1 ? "не увеличивает активный штат" : "обеспечивает выполнение заявки"}.`,
+    summary: `${engineer.name || engineer.id} подходит по навыку, оборудованию и транспорту и успевает выполнить работу в рамках окна начала и смены. В выбранном плане это остановка ${plan.stops.findIndex(item => item.jobId === job.id) + 1} из ${plan.stops.length}.`,
     checks,
     alternatives,
     distanceImpactKm,

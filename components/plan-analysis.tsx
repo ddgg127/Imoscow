@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Download } from "lucide-react";
 import { buildPlanAnalysis, downloadAnalysis, formatKm } from "@/lib/plan-analysis";
+import { optimizationExplanation } from "@/lib/optimization-explanation";
 import type { Engineer, OptimizationResult, TravelMatrix } from "@/lib/vrptw";
 
 export function PlanAnalysisView({ result, engineers, travel }: { result: OptimizationResult; engineers: Engineer[]; travel?: TravelMatrix }) {
@@ -21,6 +22,7 @@ export function PlanAnalysisView({ result, engineers, travel }: { result: Optimi
     <article className="analytics-panel wide analysis-note">
       <div className="panel-header"><div><h2>Анализ пробега</h2><p>Оптимизация учитывает приоритет выполнения заявок перед минимизацией километража</p></div></div>
       <p>{analysis.packNote}</p>
+      <p>{optimizationExplanation}</p>
     </article></details>
     <div className="export-bar">
       <button className="plain-button" title="Скачать таблицу заявок и назначенных инженеров" onClick={() => downloadAnalysis(analysis, "assignments")}><Download />Скачать назначения CSV</button>

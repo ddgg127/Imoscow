@@ -1,4 +1,5 @@
-import { DISTANCE_WEIGHT, VEHICLE_COST, coordKey, minutesLabel, uniquePoints, type Engineer, type Job, type OptimizationResult, type RoutePlan, type TravelMatrix } from "./vrptw";
+import { coordKey, minutesLabel, uniquePoints, type Engineer, type Job, type OptimizationResult, type RoutePlan, type TravelMatrix } from "./vrptw";
+import { explainPlanComparison } from "./optimization-explanation";
 
 export type AssignmentRow = {
   jobId: string;
@@ -106,12 +107,10 @@ export function buildPlanAnalysis(result: OptimizationResult, engineers: Enginee
   const extraKm = result.metrics.distanceKm - result.baseline.distanceKm;
   const vehiclesVrptw = result.routes.length;
   const vehiclesBaseline = result.baselineRoutes.length;
-  const breakEven = VEHICLE_COST / DISTANCE_WEIGHT;
-  const packNote = extraKm > 0.05
-    ? `VRPTW держит ${vehiclesVrptw} машин вместо ${vehiclesBaseline}. Штраф за новую машину равен ${VEHICLE_COST} ≈ ${breakEven.toFixed(0)} км, поэтому уплотнение принимается, даже если суммарный пробег растёт.`
-    : extraKm < -0.05
-      ? "Текущий план короче рассчитанного baseline по километрам."
-      : "Пробег почти совпадает с рассчитанным baseline.";
+  const assignedIds = new Set(result.routes.flatMap(route => route.stops.map(stop => stop.jobId)));
+  const baselineIds = new Set(result.baselineRoutes.flatMap(route => route.stops.map(stop => stop.jobId)));
+  const sameJobs = assignedIds.size === baselineIds.size && [...assignedIds].every(id => baselineIds.has(id));
+  const packNote = explainPlanComparison(result.metrics.assigned, result.baseline.assigned, vehiclesVrptw, vehiclesBaseline, extraKm, sameJobs);
   return {
     assigned: result.metrics.assigned,
     vehiclesVrptw,
