@@ -13,7 +13,7 @@ export function JobDetailsDialog({ job, executionStatus, engineer, plan, started
 }) {
   const stop = job ? plan?.stops.find(item => item.jobId === job.id) : undefined;
   return <Dialog open={Boolean(job)} onOpenChange={open => !open && onClose()}>
-    <DialogContent className="job-inspect-dialog job-compact-dialog">
+    <DialogContent className="job-inspect-dialog job-compact-dialog" onEscapeKeyDown={event => event.stopPropagation()}>
       <DialogHeader><DialogTitle>Заявка №{job?.id}</DialogTitle><DialogDescription className="sr-only">Адрес, время, приоритет и исполнитель заявки. Дополнительные параметры доступны в разделе «Подробнее».</DialogDescription></DialogHeader>
       {job && <div className="job-inspect-body" key={job.id}>
         <div className="job-hero-card">

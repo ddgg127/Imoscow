@@ -1126,6 +1126,7 @@ export default function Dashboard() {
         if (selectedEngineerId || selectedJobId) {
           setSelectedEngineerId(null);
           setSelectedJobId(null);
+          setRegion("Все зоны");
         }
       }
     };
@@ -1133,17 +1134,19 @@ export default function Dashboard() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [selectedEngineerId, selectedJobId, detailsJobId, selectedEngineerDetailsId, urgentOpen]);
   const selectEngineer = useCallback((id: string) => {
+    if (selectedEngineerId === id) setRegion("Все зоны");
     setSelectedEngineerId(current => current === id ? null : id);
     setSelectedJobId(null);
     setDetailsJobId(null);
     setCompare(false);
-  }, []);
+  }, [selectedEngineerId]);
   const selectJob = useCallback((id: string) => {
     setJobActionNotice("");
     if (selectedJobId === id) {
       setSelectedJobId(null);
       setDetailsJobId(null);
       setSelectedEngineerId(null);
+      setRegion("Все зоны");
       return;
     }
     const job = result.jobs.find(item => item.id === id);
@@ -1158,8 +1161,18 @@ export default function Dashboard() {
     setCompare(false);
   }, [result.jobs, selectedJobId]);
   const updateRoutingState = useCallback((state: RoutingState) => setRoutingState(state), []);
+  const showAllRoutes = useCallback(() => {
+    setRegion("Все зоны");
+    setSelectedEngineerId(null);
+    setSelectedJobId(null);
+    setDetailsJobId(null);
+  }, []);
   const navigate = useCallback((next: ViewId) => { setView(next); setMobileNavOpen(false); setThemeOpen(false); }, []);
   const focusEngineer = useCallback((id: string) => {
+    if (selectedEngineerId === id) {
+      showAllRoutes();
+      return;
+    }
     setSelectedEngineerId(current => current === id ? null : id);
     setSelectedJobId(null);
     setDetailsJobId(null);
@@ -1168,13 +1181,14 @@ export default function Dashboard() {
     const engineer = activeEngineers.find(item => item.id === id);
     if (engineer) setRegion(engineer.region);
     setView("plan");
-  }, [activeEngineers]);
+  }, [activeEngineers, selectedEngineerId, showAllRoutes]);
   const inspectJob = useCallback((id: string) => {
     setJobActionNotice("");
     if (selectedJobId === id) {
       setSelectedJobId(null);
       setDetailsJobId(null);
       setSelectedEngineerId(null);
+      setRegion("Все зоны");
       return;
     }
     const job = result.jobs.find(item => item.id === id);
@@ -1691,7 +1705,7 @@ export default function Dashboard() {
     {view !== "engineer" && dispatchNotice && (lastEventTime===null || simTime>=lastEventTime) && <div className="impact-banner engineer-absence-notice" role="alert"><span><AlertTriangle /></span><div><strong>Уведомление диспетчеру</strong><p>{dispatchNotice}</p></div><button type="button" onClick={() => setDispatchNotice("")}>Скрыть</button></div>}
     {view !== "engineer" && absenceNotices.filter(notice=>notice.moment.reportedAt<=simTime).map(notice => <div key={notice.engineerId} className="impact-banner engineer-absence-notice" role="alert"><span><ShieldAlert /></span><div><strong>{notice.engineerName}: {notice.reason === "emergency" ? "сообщил о ЧС" : "вышел из смены"}</strong><p>Событие в {minutesLabel(notice.moment.reportedAt)} · {notice.moment.phase === "service" ? `завершит №${notice.moment.currentJobId} к ${minutesLabel(notice.moment.effectiveAt)} и выйдет` : `вне смены с ${minutesLabel(notice.moment.effectiveAt)}`} · выполнено до события: {notice.moment.completedBefore}.</p><p>Передано другим инженерам: {notice.impact.reassigned.length}{notice.impact.reassigned.length ? ` — ${notice.impact.reassigned.slice(0, 5).map(item => `№${item.jobId} → ${item.engineerName}`).join("; ")}` : ""}.</p>{notice.impact.reassigned.length > 5 && <details><summary>Показать остальные {notice.impact.reassigned.length - 5} назначений</summary><p>{notice.impact.reassigned.slice(5).map(item => `№${item.jobId} → ${item.engineerName}`).join("; ")}</p></details>}<p>{notice.impact.unassigned.length ? `Нет доступной замены для ${notice.impact.unassigned.map(id => `№${id}`).join(", ")}. Требуется решение диспетчера.` : "Все затронутые будущие задания получили назначение либо уже выполнялись."}</p></div><button type="button" onClick={() => setAbsenceNotices(current => current.filter(item => item.engineerId !== notice.engineerId))}>Скрыть</button></div>)}
     {view === "engineer" && <EngineerWorkspace engineer={engineerPersona} jobs={playbackResult.jobs} route={engineerPersona ? routeByEngineer.get(engineerPersona.id) : undefined} allEngineers={activeEngineers} unavailableIds={playbackUnavailableIds} absenceReasons={absenceReasons} absenceMoments={absenceMoments} cancellationNotices={cancellationNotices} selectedJobId={engineerSelectedJobId} onSelectEngineer={setEngineerPersonaId} onSelectJob={setEngineerSelectedJobId} onReport={setPendingEngineerAction} reporting={busy} error={engineerActionError} simTime={simTime} simEnd={simRange.end} simPlaying={simPlaying} simSpeed={playbackMinutesPerSecond} onSimTime={changeSimulationTime} onSimPlaying={setSimPlaying} onSimSpeed={setPlaybackMinutesPerSecond} speedKmh={applied?.speedKmh ?? draft.speedKmh} onRoutingState={updateRoutingState} />}
-    {view === "plan" && <><div className="filter-row"><div className="region-select">{(["Все зоны", "Восток", "Юго-восток", "Югоцентр"] as const).map(item => <button key={item} className={region === item ? "selected" : ""} onClick={() => { setRegion(item); setSelectedEngineerId(null); setSelectedJobId(null); }}>{item}</button>)}</div><select aria-label="Инженер" className="engineer-quick-select" value={selectedEngineerId ?? ""} onChange={e => { const id = e.target.value; if (id) focusEngineer(id); else setSelectedEngineerId(null); }}><option value="">Все инженеры ({visibleEngineers.length})</option>{visibleEngineers.map(eng => <option key={eng.id} value={eng.id}>{eng.name} ({eng.id})</option>)}</select><div className="plan-state"><span className={routingState === "ready" ? "state-dot" : routingState === "loading" ? "state-dot changed" : routingState === "idle" ? "state-dot idle" : "state-dot risk-dot"} />{routingLabel}{started ? ` · ${solverLabels[solverEngine]}` : ""}</div><div className="plan-run-control"><button className="plan-run-button" disabled={busy || routingState === "loading" || !baseJobs.length || !baseEngineers.length} onClick={startPlanning}><span aria-hidden="true">{busy ? <LoaderCircle className="loading-spinner" /> : <Play />}</span>{busy ? "Рассчитываем план…" : routingState === "loading" ? "Строим дороги…" : started ? "Пересчитать маршруты" : "Построить маршруты"}</button><HelpHint label="Расчёт маршрутов">До начала смены распределяет оборудование и строит план. Во время смены пересчитывает оставшиеся задания на текущее время просмотра, сохраняя завершённые и начатые работы. Дождитесь окончания расчёта.</HelpHint></div><button disabled={busy} className="plain-button" style={{ border: "1px solid var(--border)", padding: "0 10px", borderRadius: "8px", height: "38px" }} onClick={() => setUrgentOpen(true)}><Zap size={14} /> Новая заявка</button>{started && <ExportButtons result={result} engineers={activeEngineers} solver={solverEngine} speedKmh={applied?.speedKmh ?? draft.speedKmh} />}</div>
+    {view === "plan" && <><div className="filter-row"><div className="region-select">{(["Все зоны", "Восток", "Юго-восток", "Югоцентр"] as const).map(item => <button key={item} className={region === item ? "selected" : ""} onClick={() => { setRegion(item); setSelectedEngineerId(null); setSelectedJobId(null); }}>{item}</button>)}</div><select aria-label="Инженер" className="engineer-quick-select" value={selectedEngineerId ?? ""} onChange={e => { const id = e.target.value; if (id) focusEngineer(id); else showAllRoutes(); }}><option value="">Все инженеры ({visibleEngineers.length})</option>{visibleEngineers.map(eng => <option key={eng.id} value={eng.id}>{eng.name} ({eng.id})</option>)}</select><div className="plan-state"><span className={routingState === "ready" ? "state-dot" : routingState === "loading" ? "state-dot changed" : routingState === "idle" ? "state-dot idle" : "state-dot risk-dot"} />{routingLabel}{started ? ` · ${solverLabels[solverEngine]}` : ""}</div><div className="plan-run-control"><button className="plan-run-button" disabled={busy || routingState === "loading" || !baseJobs.length || !baseEngineers.length} onClick={startPlanning}><span aria-hidden="true">{busy ? <LoaderCircle className="loading-spinner" /> : <Play />}</span>{busy ? "Рассчитываем план…" : routingState === "loading" ? "Строим дороги…" : started ? "Пересчитать маршруты" : "Построить маршруты"}</button><HelpHint label="Расчёт маршрутов">До начала смены распределяет оборудование и строит план. Во время смены пересчитывает оставшиеся задания на текущее время просмотра, сохраняя завершённые и начатые работы. Дождитесь окончания расчёта.</HelpHint></div><button disabled={busy} className="plain-button" style={{ border: "1px solid var(--border)", padding: "0 10px", borderRadius: "8px", height: "38px" }} onClick={() => setUrgentOpen(true)}><Zap size={14} /> Новая заявка</button>{started && <ExportButtons result={result} engineers={activeEngineers} solver={solverEngine} speedKmh={applied?.speedKmh ?? draft.speedKmh} />}</div>
       {!baseJobs.length && !baseEngineers.length && <div className="impact-banner"><span><Database /></span><div><strong>Набора данных нет</strong><p>Сгенерируйте заявки во вкладке «Генератор» или загрузите CSV / JSON. Новый набор полностью заменяет предыдущий.</p></div><button onClick={() => navigate("generator")}>Открыть генератор</button></div>}
 
       {solverError && <div className="impact-banner error-banner"><span><AlertTriangle /></span><div><strong>Не удалось выполнить действие</strong><p>{solverError}</p></div><button onClick={() => setSolverError("")}>Скрыть</button></div>}
@@ -1699,8 +1713,8 @@ export default function Dashboard() {
       {replanned && started && !solverError && (lastEventTime===null || simTime>=lastEventTime) && <div className="impact-banner"><span><Sparkles /></span><div><strong>{lastCalculationMethod === "cancel_local" ? "Заявка отменена у назначенного инженера" : lastCalculationMethod === "no_change" ? "Отмена без изменения маршрутов" : lastCalculationMethod === "insert" ? "Обычная заявка проверена для вставки в свободный интервал" : `OR-Tools VRPTW рассчитан за ${result.runtimeMs} мс`}</strong><p>{lastCalculationMethod === "cancel_local" ? "Инженер уведомлён; для него проверена подходящая замена. Расписание других инженеров сохранено." : lastCalculationMethod === "no_change" ? "Отменённая заявка не была назначена; повторная оптимизация не потребовалась." : lastCalculationMethod === "insert" ? "Прошедшие и согласованные работы не перестраивались; серверный solver для этой вставки не запускался." : `Назначено ${result.metrics.assigned} из ${result.metrics.total}; движок подтверждён ответом сервера.`}</p></div><button onClick={() => setReplanned(false)}>Скрыть уведомление</button></div>}
       {showReplanSummary && visibleReplanChanges.length > 0 && <section className="panel replan-compact" aria-label="Кратко об изменениях после перепланирования"><div><strong>Что изменилось после перепланирования</strong><p>{replanChanges.length} {changeWord(replanChanges.length)} · вынужденных событием: {replanChanges.filter(change => change.necessity === "required").length}. Подробности во вкладке «Аналитика».</p></div><button type="button" className="plain-button" onClick={() => navigate("analytics")}>Открыть аналитику</button><button type="button" className="plain-button" onClick={() => setShowReplanSummary(false)}>Скрыть</button></section>}
       <section className="content-grid assignment-layout">
-        <article className="panel map-panel"><div className="panel-header"><div><h2>Карта маршрутов</h2><p>{visibleEngineers.length} инж. · {mapJobs.length} заявок · {region}{simulationOn ? ` · ${minutesLabel(simTime)}` : ""}</p></div></div><div className="map-stage"><MapCanvas visibleJobs={mapJobs} baselineJobs={mapJobs} engineers={activeEngineers} selectedEngineerId={selectedEngineerId} selectedJobId={selectedJobId} simTime={simulationOn ? simTime : null} simPlaying={simPlaying} simSpeed={playbackMinutesPerSecond} carSpeedKmh={applied?.speedKmh ?? draft.speedKmh} simEnd={simRange.end} onSimTime={changeSimulationTime} onSimPlaying={setSimPlaying} compare={compare} routingEnabled={started && Boolean(planResult)} routes={playbackResult.routes} baselineRoutes={visibleBaselineRoutes} onSelectEngineer={selectEngineer} onSelectJob={selectJob} onInspectJob={inspectJob} onRoutingState={updateRoutingState} />{simulationOn && <TimeDrum start={simRange.start} end={simRange.end} time={simTime} playing={simPlaying} speed={playbackMinutesPerSecond} onTime={changeSimulationTime} onPlaying={setSimPlaying} onSpeed={setPlaybackMinutesPerSecond} disabled={busy} />}</div></article>
-        <article className="panel routes-panel"><div className="panel-header"><div><h2>Заявки</h2></div></div><AssignmentBoard jobs={visibleJobs} engineers={activeEngineers} routes={playbackResult.routes} selectedJobId={selectedJobId} selectedEngineerId={selectedEngineerId} started={started} loading={busy} filtersActive={region !== "Все зоны" || selectedEngineerId !== null} resetVersion={filterResetVersion} onResetFilters={() => { setRegion("Все зоны"); setSelectedEngineerId(null); setSelectedJobId(null); setDetailsJobId(null); setFilterResetVersion(value => value + 1); }} onSelectJob={selectJob} onSelectEngineer={focusEngineer} onShowAll={() => { setSelectedEngineerId(null); setSelectedJobId(null); setDetailsJobId(null); }} /></article>
+        <article className="panel map-panel"><div className="panel-header map-panel-header"><div><h2>Карта маршрутов</h2><p>{visibleEngineers.length} инж. · {mapJobs.length} заявок · {region}{simulationOn ? ` · ${minutesLabel(simTime)}` : ""}</p></div><button type="button" className="show-all-routes-button" title="Снять выбор инженера и заявки, показать маршруты во всех зонах" aria-pressed={region === "Все зоны" && !selectedEngineerId && !selectedJobId} onClick={showAllRoutes}><Route size={16} />Все маршруты</button></div><div className="map-stage"><MapCanvas visibleJobs={mapJobs} baselineJobs={mapJobs} engineers={activeEngineers} selectedEngineerId={selectedEngineerId} selectedJobId={selectedJobId} simTime={simulationOn ? simTime : null} simPlaying={simPlaying} simSpeed={playbackMinutesPerSecond} carSpeedKmh={applied?.speedKmh ?? draft.speedKmh} simEnd={simRange.end} onSimTime={changeSimulationTime} onSimPlaying={setSimPlaying} compare={compare} routingEnabled={started && Boolean(planResult)} routes={playbackResult.routes} baselineRoutes={visibleBaselineRoutes} onSelectEngineer={selectEngineer} onShowAllRoutes={showAllRoutes} onSelectJob={selectJob} onInspectJob={inspectJob} onRoutingState={updateRoutingState} />{simulationOn && <TimeDrum start={simRange.start} end={simRange.end} time={simTime} playing={simPlaying} speed={playbackMinutesPerSecond} onTime={changeSimulationTime} onPlaying={setSimPlaying} onSpeed={setPlaybackMinutesPerSecond} disabled={busy} />}</div></article>
+        <article className="panel routes-panel"><div className="panel-header"><div><h2>Заявки</h2></div></div><AssignmentBoard jobs={visibleJobs} engineers={activeEngineers} routes={playbackResult.routes} selectedJobId={selectedJobId} selectedEngineerId={selectedEngineerId} started={started} loading={busy} filtersActive={region !== "Все зоны" || selectedEngineerId !== null} resetVersion={filterResetVersion} onResetFilters={() => { showAllRoutes(); setFilterResetVersion(value => value + 1); }} onSelectJob={selectJob} onSelectEngineer={focusEngineer} onShowAll={() => { showAllRoutes(); setFilterResetVersion(value => value + 1); }} /></article>
       </section>
       {focusedEngineer && (
         <EngineerTimeline
@@ -1709,7 +1723,7 @@ export default function Dashboard() {
           jobs={playbackResult.jobs}
           simTime={simulationOn ? simTime : null}
           onSelectJob={selectJob}
-          onClose={() => setSelectedEngineerId(null)}
+          onClose={showAllRoutes}
         />
       )}
       <section className="panel queue-panel"><div className="panel-header"><div><h2>Ближайшие заявки</h2></div></div><JobTable started={started} jobs={plannedJobs.filter(job => !job.cancelled && (region === "Все зоны" || job.region === region))} engineers={activeEngineers} onOpen={selectJob} limit={12} /></section></>}
