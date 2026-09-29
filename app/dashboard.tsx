@@ -610,7 +610,9 @@ function GeneratorView({
   const currentEvents = currentDataset?.events ?? [];
   const hasData = currentJobs.length > 0 || currentEngineers.length > 0;
   const eventTotal = cancelEvents + unavailableEvents + urgentEvents;
-  const showImportStatus = Boolean(importStatus && /Геокодирование|Читаем|Ошибка|Не удалось/.test(importStatus));
+  const showImportStatus = Boolean(importStatus);
+  const importingFile = /Геокодирование|Читаем/.test(importStatus ?? "");
+  const importFailed = /Ошибка|Не удалось/.test(importStatus ?? "");
 
   const fresh = generated && generatedFrom && Object.keys(draft).every(key => draft[key as keyof PlanConfig] === generatedFrom[key as keyof PlanConfig]);
   const heavyRun = draft.engineers * draft.jobs > 150000;
@@ -773,8 +775,8 @@ function GeneratorView({
         )}
         {paramsOpen && heavyRun && <p className="config-warning">Большой объём: расчёт дорожной матрицы займёт дополнительное время.</p>}
         {showImportStatus && (
-          <p className="generator-status-line">
-            <RefreshCw size={13} className={importStatus?.includes("Геокодирование") ? "spin-active" : ""} />
+          <p className="generator-status-line" role="status">
+            {importingFile ? <RefreshCw size={13} className="spin-active" /> : importFailed ? <AlertTriangle size={13} /> : <Check size={13} />}
             {importStatus}
           </p>
         )}
@@ -1578,6 +1580,8 @@ export default function Dashboard() {
       }
       const jobs = imported.jobs.map(job => coordinates.has(job.address) ? { ...job, coordinates: coordinates.get(job.address)!, geocodeVerified: true, geocodeQuality: "street" as const } : job);
       const events=imported.events?.map(event=>event.job && coordinates.has(event.job.address) ? {...event,job:{...event.job,coordinates:coordinates.get(event.job.address)!,geocodeVerified:true,geocodeQuality:"street" as const}} : event);
+      const unresolved = [...jobs, ...(events?.flatMap(event => event.job ? [event.job] : []) ?? [])].filter(job => !job.geocodeVerified);
+      if (unresolved.length) throw new Error(`Не удалось определить координаты ${unresolved.length} заявок (например, №${unresolved[0].id}). Уточните адрес или добавьте долготу и широту в файл. Прежний набор сохранён.`);
       if (events && !jobs.length && !imported.engineers?.length) {
         if (started && events.some(event=>parseTime(event.time)<Math.floor(simTime))) { setImportStatus("Ошибка: события раньше времени просмотра. Сначала переместите шкалу до их появления."); return; }
         if (started) invalidateFutureScenario();
@@ -1599,7 +1603,9 @@ export default function Dashboard() {
       if (jobs.length) { setExtraJobs([]); setCancelledJobIds([]); setUnavailableEngineerIds([]); setAbsenceReasons({}); setAbsenceMoments({}); setAvailabilityChanges([]); setAbsenceNotices([]); setPlanHistory([]); setEngineerPersonaId(null); }
       setApplied(null); setPlanResult(null); setEventOutcomes({}); setLastEventTime(null); setTravel(undefined); setMatrixFallback(false); setReplanChanges([]); setSelectedJobId(null); setSelectedEngineerId(null); setRegion("Все зоны");
       setDraft(current => ({ ...current, jobs: jobs.length || current.jobs, engineers: imported.engineers?.length || current.engineers, speedKmh: imported.speedKmh ?? current.speedKmh }));
-      setImportStatus(`${file.name}: ${jobs.length ? `${jobs.length} заявок, координаты подтверждены ${verified}/${jobs.length}` : `${imported.engineers?.length ?? 0} инженеров`}${imported.warnings.length ? "; " + imported.warnings[0] : ""}.`);
+      const nextStep = jobs.length && !importedCrew?.length && !baseEngineers.length ? "для расчёта загрузите инженеров" : !jobs.length && importedCrew?.length && !baseJobs.length ? "для расчёта загрузите заявки" : "";
+      const details = [jobs.length ? `${jobs.length} заявок, координаты подтверждены ${verified}/${jobs.length}` : `${imported.engineers?.length ?? 0} инженеров`, nextStep, imported.warnings[0]?.replace(/[.!?]+$/, "")].filter(Boolean);
+      setImportStatus(`${file.name}: ${details.join("; ")}.`);
     } catch (error) {
       setImportStatus(error instanceof Error ? `Ошибка: ${error.message}` : "Не удалось импортировать файл");
     }
@@ -1710,7 +1716,7 @@ export default function Dashboard() {
 
       {solverError && <div className="impact-banner error-banner"><span><AlertTriangle /></span><div><strong>Не удалось выполнить действие</strong><p>{solverError}</p></div><button onClick={() => setSolverError("")}>Скрыть</button></div>}
       {unservedElevated.length > 0 && <div className="impact-banner error-banner" role="alert"><span><AlertTriangle /></span><div><strong>Повышенный приоритет: {unservedElevated.length} заявок без назначения</strong><p>№ {unservedElevated.slice(0, 8).map(job => job.id).join(", № ")}{unservedElevated.length > 8 ? "…" : ""}. Проверьте окна, инженеров и ресурсы в карточках; найденный план не выполнил все повышенные работы.</p></div></div>}
-      {replanned && started && !solverError && (lastEventTime===null || simTime>=lastEventTime) && <div className="impact-banner"><span><Sparkles /></span><div><strong>{lastCalculationMethod === "cancel_local" ? "Заявка отменена у назначенного инженера" : lastCalculationMethod === "no_change" ? "Отмена без изменения маршрутов" : lastCalculationMethod === "insert" ? "Обычная заявка проверена для вставки в свободный интервал" : `OR-Tools VRPTW рассчитан за ${result.runtimeMs} мс`}</strong><p>{lastCalculationMethod === "cancel_local" ? "Инженер уведомлён; для него проверена подходящая замена. Расписание других инженеров сохранено." : lastCalculationMethod === "no_change" ? "Отменённая заявка не была назначена; повторная оптимизация не потребовалась." : lastCalculationMethod === "insert" ? "Прошедшие и согласованные работы не перестраивались; серверный solver для этой вставки не запускался." : `Назначено ${result.metrics.assigned} из ${result.metrics.total}; движок подтверждён ответом сервера.`}</p></div><button onClick={() => setReplanned(false)}>Скрыть уведомление</button></div>}
+      {replanned && started && !solverError && (lastEventTime===null || simTime>=lastEventTime) && <div className="impact-banner"><span><Sparkles /></span><div><strong>{lastCalculationMethod === "cancel_local" ? "Заявка отменена у назначенного инженера" : lastCalculationMethod === "no_change" ? "Отмена без изменения маршрутов" : lastCalculationMethod === "insert" ? "Обычная заявка проверена для вставки в свободный интервал" : "План маршрутов рассчитан с помощью OR-Tools"}</strong><p>{lastCalculationMethod === "cancel_local" ? "Инженер уведомлён; для него проверена подходящая замена. Расписание других инженеров сохранено." : lastCalculationMethod === "no_change" ? "Отменённая заявка не была назначена; повторная оптимизация не потребовалась." : lastCalculationMethod === "insert" ? "Прошедшие и согласованные работы не перестраивались; серверный solver для этой вставки не запускался." : `Назначено ${result.metrics.assigned} из ${result.metrics.total}; движок подтверждён ответом сервера.`}</p></div><button onClick={() => setReplanned(false)}>Скрыть уведомление</button></div>}
       {showReplanSummary && visibleReplanChanges.length > 0 && <section className="panel replan-compact" aria-label="Кратко об изменениях после перепланирования"><div><strong>Что изменилось после перепланирования</strong><p>{replanChanges.length} {changeWord(replanChanges.length)} · вынужденных событием: {replanChanges.filter(change => change.necessity === "required").length}. Подробности во вкладке «Аналитика».</p></div><button type="button" className="plain-button" onClick={() => navigate("analytics")}>Открыть аналитику</button><button type="button" className="plain-button" onClick={() => setShowReplanSummary(false)}>Скрыть</button></section>}
       <section className="content-grid assignment-layout">
         <article className="panel map-panel"><div className="panel-header map-panel-header"><div><h2>Карта маршрутов</h2><p>{visibleEngineers.length} инж. · {mapJobs.length} заявок · {region}{simulationOn ? ` · ${minutesLabel(simTime)}` : ""}</p></div><button type="button" className="show-all-routes-button" title="Снять выбор инженера и заявки, показать маршруты во всех зонах" aria-pressed={region === "Все зоны" && !selectedEngineerId && !selectedJobId} onClick={showAllRoutes}><Route size={16} />Все маршруты</button></div><div className="map-stage"><MapCanvas visibleJobs={mapJobs} baselineJobs={mapJobs} engineers={activeEngineers} selectedEngineerId={selectedEngineerId} selectedJobId={selectedJobId} simTime={simulationOn ? simTime : null} simPlaying={simPlaying} simSpeed={playbackMinutesPerSecond} carSpeedKmh={applied?.speedKmh ?? draft.speedKmh} simEnd={simRange.end} onSimTime={changeSimulationTime} onSimPlaying={setSimPlaying} compare={compare} routingEnabled={started && Boolean(planResult)} routes={playbackResult.routes} baselineRoutes={visibleBaselineRoutes} onSelectEngineer={selectEngineer} onShowAllRoutes={showAllRoutes} onSelectJob={selectJob} onInspectJob={inspectJob} onRoutingState={updateRoutingState} />{simulationOn && <TimeDrum start={simRange.start} end={simRange.end} time={simTime} playing={simPlaying} speed={playbackMinutesPerSecond} onTime={changeSimulationTime} onPlaying={setSimPlaying} onSpeed={setPlaybackMinutesPerSecond} disabled={busy} />}</div></article>

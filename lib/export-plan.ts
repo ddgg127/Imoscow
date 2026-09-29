@@ -13,6 +13,8 @@ const csvColumns = [
   "Навык", "Оборудование", "Транспорт", "Источник", "Причина отсутствия маршрута",
   "Baseline инженер", "Выполнение", "Приоритет", "Класс работ",
   "Работа, мин", "Норматив, мин", "Резерв дороги, мин", "Расчётная дорога, мин", "Источник норматива",
+  "Долгота", "Широта", "Окно с", "Окно до", "Отменена", "Координаты подтверждены", "Качество координат",
+  "Допустимый транспорт", "Название работы", "Район",
 ] as const;
 
 function safeCell(value: unknown) {
@@ -56,6 +58,16 @@ export function buildPlanRows(result: OptimizationResult, engineers: Engineer[])
       job.travelReserveMinutes ?? "",
       assignment?.stop.travelMinutes ?? job.estimatedTravelMinutes ?? "",
       job.normSource ?? "",
+      job.coordinates[0],
+      job.coordinates[1],
+      minutesLabel(job.windowStart),
+      minutesLabel(job.windowEnd),
+      job.cancelled ? "Да" : "Нет",
+      job.geocodeVerified ? "Да" : "Нет",
+      job.geocodeQuality ?? "",
+      job.allowedTransports?.join("|") ?? "",
+      job.workType ?? job.kind,
+      job.area,
     ];
   });
 }
@@ -73,6 +85,8 @@ export function buildPlanExport(result: OptimizationResult, engineers: Engineer[
     generatedAt: metadata.generatedAt ?? new Date().toISOString(),
     solver: metadata.solver,
     config: { speedKmh: metadata.speedKmh ?? null },
+    jobs: result.jobs,
+    engineers,
     metrics: result.metrics,
     baseline: result.baseline,
     comparison: result.comparison,

@@ -20,7 +20,7 @@ function keyMatches(key: string, alias: string) {
 }
 
 function value(row: Record<string, unknown>, aliases: string[]) {
-  const entry = Object.entries(row).find(([key]) => aliases.some(alias => keyMatches(key, alias)));
+  const entry = aliases.map(alias => Object.entries(row).find(([key]) => keyMatches(key, alias))).find(Boolean);
   if (entry?.[1] == null) return "";
   return Array.isArray(entry[1]) ? entry[1].map(item => String(item).trim()).filter(Boolean).join(", ") : String(entry[1]).trim();
 }
@@ -125,8 +125,7 @@ function parseCsv(text: string) {
 }
 
 function looksLikeEngineerRows(headers: string[], rows: Record<string, unknown>[]) {
-  const joined = headers.map(normalizeKey).join(" ");
-  if (/инженер|имя|смены|адрес старта/.test(joined)) return true;
+  if (headers.some(header => ["id инженера", "engineerid", "начало смены", "shiftStart", "адрес старта", "startAddress"].some(alias => keyMatches(header, alias)))) return true;
   const sample = rows[0];
   return Boolean(sample && value(sample, ["имя", "name"]) && !value(sample, ["address", "адрес"]));
 }
@@ -138,42 +137,49 @@ function rowsToJobs(rows: Record<string, unknown>[], centers: Record<Region, Coo
     const id = /^\d+$/.test(rawId) ? rawId.padStart(4, "0") : rawId || String(index + 1).padStart(4, "0");
     const address = value(row, ["address", "адрес"]);
     if (!address) throw new Error(`Строка ${index + 2}: отсутствует адрес`);
-    const rawWork = value(row, ["worktype", "work_type", "тип работы", "тип заявки hd", "тип заявки bk", "kind", "навык", "навыки", "название задачи", "title"]) || "Локальные работы";
-    const kind = canonicalSkill(value(row,["kind","требуемый навык"]) || rawWork);
-    const start = timeMinutes(value(row, ["windowstart", "window_start", "начало", "окно с", "начало окна"]), 540);
-    const end = timeMinutes(value(row, ["windowend", "window_end", "окончание", "окно до", "конец окна"]), Math.max(660, start + 120));
+    const rawWork = value(row, ["worktype", "work_type", "название работы", "тип работы", "тип заявки hd", "тип заявки bk", "kind", "навык", "навыки", "название задачи", "title"]) || "Локальные работы";
+    const kind = canonicalSkill(value(row,["kind","требуемый навык","навык","тип работы"]) || rawWork);
+    const windowTimes = value(row, ["окно sla", "окно"]).match(/\d{1,2}:\d{2}/g) ?? [];
+    const startText = value(row, ["windowstart", "window_start", "окно с", "начало окна"]) || windowTimes[0] || value(row, ["начало"]);
+    const start = timeMinutes(startText, 540);
+    const endText = value(row, ["windowend", "window_end", "окно до", "конец окна"]) || windowTimes[1] || value(row, ["окончание"]);
+    const end = timeMinutes(endText, Math.max(660, start + 120));
     if (end <= start) throw new Error(`Строка ${index + 2}: окончание окна должно быть позже начала`);
     const region = normalizeRegion(value(row, ["region", "регион", "зона"]), address);
     const embedded = Array.isArray(row.coordinates) ? row.coordinates.map(Number) : [];
     const lon = Number.isFinite(embedded[0]) ? embedded[0] : numberValue(row, ["lon", "lng", "longitude", "долгота"]);
     const lat = Number.isFinite(embedded[1]) ? embedded[1] : numberValue(row, ["lat", "latitude", "широта"]);
-    const verified = row.geocodeVerified !== false && value(row,["geocodeQuality"]) !== "fallback" && lon != null && lat != null && lon >= 30 && lon <= 50 && lat >= 50 && lat <= 60;
+    const verification = value(row, ["geocodeVerified", "координаты подтверждены"]);
+    const quality = value(row, ["geocodeQuality", "качество координат"]);
+    const verified = row.geocodeVerified !== false && !/^(false|0|нет)$/i.test(verification) && quality !== "fallback" && lon != null && lat != null && lon >= 30 && lon <= 50 && lat >= 50 && lat <= 60;
     if (!verified) warnings.push(`№ ${id}: координаты будут геокодированы по адресу`);
     const point: Coordinate = verified ? [lon!, lat!] : centers[region];
     const resolvedRegion = value(row, ["region", "регион", "зона"]) ? region : verified ? regionFromPoint(point, centers) : region;
     const transport = canonicalTransport(value(row, ["transport", "транспорт", "requiredtransport", "vehicle", "требуемый транспорт"]));
     const allowedRaw = row.allowedTransports;
-    const allowed = (Array.isArray(allowedRaw) ? allowedRaw.map(String) : value(row, ["allowedTransports", "allowed_transports"]).split(/[|,]/)).map(item => canonicalTransport(item)).filter(Boolean);
+    const allowed = (Array.isArray(allowedRaw) ? allowedRaw.map(String) : value(row, ["allowedTransports", "allowed_transports", "допустимый транспорт"]).split(/[|,]/)).map(item => canonicalTransport(item)).filter(Boolean);
     const equipment = equipmentFor(value(row, ["equipment", "оборудование"]), kind);
     const rawUrgency = value(row, ["urgency", "срочность", "приоритет срочности"]);
     const priority = priorityFor(value(row, ["priority", "приоритет"]), rawUrgency);
-    const explicitService = value(row, ["serviceminutes", "service_minutes", "время работы", "длительность", "durationmin"]);
+    const explicitService = value(row, ["serviceminutes", "service_minutes", "время работы", "работа", "длительность", "durationmin"]);
     const explicitNorm = numberValue(row, ["normativeMinutes", "normative_minutes", "норматив"]);
-    const reserve = numberValue(row, ["travelReserveMinutes", "travel_reserve_minutes"]) ?? (kind === TZ_SKILLS[2] ? 20 : 0);
+    const reserve = numberValue(row, ["travelReserveMinutes", "travel_reserve_minutes", "резерв дороги"]) ?? (kind === TZ_SKILLS[2] ? 20 : 0);
     const serviceMinutes = explicitService ? serviceFor(explicitService, kind) : explicitNorm != null ? Math.max(5, Math.round(explicitNorm - reserve)) : serviceFor("", kind);
-    const workClass = value(row, ["workClass", "work_class"]) || (kind === TZ_SKILLS[2] ? "emergency" : kind === TZ_SKILLS[1] || kind === "Монтаж СКС" || kind === "Видеонаблюдение" ? "connection" : "repair");
+    const workClass = value(row, ["workClass", "work_class", "класс работ"]) || (kind === TZ_SKILLS[2] ? "emergency" : kind === TZ_SKILLS[1] || kind === "Монтаж СКС" || kind === "Видеонаблюдение" ? "connection" : "repair");
+    const rawNormSource = value(row, ["normSource", "источник норматива"]);
+    const normSource = (["экспертный норматив", "демонстрационное допущение", "введено пользователем"] as const).find(item => item === rawNormSource) ?? (explicitService || explicitNorm != null ? "введено пользователем" : kind === TZ_SKILLS[2] ? "экспертный норматив" : "демонстрационное допущение");
     const urgency = priority === 2 ? "urgent" : "normal";
     return {
       id, time: `${String(Math.floor(start / 60)).padStart(2, "0")}:${String(start % 60).padStart(2, "0")}–${String(Math.floor(end / 60)).padStart(2, "0")}:${String(end % 60).padStart(2, "0")}`,
       windowStart: start, windowEnd: end, area: value(row, ["area", "район"]) || resolvedRegion, address,
       kind, workType: rawWork, tone: ["violet", "blue", "amber", "green"][index % 4], region: resolvedRegion,
       engineerId: null, baselineEngineerId: null, coordinates: point, geocodeVerified: verified,
-      geocodeQuality: verified ? (["street", "manual"].includes(value(row, ["geocodeQuality"])) ? value(row, ["geocodeQuality"]) as "street" | "manual" : "house") : "fallback", risk: false, equipment, requiredTransport: transport, allowedTransports: allowed.length ? allowed : undefined, priority,
+      geocodeQuality: verified ? (["street", "manual"].includes(quality) ? quality as "street" | "manual" : "house") : "fallback", risk: false, equipment, requiredTransport: transport, allowedTransports: allowed.length ? allowed : undefined, priority,
       serviceMinutes, normativeMinutes: explicitNorm ?? (kind === TZ_SKILLS[2] ? 100 : undefined), travelReserveMinutes: reserve,
-      estimatedTravelMinutes: numberValue(row, ["estimatedTravelMinutes", "estimated_travel_minutes"]) ?? reserve,
-      normSource: explicitService || explicitNorm != null ? "введено пользователем" : kind === TZ_SKILLS[2] ? "экспертный норматив" : "демонстрационное допущение",
+      estimatedTravelMinutes: numberValue(row, ["estimatedTravelMinutes", "estimated_travel_minutes", "расчётная дорога"]) ?? reserve,
+      normSource,
       urgency, workClass: ["emergency", "connection", "repair"].includes(workClass) ? workClass as Job["workClass"] : "repair",
-      source, status: value(row, ["status", "статус"]) || "Новая", executionStatus: (["not_started", "in_progress", "completed"].includes(value(row, ["executionStatus", "execution_status", "выполнение"])) ? value(row, ["executionStatus", "execution_status", "выполнение"]) : "not_started") as Job["executionStatus"], cancelled: /^(true|1|да)$/i.test(value(row, ["cancelled", "отменена"])),
+      source: value(row, ["source", "источник"]) || source, status: value(row, ["status", "статус"]) || "Новая", executionStatus: (["not_started", "in_progress", "completed"].includes(value(row, ["executionStatus", "execution_status", "выполнение"])) ? value(row, ["executionStatus", "execution_status", "выполнение"]) : "not_started") as Job["executionStatus"], cancelled: /^(true|1|да)$/i.test(value(row, ["cancelled", "отменена"])),
     };
   });
   const duplicates = jobs.filter((job, index) => jobs.findIndex(candidate => candidate.id === job.id) !== index);
@@ -235,27 +241,40 @@ function rowsToEvents(rows:Record<string,unknown>[],centers:Record<Region,Coordi
 
 export function importPlanText(text: string, name: string, centers: Record<Region, Coordinate>): ImportedPlan {
   if (name.toLocaleLowerCase().endsWith(".json")) {
-    const payload = JSON.parse(text) as unknown;
-    const object = (Array.isArray(payload) ? { jobs: payload } : payload) as { jobs?: unknown[]; engineers?: unknown[]; events?:Record<string,unknown>[]; speedKmh?: number };
+    let payload: unknown;
+    try { payload = JSON.parse(text.replace(/^\uFEFF/, "")); }
+    catch { throw new Error("Некорректный JSON. Проверьте, что выбран файл набора данных или выгрузки плана."); }
+    if (!Array.isArray(payload) && (!payload || typeof payload !== "object")) throw new Error("JSON должен содержать набор заявок или выгрузку плана FieldFlow");
+    const object = (Array.isArray(payload) ? { jobs: payload } : payload) as { jobs?: unknown[]; engineers?: unknown[]; events?:Record<string,unknown>[]; speedKmh?: number; config?: {speedKmh?: number}; routes?: unknown[]; unassigned?: unknown[] };
+    const legacyPlan = !Array.isArray(object.jobs) && Array.isArray(object.routes);
+    if (legacyPlan) {
+      const routes = object.routes!.filter((route): route is Record<string, unknown> => !!route && typeof route === "object");
+      const assigned = routes.flatMap(route => Array.isArray(route.stops) ? route.stops.filter((stop): stop is Record<string, unknown> => !!stop && typeof stop === "object").map(stop => stop.job) : []);
+      const unassigned = (object.unassigned ?? []).filter((entry): entry is Record<string, unknown> => !!entry && typeof entry === "object").map(entry => entry.job);
+      object.jobs = [...assigned, ...unassigned];
+      object.engineers = routes.map(route => route.engineer).filter(engineer => engineer && typeof engineer === "object");
+    }
     if (!Array.isArray(object.jobs)) throw new Error("JSON должен содержать массив jobs или быть массивом заявок");
+    if (object.jobs.some(job => !job || typeof job !== "object" || Array.isArray(job))) throw new Error("В массиве jobs должны быть объекты заявок");
     const imported = rowsToJobs(object.jobs as Record<string, unknown>[], centers, "Генератор");
     const events=Array.isArray(object.events) ? rowsToEvents(object.events,centers) : undefined;
     const urgentIds=events?.flatMap(event=>event.job ? [event.job.id] : []) ?? [];
     if (new Set([...imported.jobs.map(job=>job.id),...urgentIds]).size!==imported.jobs.length+urgentIds.length) throw new Error("Номера срочных и исходных заявок должны быть уникальны");
-    return { ...imported, events, engineers: Array.isArray(object.engineers) && object.engineers.length ? rowsToEngineers(object.engineers as Record<string, unknown>[], centers) : undefined, speedKmh: Number.isFinite(object.speedKmh) ? object.speedKmh : undefined };
+    return { ...imported, warnings: legacyPlan ? [...imported.warnings, "Из старой выгрузки плана восстановлены только инженеры с маршрутом."] : imported.warnings, events, engineers: Array.isArray(object.engineers) && object.engineers.length ? rowsToEngineers(object.engineers as Record<string, unknown>[], centers) : undefined, speedKmh: Number.isFinite(object.speedKmh) ? object.speedKmh : Number.isFinite(object.config?.speedKmh) ? object.config?.speedKmh : undefined };
   }
   if (!/\.csv$/i.test(name)) throw new Error("Поддерживаются только CSV и JSON");
   const { headers, rows } = parseCsv(text);
   if (headers.some(header=>keyMatches(header,"тип события"))) return {jobs:[],events:rowsToEvents(rows,centers),warnings:[]};
   if (looksLikeEngineerRows(headers, rows) && !headers.some(header => keyMatches(header, "recordType"))) {
-    return { jobs: [], engineers: rowsToEngineers(rows, centers), warnings: ["Загружен список инженеров без заявок. Добавьте CSV или JSON заявок."] };
+    return { jobs: [], engineers: rowsToEngineers(rows, centers), warnings: [] };
   }
   const jobs = rows.filter(row => !value(row, ["recordType", "record_type"]) || value(row, ["recordType", "record_type"]) === "job");
   const engineers = rows.filter(row => value(row, ["recordType", "record_type"]) === "engineer");
   if (!jobs.length) throw new Error("В CSV нет заявок");
   const imported = rowsToJobs(jobs, centers);
   const speedKmh = numberValue(rows[0], ["speedKmh", "speed_kmh"]);
-  return { ...imported, engineers: engineers.length ? rowsToEngineers(engineers, centers) : undefined, speedKmh: speedKmh && speedKmh > 0 ? speedKmh : undefined };
+  const planExport = headers.some(header => keyMatches(header, "окно sla")) && headers.some(header => keyMatches(header, "порядок"));
+  return { ...imported, warnings: planExport ? [...imported.warnings, "CSV плана содержит заявки без параметров инженеров. Загрузите CSV инженеров отдельно, если их нет в текущем наборе."] : imported.warnings, engineers: engineers.length ? rowsToEngineers(engineers, centers) : undefined, speedKmh: speedKmh && speedKmh > 0 ? speedKmh : undefined };
 }
 
 export async function importPlanFile(file: File, centers: Record<Region, Coordinate>): Promise<ImportedPlan> {
